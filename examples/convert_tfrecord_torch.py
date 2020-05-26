@@ -205,9 +205,9 @@ def main():
                         help="Dataset name.")
     parser.add_argument("--mode", type=str, default="train",
                         help="Mode {train, test}")
-    parser.add_argument("--first-n", type=int, default=None,
+    parser.add_argument("--first-n", type=int, default=100,
                         help="Read only first n data")
-    parser.add_argument("--batch-size", type=int, default=10000,
+    parser.add_argument("--batch-size", type=int, default=16,
                         help="Batch size of each tfrecord")
     args = parser.parse_args()
 
