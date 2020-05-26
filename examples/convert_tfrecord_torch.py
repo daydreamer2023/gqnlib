@@ -151,7 +151,7 @@ def convert_raw_to_gzip(dataset_info: collections.namedtuple,
     frames = _preprocess_frames(dataset_info, example)
     cameras = _preprocess_cameras(dataset_info, example)
 
-    return frames.numpy(), cameras.numpy()
+    return frames.numpy().squeeze(), cameras.numpy().squeeze()
 
 
 def _convert_frame_data(jpeg_data):
