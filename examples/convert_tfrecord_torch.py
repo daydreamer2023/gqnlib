@@ -4,7 +4,7 @@
 This file converts tfrecords in deepmind gqn dataset to gzip files. Each
 tfrecord will be converted to a single gzip file.
 
-ex) 001-of-900.tfrecord -> 1.pt.gz
+ex) 001-of-900.tfrecord -> 001-of-900.pt.gz
 
 Each gzip file contains a list of tuples (images, poses). For example, when
 converting shepard_metzler_5_parts dataset with batch size of 32, the zgip
@@ -125,8 +125,7 @@ def convert_record(path: pathlib.Path, dataset_name: str,
         scene_list.append(convert_raw_to_gzip(dataset_info, raw_data))
 
     # Save
-    base_name = int(path.stem.split("-")[0])
-    save_path = save_dir / f"{base_name}.pt.gz"
+    save_path = save_dir / f"{path.stem}.pt.gz"
     with gzip.open(str(save_path), "wb") as f:
         torch.save(scene_list, f)
 
