@@ -185,14 +185,9 @@ def _preprocess_frames(dataset_info, example):
 
 def _preprocess_cameras(dataset_info, example):
     raw_pose_params = example["cameras"]
-    raw_pose_params = tf.reshape(
+    cameras = tf.reshape(
         raw_pose_params,
         [-1, dataset_info.sequence_size, _NUM_RAW_CAMERA_PARAMS])
-    pos = raw_pose_params[:, :, 0:3]
-    yaw = raw_pose_params[:, :, 3:4]
-    pitch = raw_pose_params[:, :, 4:5]
-    cameras = tf.concat(
-        [pos, tf.sin(yaw), tf.cos(yaw), tf.sin(pitch), tf.cos(pitch)], axis=2)
     return cameras
 
 
