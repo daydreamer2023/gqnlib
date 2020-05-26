@@ -105,24 +105,25 @@ def run_loop(dataset_name: str, org_dir: pathlib.Path, save_dir: pathlib.Path
         save_path = save_dir / f"{base_name}.pt.gz"
 
         # Read tf record
-        raw_data = tf.data.TFRecordDataset(path)
+        raw_data = tf.data.TFRecordDataset(str(path))
 
         # Run in multiprocess
         p = mp.Process(
-            convert_raw_to_torch, args=(dataset_info, raw_data, save_path))
+            convert_raw_to_torch,
+            args=(dataset_info, raw_data, str(save_path)))
         p.start()
         p.join()
 
 
 def convert_raw_to_torch(dataset_info: collections.namedtuple,
                          raw_data: tf.Tensor,
-                         path: pathlib.Path) -> None:
+                         path: str) -> None:
     """Converts raw data to tensor and saves into torch gziped file.
 
     Args:
         dataset_info (collections.namedtuple): Information tuple.
         raw_data (tf.Tensor): Tensor of original data.
-        path (pathlib.Path): Path to saved file.
+        path (str): Path to saved file.
     """
 
     feature_map = {
@@ -198,8 +199,8 @@ def main():
     torch_train_dir = root / f"{args.dataset}_torch/train/"
     torch_test_dir = root / f"{args.dataset}_torch/test/"
 
-    torch_train_dir.mkdir(parents=True)
-    torch_test_dir.mkdir(parents=True)
+    torch_train_dir.mkdir(parents=True, exist_ok=True)
+    torch_test_dir.mkdir(parents=True, exist_ok=True)
 
     if not tf_train_dir.exists() or not tf_test_dir.exists():
         raise FileNotFoundError("TFRecord path does not exists. ",
