@@ -6,10 +6,10 @@ tfrecord will be converted to a single gzip file.
 
 ex) 001-of-900.tfrecord -> 1.pt.gz
 
-Each gzip file contains a list of namedtuples (images, poses). For example,
-when converting shepard_metzler_5_parts dataset with batch size of 32, the zgip
-file contains a list of length 32 namedtuples, ((15, 64, 64, 3), (15, 5)),
-where 15 is the sequence length.
+Each gzip file contains a list of tuples (images, poses). For example, when
+converting shepard_metzler_5_parts dataset with batch size of 32, the zgip
+file contains a list of length 32 tuples, ((15, 64, 64, 3), (15, 5)), where
+15 is the sequence length.
 
 (Dataset)
 
@@ -43,7 +43,6 @@ DatasetInfo = collections.namedtuple(
     'DatasetInfo',
     ['basepath', 'train_size', 'test_size', 'frame_size', 'sequence_size']
 )
-Scene = collections.namedtuple('Scene', ['frames', 'cameras'])
 
 
 _DATASETS = dict(
@@ -152,7 +151,7 @@ def convert_raw_to_gzip(dataset_info: collections.namedtuple,
     frames = _preprocess_frames(dataset_info, example)
     cameras = _preprocess_cameras(dataset_info, example)
 
-    return Scene(frames=frames.numpy(), cameras=cameras.numpy())
+    return frames.numpy(), cameras.numpy()
 
 
 def _convert_frame_data(jpeg_data):
