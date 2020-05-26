@@ -1,29 +1,42 @@
 
-"""Convert tfrecord to torch data.
+"""Convert tfrecords to gziped files.
 
-Original dataset provided by DeepMind is saved as tfrecord format. This script
-convert these records to torch format.
+This file converts tfrecords in deepmind gqn dataset to gzip files. Each
+tfrecord will be converted to a single gzip file.
 
-Refrence)
+ex) 561-of-900.tfrecord -> 561.pt.gz
+
+Each gzip file contains a list of namedtuples (images, poses). For example,
+when converting shepard_metzler_5_parts dataset with batch size of 32, the zgip
+file contains a list of length 32 namedtuples, ((15, 64, 64, 3), (15, 5)),
+where 15 is the sequence length.
+
+(Dataset)
 
 https://github.com/deepmind/gqn-datasets
+
+(Refrence)
 
 https://github.com/deepmind/gqn-datasets/blob/master/data_reader.py
 
 https://github.com/iShohei220/torch-gqn/blob/master/dataset/convert2torch.py
 
 https://github.com/wohlert/generative-query-network-pytorch/blob/master/scripts/tfrecord-converter.py
+
+https://github.com/l3robot/gqn_datasets_translator
+
+https://github.com/musyoku/gqn-datasets-translator/blob/master/convert.py
 """
 
 import argparse
 import collections
+import functools
 import gzip
 import multiprocessing as mp
 import pathlib
 
 import tensorflow as tf
 import torch
-import tqdm
 
 
 DatasetInfo = collections.namedtuple(
@@ -87,58 +100,59 @@ _NUM_CHANNELS = 3
 _NUM_RAW_CAMERA_PARAMS = 5
 
 
-def run_loop(dataset_name: str, org_dir: pathlib.Path, save_dir: pathlib.Path
-             ) -> None:
-    """Runs process in for-loop.
+def convert_record(path: pathlib.Path, dataset_name: str,
+                   save_dir: pathlib.Path, batch_size: int) -> None:
+    """Main process for one tfrecord file.
+
+    This method load one tfrecord file, and preprocess each (frames, cameras)
+    pair. The maximum number of pairs are bounded by `batch_size`.
 
     Args:
+        path (pathlib.Path): Path to original data.
         dataset_name (str): Name of dataset.
-        org_dir (pathlib.Path): Path to original data.
         save_dir (pathlib.Path): Path to saved data.
+        batch_size (int): Batch size of dataset for each tfrecord.
     """
 
     # Dataset info
     dataset_info = _DATASETS[dataset_name]
 
-    for path in tqdm.tqdm(sorted(org_dir.glob("*.tfrecord"))):
-        # Saved path
-        base_name = path.stem.split("-")[0]
-        save_path = save_dir / f"{base_name}.pt.gz"
+    # Load tfrecord
+    dataset = tf.data.TFRecordDataset(str(path))
 
-        # Read tf record
-        raw_data = tf.data.TFRecordDataset(str(path))
+    # Preprocess for each data
+    scene_list = []
+    for raw_data in dataset.take(batch_size):
+        scene_list.append(convert_raw_to_gzip(dataset_info, raw_data))
 
-        # Run in multiprocess
-        p = mp.Process(target=convert_raw_to_torch,
-                       args=(dataset_info, raw_data, str(save_path)))
-        p.start()
-        p.join()
+    # Save
+    base_name = int(path.stem.split("-")[0])
+    save_path = save_dir / f"{base_name}.pt.gz"
+    with gzip.open(str(save_path), "wb") as f:
+        torch.save(scene_list, f)
 
 
-def convert_raw_to_torch(dataset_info: collections.namedtuple,
-                         raw_data: tf.Tensor,
-                         path: str) -> None:
+def convert_raw_to_gzip(dataset_info: collections.namedtuple,
+                        raw_data: tf.Tensor) -> None:
     """Converts raw data to tensor and saves into torch gziped file.
 
     Args:
         dataset_info (collections.namedtuple): Information tuple.
         raw_data (tf.Tensor): Tensor of original data.
-        path (str): Path to saved file.
     """
 
     feature_map = {
         'frames': tf.io.FixedLenFeature(
             shape=dataset_info.sequence_size, dtype=tf.string),
         'cameras': tf.io.FixedLenFeature(
-            shape=[dataset_info.sequence_size * _NUM_RAW_CAMERA_PARAMS],
+            shape=dataset_info.sequence_size * _NUM_RAW_CAMERA_PARAMS,
             dtype=tf.float32),
     }
-    example = tf.io.parse_example(raw_data, feature_map)
+    example = tf.io.parse_single_example(raw_data, feature_map)
     frames = _preprocess_frames(dataset_info, example)
     cameras = _preprocess_cameras(dataset_info, example)
-    scene = Scene(frames=frames.numpy(), cameras=cameras.numpy())
-    with gzip.open(path, "wb") as f:
-        torch.save(scene, f)
+
+    return Scene(frames=frames.numpy(), cameras=cameras.numpy())
 
 
 def _convert_frame_data(jpeg_data):
@@ -148,8 +162,11 @@ def _convert_frame_data(jpeg_data):
 
 def _preprocess_frames(dataset_info, example):
     frames = tf.concat(example["frames"], axis=0)
-    frames = tf.map_fn(_convert_frame_data, tf.reshape(frames, [-1]),
-                       dtype=tf.float32, back_prop=False)
+    frames = tf.nest.map_structure(
+        tf.stop_gradient,
+        tf.map_fn(_convert_frame_data, tf.reshape(frames, [-1]),
+                  dtype=tf.float32)
+    )
     dataset_image_dimensions = tuple(
         [dataset_info.frame_size] * 2 + [_NUM_CHANNELS])
     frames = tf.reshape(
@@ -186,6 +203,12 @@ def main():
     parser.add_argument("--dataset", type=str,
                         default="shepard_metzler_5_parts",
                         help="Dataset name.")
+    parser.add_argument("--mode", type=str, default="train",
+                        help="Mode {train, test}")
+    parser.add_argument("--first-n", type=int, default=None,
+                        help="Read only first n data")
+    parser.add_argument("--batch-size", type=int, default=10000,
+                        help="Batch size of each tfrecord")
     args = parser.parse_args()
 
     if args.dataset not in _DATASETS:
@@ -194,21 +217,24 @@ def main():
 
     # Path
     root = pathlib.Path("./data/")
-    tf_train_dir = root / f"{args.dataset}/train/"
-    tf_test_dir = root / f"{args.dataset}/test/"
-    torch_train_dir = root / f"{args.dataset}_torch/train/"
-    torch_test_dir = root / f"{args.dataset}_torch/test/"
+    tf_dir = root / f"{args.dataset}/{args.mode}/"
+    torch_dir = root / f"{args.dataset}_torch/{args.mode}/"
+    torch_dir.mkdir(parents=True, exist_ok=True)
 
-    torch_train_dir.mkdir(parents=True, exist_ok=True)
-    torch_test_dir.mkdir(parents=True, exist_ok=True)
+    if not tf_dir.exists():
+        raise FileNotFoundError(f"TFRecord path `{tf_dir}` does not exists.")
 
-    if not tf_train_dir.exists() or not tf_test_dir.exists():
-        raise FileNotFoundError("TFRecord path does not exists. ",
-                                f"train: {tf_train_dir}, test: {tf_test_dir}.")
+    # File list of original dataset
+    record_list = sorted(tf_dir.glob("*.tfrecord"))
+    if args.first_n is not None:
+        record_list = record_list[:args.first_n]
 
-    # Process
-    run_loop(args.dataset, tf_train_dir, torch_train_dir)
-    run_loop(args.dataset, tf_test_dir, torch_test_dir)
+    # Multi process
+    num_proc = mp.cpu_count()
+    with mp.Pool(processes=num_proc) as pool:
+        f = functools.partial(convert_record, dataset_name=args.dataset,
+                              save_dir=torch_dir, batch_size=args.batch_size)
+        pool.map(f, record_list)
 
 
 if __name__ == "__main__":
