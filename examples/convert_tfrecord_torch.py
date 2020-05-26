@@ -19,11 +19,11 @@ https://github.com/deepmind/gqn-datasets
 
 https://github.com/deepmind/gqn-datasets/blob/master/data_reader.py
 
-https://github.com/iShohei220/torch-gqn/blob/master/dataset/convert2torch.py
+https://github.com/l3robot/gqn_datasets_translator
 
 https://github.com/wohlert/generative-query-network-pytorch/blob/master/scripts/tfrecord-converter.py
 
-https://github.com/l3robot/gqn_datasets_translator
+https://github.com/iShohei220/torch-gqn/blob/master/dataset/convert2torch.py
 
 https://github.com/musyoku/gqn-datasets-translator/blob/master/convert.py
 """
