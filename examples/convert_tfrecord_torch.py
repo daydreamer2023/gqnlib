@@ -108,9 +108,8 @@ def run_loop(dataset_name: str, org_dir: pathlib.Path, save_dir: pathlib.Path
         raw_data = tf.data.TFRecordDataset(str(path))
 
         # Run in multiprocess
-        p = mp.Process(
-            convert_raw_to_torch,
-            args=(dataset_info, raw_data, str(save_path)))
+        p = mp.Process(target=convert_raw_to_torch,
+                       args=(dataset_info, raw_data, str(save_path)))
         p.start()
         p.join()
 
