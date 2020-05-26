@@ -23,6 +23,7 @@ import pathlib
 
 import tensorflow as tf
 import torch
+import tqdm
 
 
 DatasetInfo = collections.namedtuple(
@@ -99,7 +100,7 @@ def run_loop(dataset_name: str, org_dir: pathlib.Path, save_dir: pathlib.Path
     # Dataset info
     dataset_info = _DATASETS[dataset_name]
 
-    for path in sorted(org_dir.glob("*.tfrecord")):
+    for path in tqdm.tqdm(sorted(org_dir.glob("*.tfrecord"))):
         # Saved path
         base_name = path.stem.split("-")[0]
         save_path = save_dir / f"{base_name}.pt.gz"
