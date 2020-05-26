@@ -36,7 +36,7 @@ class SceneDataset(torch.utils.data.Dataset):
     def __getitem__(self, index) -> Tuple[Tensor, Tensor]:
         """Load and get data with specified index.
 
-        This method read `<index>.pt.gz` file, which includes list of tuples,
+        This method reads `<index>.pt.gz` file, which includes list of tuples
         `(images, viewpoints)`.
 
         Args:
@@ -79,9 +79,8 @@ def transform_viewpoint(viewpoints: Tensor) -> Tensor:
     """
 
     pos, tmp = torch.split(viewpoints, 3, dim=-1)
-    yaw, pitch = torch.split(tmp, 1, dim=-1)
+    y, p = torch.split(tmp, 1, dim=-1)
 
-    view = [pos, torch.cos(yaw), torch.sin(yaw),
-            torch.cos(pitch), torch.sin(pitch)]
+    view = [pos, torch.cos(y), torch.sin(y), torch.cos(p), torch.sin(p)]
     view = torch.cat(view, dim=-1)
     return view
