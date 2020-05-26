@@ -4,7 +4,7 @@
 This file converts tfrecords in deepmind gqn dataset to gzip files. Each
 tfrecord will be converted to a single gzip file.
 
-ex) 561-of-900.tfrecord -> 561.pt.gz
+ex) 001-of-900.tfrecord -> 1.pt.gz
 
 Each gzip file contains a list of namedtuples (images, poses). For example,
 when converting shepard_metzler_5_parts dataset with batch size of 32, the zgip
