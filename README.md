@@ -10,7 +10,6 @@ Generative Query Network by PyTorch
 
 Requirements for example code
 
-* numpy == 1.18.4
 * matplotlib == 3.2.1
 * tqdm == 4.46.0
 * tensorflow == 2.2.0
