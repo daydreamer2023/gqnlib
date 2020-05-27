@@ -17,6 +17,9 @@ class SceneDataset(torch.utils.data.Dataset):
 
     Args:
         root_dir (str): Path to root directory
+
+    Attributes:
+        record_list (list of pathlib.Path): List of path to data files.
     """
 
     def __init__(self, root_dir: str):
@@ -34,7 +37,7 @@ class SceneDataset(torch.utils.data.Dataset):
 
         return len(self.record_list)
 
-    def __getitem__(self, index) -> Tuple[Tensor, Tensor]:
+    def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
         """Load and get data with specified index.
 
         This method reads `<index>.pt.gz` file, which includes list of tuples
