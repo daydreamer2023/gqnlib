@@ -218,11 +218,11 @@ class ConvolutionalDRAW(nn.Module):
         w_scale = w // self.scale
 
         # Hidden states
-        h_dec = torch.zeros(batch_size, self.h_channel, h_scale, w_scale)
-        c_dec = torch.zeros(batch_size, self.h_channel, h_scale, w_scale)
+        h_dec = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_dec = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
 
         # Canvas that data is drawn on
-        u = torch.zeros((batch_size, self.h_channel, h, w))
+        u = v.new_zeros((batch_size, self.h_channel, h, w))
 
         # Upsample v and r
         v = v.view(batch_size, -1, 1, 1).repeat(1, 1, h_scale, w_scale)
