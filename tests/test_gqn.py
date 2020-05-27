@@ -17,9 +17,10 @@ class TestGenerativeQueryNetwork(unittest.TestCase):
         x_q = torch.randn(4, 3, 64, 64)
         v_q = torch.randn(4, 7)
 
-        canvas, loss_dict = self.model.inference(x_c, v_c, x_q, v_q)
+        canvas, r, loss_dict = self.model.inference(x_c, v_c, x_q, v_q)
 
         self.assertTupleEqual(canvas.size(), (4, 3, 64, 64))
+        self.assertTupleEqual(r.size(), (4, 256, 1, 1))
         self.assertGreater(loss_dict["loss"], 0)
         self.assertGreater(loss_dict["nll_loss"], 0)
         self.assertGreater(loss_dict["kl_loss"], 0)
@@ -30,8 +31,9 @@ class TestGenerativeQueryNetwork(unittest.TestCase):
         x_q = torch.randn(4, 3, 64, 64)
         v_q = torch.randn(4, 7)
 
-        canvas = self.model(x_c, v_c, x_q, v_q)
+        canvas, r = self.model(x_c, v_c, x_q, v_q)
         self.assertTupleEqual(canvas.size(), (4, 3, 64, 64))
+        self.assertTupleEqual(r.size(), (4, 256, 1, 1))
 
     def test_loss_func(self):
         x_c = torch.randn(4, 15, 3, 64, 64)

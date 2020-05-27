@@ -32,7 +32,7 @@ class GenerativeQueryNetwork(nn.Module):
         self.representation = Tower(x_channel, v_dim)
 
     def forward(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor
-                ) -> Tensor:
+                ) -> Tuple[Tensor, Tensor]:
         """Reconstructs queried images.
 
         Args:
@@ -43,10 +43,11 @@ class GenerativeQueryNetwork(nn.Module):
 
         Returns:
             canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+            r (torch.Tensor): Representations, size `(b, r, h, w)`.
         """
 
-        canvas, _ = self.inference(x_c, v_c, x_q, v_q)
-        return canvas
+        canvas, r, _ = self.inference(x_c, v_c, x_q, v_q)
+        return canvas, r
 
     def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0) -> Dict[str, Tensor]:
@@ -63,11 +64,12 @@ class GenerativeQueryNetwork(nn.Module):
             loss_dict (dict of [str, torch.Tensor]): Calculated losses.
         """
 
-        _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
+        *_, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
         return loss_dict
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
-                  var: float = 1.0) -> Tuple[Tensor, Dict[str, Tensor]]:
+                  var: float = 1.0
+                  ) -> Tuple[Tensor, Tensor, Dict[str, Tensor]]:
         """Inference.
 
         Args:
@@ -79,6 +81,7 @@ class GenerativeQueryNetwork(nn.Module):
 
         Returns:
             canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+            r (torch.Tensor): Representations, size `(b, r, h, w)`.
             loss_dict (dict of [str, torch.Tensor]): Calculated losses.
         """
 
@@ -108,7 +111,7 @@ class GenerativeQueryNetwork(nn.Module):
         loss_dict = {"loss": nll_loss + kl_loss, "nll_loss": nll_loss,
                      "kl_loss": kl_loss}
 
-        return canvas, loss_dict
+        return canvas, r, loss_dict
 
     def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
         """Samples images `x_q` by context pair `(x, v)` and query viewpoint
