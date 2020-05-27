@@ -5,6 +5,7 @@ from typing import Tuple
 
 import gzip
 import pathlib
+import random
 
 import torch
 from torch import Tensor
@@ -87,3 +88,48 @@ def transform_viewpoint(viewpoints: Tensor) -> Tensor:
     view = [pos, torch.cos(y), torch.sin(y), torch.cos(p), torch.sin(p)]
     view = torch.cat(view, dim=-1)
     return view
+
+
+def partition(images: Tensor, viewpoints: Tensor
+              ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
+    """Partitions given data into context and query sets.
+
+    * Number of context is randomly sampled.
+    * Number of query is 1.
+
+    Args:
+        images (torch.Tensor): Image tensor, size
+            `(batch, data-batch, num_points, c, h, w)`.
+        viewpoints (torch.Tensor): Viewpoints tensor, size
+            `(batch, data-batch, num_points, target)`.
+
+    Returns:
+        x_c (torch.Tensor): Context images, size `(b*d, num_context, c, h, w)`.
+        v_c (torch.Tensor): Context viewpoints, size `(b*d, num_context, t)`.
+        x_q (torch.Tensor): Query images, size `(b*d, c, h, w)`.
+        v_q (torch.Tensor): Query viewpoints, size `(b*d, t)`.
+    """
+
+    # Maximum number of context
+    _, _, num, *x_dims = images.size()
+    _, _, num, *v_dims = viewpoints.size()
+
+    # Squeeze dataset
+    images = images.view(-1, num, *x_dims)
+    viewpoints = viewpoints.view(-1, num, *v_dims)
+
+    # Sample randum number of data
+    n_data = random.randint(2, num - 1)
+    indices = random.sample(list(range(num)), n_data)
+
+    # Partition into context and query
+    context_idx = indices[:-1]
+    query_idx = indices[-1]
+
+    x_c = images[:, context_idx]
+    v_c = viewpoints[:, context_idx]
+
+    x_q = images[:, query_idx]
+    v_q = viewpoints[:, query_idx]
+
+    return x_c, v_c, x_q, v_q
