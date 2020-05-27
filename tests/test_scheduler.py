@@ -11,7 +11,7 @@ class TestAnnealingStepLR(unittest.TestCase):
 
     def test_step(self):
         net = DummyNet()
-        optimizer = torch.optim.Adam(net.parameters())
+        optimizer = optim.Adam(net.parameters())
         annealr = gqnlib.AnnealingStepLR(optimizer, mu_i=0.1, mu_f=0.01, n=10)
         x = torch.randn(8, 10)
 
