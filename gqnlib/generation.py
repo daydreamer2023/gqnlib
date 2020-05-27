@@ -240,7 +240,7 @@ class ConvolutionalDRAW(nn.Module):
             # Draw canvas
             u = u + self.write_head(h_dec)
 
-        canvas = self.observation(u)
+        canvas = torch.sigmoid(self.observation(u))
 
         return canvas
 
