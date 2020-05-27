@@ -276,7 +276,7 @@ def kl_divergence_normal(mu0: Tensor, var0: Tensor, mu1: Tensor, var1: Tensor,
     KL(p||q) = 1/2 * (var0/var1 + (mu1-mu0)^2/var1 - 1 + log(var1/var0))
 
     Args:
-        mu0 (torch.Tensor): Mean vector of p, size.
+        mu0 (torch.Tensor): Mean vector of p.
         var0 (torch.Tensor): Diagonal variance of p.
         mu1 (torch.Tensor): Mean vector of q.
         var1 (torch.Tensor): Diagonal variance of q.
