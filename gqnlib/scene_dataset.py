@@ -39,7 +39,7 @@ class SceneDataset(torch.utils.data.Dataset):
         return len(self.record_list)
 
     def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
-        """Load and get data with specified index.
+        """Loads data file and returns data with specified index.
 
         This method reads `<index>.pt.gz` file, which includes list of tuples
         `(images, viewpoints)`.
@@ -49,16 +49,16 @@ class SceneDataset(torch.utils.data.Dataset):
 
         Returns:
             images (torch.Tensor): Image tensor, size
-                `(batch, seqlen, 3, 64, 64)`.
-            viewpoints (torch.Tensor): View points, size `(batch, seqlen, 7)`.
+                `(data_batch, num_points, 3, 64, 64)`.
+            viewpoints (torch.Tensor): View points, size
+                `(data_batch, num_points, 7)`.
         """
 
         with gzip.open(self.record_list[index], "rb") as f:
             dataset = torch.load(f)
 
-        images = torch.stack([torch.from_numpy(data[0]) for data in dataset])
-        viewpoints = torch.stack(
-            [torch.from_numpy(data[1]) for data in dataset])
+        images = torch.stack([torch.from_numpy(x[0]) for x in dataset])
+        viewpoints = torch.stack([torch.from_numpy(x[1]) for x in dataset])
 
         # Convert data size: BNHWC -> BNCHW
         images = images.permute(0, 1, 4, 2, 3)
@@ -99,9 +99,9 @@ def partition(images: Tensor, viewpoints: Tensor
 
     Args:
         images (torch.Tensor): Image tensor, size
-            `(batch, data-batch, num_points, c, h, w)`.
+            `(batch, data_batch, num_points, c, h, w)`.
         viewpoints (torch.Tensor): Viewpoints tensor, size
-            `(batch, data-batch, num_points, target)`.
+            `(batch, data_batch, num_points, target)`.
 
     Returns:
         x_c (torch.Tensor): Context images, size `(b*d, num_context, c, h, w)`.
