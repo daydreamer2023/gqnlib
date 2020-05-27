@@ -111,7 +111,8 @@ class GenerativeQueryNetwork(nn.Module):
         return canvas, loss_dict
 
     def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
-        """Inference.
+        """Samples images `x_q` by context pair `(x, v)` and query viewpoint
+        `v_q`.
 
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.

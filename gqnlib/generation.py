@@ -131,7 +131,7 @@ class ConvolutionalDRAW(nn.Module):
 
     def forward(self, x: Tensor, v: Tensor, r: Tensor
                 ) -> Tuple[Tensor, Tensor]:
-        """Inferences through given query pair (x, v) and representation r.
+        """Inferences given query pair (x, v) and representation r.
 
         Args:
             x (torch.Tensor): True queried iamges `x_q`, size `(b, c, h, w)`.
@@ -201,7 +201,7 @@ class ConvolutionalDRAW(nn.Module):
 
     def sample(self, v: Tensor, r: Tensor, x_shape: Tuple[int, int] = (64, 64)
                ) -> Tensor:
-        """Samples images from the prior.
+        """Samples images from the prior given viewpoint and representation.
 
         Args:
             v (torch.Tensor): Query of viewpoints `v_q`, size `(b, v)`.
