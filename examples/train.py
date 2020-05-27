@@ -75,7 +75,7 @@ def init_args():
     parser.add_argument("--epochs", type=int, default=5,
                         help="Number of training epochs.")
     parser.add_argument("--log-save-interval", type=int, default=5,
-                        help="Interval epochs of saving logs.")
+                        help="Interval epochs for saving logs.")
 
     return parser.parse_args()
 
