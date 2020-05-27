@@ -26,7 +26,6 @@ class GenerativeQueryNetwork(nn.Module):
                  z_channel: int = 64, h_channel: int = 128, n_layer: int = 8):
         super().__init__()
 
-        self.r_dim = r_dim
         self.generator = ConvolutionalDRAW(x_channel, v_dim, r_dim, z_channel,
                                            h_channel, n_layer)
         self.representation = Tower(x_channel, v_dim)

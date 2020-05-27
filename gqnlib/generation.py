@@ -102,7 +102,6 @@ class ConvolutionalDRAW(nn.Module):
                  scale: int = 4):
         super().__init__()
 
-        self.x_channel = x_channel
         self.h_channel = h_channel
         self.z_channel = z_channel
         self.n_layer = n_layer
