@@ -7,7 +7,7 @@ SEED=${2:-0}
 
 # Log path
 export LOGDIR=./logs/
-export EXPERIMENT_NAME=${MODEL_NAME}
+export EXPERIMENT_NAME=${DATASET}
 
 # Dataset path
 export DATASET_DIR=./data/
