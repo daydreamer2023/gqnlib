@@ -55,7 +55,7 @@ class Tower(nn.Module):
     """
 
     def __init__(self, n_channel: int = 3, n_target: int = 7,
-                 do_pool: bool = False):
+                 do_pool: bool = True):
         super().__init__()
 
         self.conv1 = nn.Conv2d(n_channel, 256, kernel_size=2, stride=2)

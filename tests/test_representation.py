@@ -26,7 +26,7 @@ class TestTower(unittest.TestCase):
         x = torch.empty(batch_size, 3, 64, 64)
         v = torch.empty(batch_size, 7)
 
-        model = gqnlib.Tower()
+        model = gqnlib.Tower(do_pool=False)
         r = model(x, v)
 
         self.assertTupleEqual(r.size(), (batch_size, 256, 16, 16))
