@@ -27,6 +27,15 @@ class TestConvolutionalDRAW(unittest.TestCase):
 
         self.assertTupleEqual(canvas.size(), (10, 3, 64, 64))
 
+    def test_forward_alt_r(self):
+        x = torch.randn(10, 3, 64, 64)
+        v = torch.randn(10, 7)
+        r = torch.randn(10, 256, 16, 16)
+        canvas, kl_loss = self.model(x, v, r)
+
+        self.assertTupleEqual(canvas.size(), (10, 3, 64, 64))
+        self.assertGreater(kl_loss, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
