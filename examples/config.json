@@ -1,3 +1,10 @@
 {
-    "tmp": 0
+    "model_params": {
+        "x_channel": 3,
+        "v_dim": 7,
+        "r_dim": 256,
+        "z_channel": 64,
+        "h_channel": 128,
+        "n_layer": 8
+    }
 }
