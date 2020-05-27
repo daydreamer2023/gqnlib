@@ -138,7 +138,7 @@ class ConvolutionalDRAW(nn.Module):
 
         Returns:
             canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
-            kl_loss (torch.Tensor): Calculated KL loss.
+            kl_loss (torch.Tensor): Calculated KL loss, size `(1)`.
         """
 
         # Data size
@@ -147,16 +147,12 @@ class ConvolutionalDRAW(nn.Module):
         w_scale = w // self.scale
 
         # Generator initial state
-        h_enc = x.new_zeros(
-            (batch_size, self.h_channel, h_scale, w_scale))
-        c_dec = x.new_zeros(
-            (batch_size, self.h_channel, h_scale, w_scale))
+        h_enc = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_dec = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
 
         # Inference initial state
-        h_dec = x.new_zeros(
-            (batch_size, self.h_channel, h_scale, w_scale))
-        c_enc = x.new_zeros(
-            (batch_size, self.h_channel, h_scale, w_scale))
+        h_dec = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_enc = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
 
         # Canvas that data is drawn on
         u = x.new_zeros((batch_size, self.h_channel, h, w))
