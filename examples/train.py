@@ -50,7 +50,7 @@ def main():
     # -------------------------------------------------------------------------
 
     # GQN model
-    model = gqnlib.GenerativeQueryNetwork()
+    model = gqnlib.GenerativeQueryNetwork(config["model_params"])
 
     # Trainer
     params = {
