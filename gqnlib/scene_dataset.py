@@ -22,7 +22,8 @@ class SceneDataset(torch.utils.data.Dataset):
     def __init__(self, root_dir: str):
         super().__init__()
 
-        self.root_dir = pathlib.Path(root_dir)
+        root_dir = pathlib.Path(root_dir)
+        self.record_list = sorted(root_dir.glob("*.pt.gz"))
 
     def __len__(self) -> int:
         """Returns number of files and directories in root dir.
@@ -31,7 +32,7 @@ class SceneDataset(torch.utils.data.Dataset):
             len (int): Number of objects in root dir.
         """
 
-        return len(list(self.root_dir.iterdir()))
+        return len(self.record_list)
 
     def __getitem__(self, index) -> Tuple[Tensor, Tensor]:
         """Load and get data with specified index.
@@ -48,8 +49,7 @@ class SceneDataset(torch.utils.data.Dataset):
             viewpoints (torch.Tensor): View points, size `(batch, seqlen, 7)`.
         """
 
-        filename = f"{index}.pt.gz"
-        with gzip.open(self.root_dir / filename, "rb") as f:
+        with gzip.open(self.record_list[index], "rb") as f:
             dataset = torch.load(f)
 
         images = torch.stack([torch.from_numpy(data[0]) for data in dataset])
