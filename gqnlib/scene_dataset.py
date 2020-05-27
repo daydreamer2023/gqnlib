@@ -49,9 +49,9 @@ class SceneDataset(torch.utils.data.Dataset):
 
         Returns:
             images (torch.Tensor): Image tensor, size
-                `(data_batch, num_points, 3, 64, 64)`.
+                `(observations, num_points, 3, 64, 64)`.
             viewpoints (torch.Tensor): View points, size
-                `(data_batch, num_points, 7)`.
+                `(observations, num_points, 7)`.
         """
 
         with gzip.open(self.record_list[index], "rb") as f:
@@ -99,15 +99,15 @@ def partition(images: Tensor, viewpoints: Tensor
 
     Args:
         images (torch.Tensor): Image tensor, size
-            `(batch, data_batch, num_points, c, h, w)`.
+            `(batch, observations, num_points, c, h, w)`.
         viewpoints (torch.Tensor): Viewpoints tensor, size
-            `(batch, data_batch, num_points, target)`.
+            `(batch, observations, num_points, target)`.
 
     Returns:
-        x_c (torch.Tensor): Context images, size `(b*d, num_context, c, h, w)`.
-        v_c (torch.Tensor): Context viewpoints, size `(b*d, num_context, t)`.
-        x_q (torch.Tensor): Query images, size `(b*d, c, h, w)`.
-        v_q (torch.Tensor): Query viewpoints, size `(b*d, t)`.
+        x_c (torch.Tensor): Context images, size `(b*m, num_context, c, h, w)`.
+        v_c (torch.Tensor): Context viewpoints, size `(b*m, num_context, t)`.
+        x_q (torch.Tensor): Query images, size `(b*m, c, h, w)`.
+        v_q (torch.Tensor): Query viewpoints, size `(b*m, t)`.
     """
 
     # Maximum number of context
