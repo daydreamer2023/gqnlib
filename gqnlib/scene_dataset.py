@@ -120,7 +120,7 @@ def partition(images: Tensor, viewpoints: Tensor
 
     # Sample randum number of data
     n_data = random.randint(2, num - 1)
-    indices = random.sample(list(range(num)), n_data)
+    indices = random.sample(range(num), n_data)
 
     # Partition into context and query
     context_idx = indices[:-1]
