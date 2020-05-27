@@ -13,7 +13,7 @@
 
 # Kwargs
 export DATASET_NAME=${1:-shepard_metzler_5_parts}
-export BATCH_SIZE=${2:-32}
+export BATCH_SIZE=${2:-64}
 
 # Path
 export DATA_DIR=./data/
