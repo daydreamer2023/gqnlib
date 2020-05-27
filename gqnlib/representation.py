@@ -35,7 +35,7 @@ class Pyramid(nn.Module):
             v (torch.Tensor): Viewpoints tensor, size `(batch, t)`.
 
         Returns:
-            r (torch.Tensor): Representation tensor.
+            r (torch.Tensor): Representation tensor, size `(batch, 256, 1, 1)`.
         """
 
         v = v.view(-1, 7, 1, 1).repeat(1, 1, 64, 64)
