@@ -88,11 +88,13 @@ class ConvolutionalDRAW(nn.Module):
     """Convolutional DRAW (Deep Recurrent Attentive Writer).
 
     Args:
-        x_channel (int, optional): Number of channel in inputs.
-        x_shape (tuple of int, optional): Shape of input images.
-        h_channel (int, optional): Number of channel in hidden states.
+        x_channel (int, optional): Number of channel in input images.
+        v_dim (int, optional): Dimensions of viewpoints.
+        r_dim (int, optional): Dimensions of representations.
         z_channel (int, optional): Number of channel in latent variable.
+        h_channel (int, optional): Number of channel in hidden states.
         n_layer (int, optional): Number of recurrent layers.
+        scale (int, optional): Scale of image generation process.
     """
 
     def __init__(self, x_channel: int = 3, v_dim: int = 7, r_dim: int = 256,
@@ -133,7 +135,7 @@ class ConvolutionalDRAW(nn.Module):
 
         Args:
             x (torch.Tensor): True queried iamges `x_q`, size `(b, c, h, w)`.
-            v (torch.Tensor): Query of viewpoints `v_q`, size `(b, t)`.
+            v (torch.Tensor): Query of viewpoints `v_q`, size `(b, v)`.
             r (torch.Tensor): Representation of context, size `(b, c, h, w)`.
 
         Returns:
@@ -202,7 +204,7 @@ class ConvolutionalDRAW(nn.Module):
         """Samples images from the prior.
 
         Args:
-            v (torch.Tensor): Query of viewpoints `v_q`, size `(b, t)`.
+            v (torch.Tensor): Query of viewpoints `v_q`, size `(b, v)`.
             r (torch.Tensor): Representation of context, size `(b, c, h, w)`.
             x_shape (tuple of int, optional): Sampled x shape.
 
