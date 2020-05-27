@@ -54,22 +54,26 @@ docker run --gpus all -it dgmvae bash
 
 Dataset is provided by deepmind, and you can see how to download them from [GitHub](https://github.com/deepmind/gqn-datasets).
 
-The following commant will download the specified dataset. This shell script uses [`gsutil cp`]((https://cloud.google.com/storage/docs/gsutil/commands/cp)) command.
+The following commant will download the specified dataset and convert tfrecords into torch gziped files. This shell script uses [`gsutil cp`]((https://cloud.google.com/storage/docs/gsutil/commands/cp)) command, which should be install in advance.
 
 ```bash
+# Usage
+bash bin/download.sh <dataset-name>
+
+# Example
 bash bin/download.sh shepard_metzler_5_parts
 ```
 
 ## Run experiment
 
-Train models. Shell scripts in `bin` folder contains the necessary settings of the environment variables.
+Train models. Shell script in `bin` folder contains the necessary settings of the environment variables.
 
 ```bash
 # Usage
-bash bin/train.sh <model-name> <random-seed>
+bash bin/train.sh <dataset-name> <random-seed>
 
 # Example
-bash bin/train.sh cnp 0
+bash bin/train.sh shepard_metzler_5_parts 0
 ```
 
 # Reference
