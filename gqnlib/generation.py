@@ -260,8 +260,6 @@ def nll_normal(x: Tensor, mu: Tensor, var: Tensor, reduce: bool = True
         nll (torch.Tensor): Calculated nll for each data.
     """
 
-    print(x.size(), mu.size(), var.size())
-
     nll = 0.5 * ((2 * math.pi * var).log() + (x - mu) ** 2 / var)
 
     if reduce:
