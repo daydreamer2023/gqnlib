@@ -69,7 +69,8 @@ def main():
 def init_args():
     parser = argparse.ArgumentParser(description="GQN training")
     parser.add_argument("--cuda", type=str, default="0",
-                        help="Number of CUDA device. 'null' means cpu device.")
+                        help="Number of CUDA device with comma separation, "
+                             "ex. '0,1'. 'null' means cpu device.")
     parser.add_argument("--seed", type=int, default=0,
                         help="Random seed.")
     parser.add_argument("--steps", type=int, default=100,
