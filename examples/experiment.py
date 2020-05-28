@@ -28,6 +28,7 @@ class Trainer:
     * logdir (str): Path to log direcotry. This is updated to `logdir/<date>`.
     * train_dir (str): Path to training data.
     * test_dir (str): Path to test data.
+    * batch_size (int): Batch size.
     * max_steps (int): Number of max iteration steps.
     * log_save_interval (int): Number of interval epochs to save checkpoints.
     * device (str): Device to be used.
@@ -107,21 +108,25 @@ class Trainer:
 
         self.writer = tb.SummaryWriter(str(self.logdir))
 
-    def load_dataloader(self, train_dir: str, test_dir: str) -> None:
+    def load_dataloader(self, train_dir: str, test_dir: str, batch_size: int
+                        ) -> None:
         """Loads data loader for training and test.
 
         Args:
             train_dir (str): Path to train directory.
             test_dir (str): Path to test directory.
+            batch_size (int): Batch size.
         """
 
         self.logger.info("Load dataset")
 
         self.train_loader = torch.utils.data.DataLoader(
-            gqnlib.SceneDataset(train_dir), shuffle=True, batch_size=1)
+            gqnlib.SceneDataset(train_dir), shuffle=True,
+            batch_size=batch_size)
 
         self.test_loader = torch.utils.data.DataLoader(
-            gqnlib.SceneDataset(test_dir), shuffle=False, batch_size=1)
+            gqnlib.SceneDataset(test_dir), shuffle=False,
+            batch_size=batch_size)
 
     def train(self, epoch: int) -> float:
         """Trains model.
@@ -262,12 +267,13 @@ class Trainer:
         hparams = copy.deepcopy(self.hparams)
         train_dir = hparams.pop("train_dir", "./data/tmp/train")
         test_dir = hparams.pop("test_dir", "./data/tmp/test")
+        batch_size = hparams.pop("batch_size", 1)
         self.max_steps = hparams.pop("steps", 10)
         log_save_interval = hparams.pop("log_save_interval", 5)
         gpus = hparams.pop("gpus", None)
 
         # Data
-        self.load_dataloader(train_dir, test_dir)
+        self.load_dataloader(train_dir, test_dir, batch_size)
 
         # Model to device
         if gpus:
