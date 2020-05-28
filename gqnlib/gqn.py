@@ -6,8 +6,9 @@ from typing import Dict, Tuple
 import torch
 from torch import nn, Tensor
 
-from .generation import ConvolutionalDRAW, nll_normal
+from .generation import ConvolutionalDRAW
 from .representation import Tower
+from .utils import nll_normal
 
 
 class GenerativeQueryNetwork(nn.Module):

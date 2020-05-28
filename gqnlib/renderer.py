@@ -6,7 +6,8 @@ from typing import Tuple
 import torch
 from torch import nn, Tensor
 
-from .generation import Conv2dLSTMCell, kl_divergence_normal
+from .utils import kl_divergence_normal
+from .generation import Conv2dLSTMCell
 
 
 class LatentDistribution(nn.Module):
