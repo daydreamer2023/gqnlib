@@ -4,7 +4,7 @@
 Generator network is similar to Convolutional DRAW [K. Gregor et al., 2016],
 [K. Gregor et al., 2016]. The original GQN paper [S. M. Ali Eslami et al.,
 2018] does not mention it, but the successive paper [A. Kumar et al., (2018)]
-explicitly uses Convolutional DRAW.
+explicitly uses Convolutional DRAW as a part of generator.
 
 (Reference)
 
