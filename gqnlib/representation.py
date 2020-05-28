@@ -32,8 +32,8 @@ class Pyramid(nn.Module):
         """Represents r given images `x` and viewpoints `v`.
 
         Args:
-            x (torch.Tensor): Images tensor, size `(batch, c, h, w)`.
-            v (torch.Tensor): Viewpoints tensor, size `(batch, t)`.
+            x (torch.Tensor): Images tensor, size `(batch, c, 64, 64)`.
+            v (torch.Tensor): Viewpoints tensor, size `(batch, 7)`.
 
         Returns:
             r (torch.Tensor): Representation tensor, size `(batch, 256, 1, 1)`.
@@ -76,8 +76,8 @@ class Tower(nn.Module):
         """Represents r given images `x` and viewpoints `v`.
 
         Args:
-            x (torch.Tensor): Images tensor, size `(batch, c, h, w)`.
-            v (torch.Tensor): Viewpoints tensor, size `(batch, t)`.
+            x (torch.Tensor): Images tensor, size `(batch, c, 64, 64)`.
+            v (torch.Tensor): Viewpoints tensor, size `(batch, 7)`.
 
         Returns:
             r (torch.Tensor): Representation tensor, size `(batch, 256, 1, 1)`
