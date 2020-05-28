@@ -58,3 +58,58 @@ class LatentDistribution(nn.Module):
         mu, logvar = torch.chunk(self.conv2(h), 2, dim=1)
 
         return h, c, mu, logvar
+
+
+class Renderer(nn.Module):
+    """Renderer M_gamma(z, v_q)
+
+    Args:
+        h_channel (int): Number of channels in LSTM layer (nf_to_hidden).
+        d_channel (int): Number of channels in the conv. layer mapping the
+            canvas state to the LSTM input (nf_dec).
+        z_channel (int): Number of channels in the stochastic latent in each
+            DRAW step (nf_z).
+        u_channel (int): Number of channels in the hidden layer between
+            LSTM states and the canvas (nf_to_obs).
+        v_dim (int): Dimension size of viewpoints.
+        stride (int): Kernel size of transposed conv. layer (stride_to_obs).
+    """
+
+    def __init__(self, h_channel: int, d_channel: int, z_channel: int,
+                 u_channel: int, v_dim: int, stride: int):
+        super().__init__()
+
+        self.conv = nn.Conv2d(u_channel, d_channel, kernel_size=stride,
+                              stride=stride)
+        self.lstm_cell = Conv2dLSTMCell(z_channel + v_dim + d_channel,
+                                        h_channel, kernel_size=5, stride=1,
+                                        padding=2)
+        self.deconv = nn.ConvTranspose2d(h_channel, u_channel,
+                                         kernel_size=stride, stride=stride)
+
+    def forward(self, z: Tensor, v: Tensor, u: Tensor, h: Tensor, c: Tensor
+                ) -> Tuple[Tensor, Tensor, Tensor]:
+        """Render u = M(z, v)
+
+        Args:
+            z (torch.Tensor): Latent states, size `(b, z, 8, 8)`.
+            v (torch.Tensor): Query viewpoints, size `(b, v)`.
+            u (torch.Tensor): Canvas for images, size `(b, u, h*st, w*st)`.
+            h (torch.Tensor): Previous hidden states, size `(b, h, 8, 8)`.
+            c (torch.Tensor): Previous cell states, size `(b, h, 8, 8)`.
+
+        Returns:
+            u (torch.Tensor): Aggregated canvas, size `(b, u, h*st, w*st)`.
+            h (torch.Tensor): Current hidden states, size `(b, h, 8, 8)`.
+            c (torch.Tensor): Current cell states, size `(b, h, 8, 8)`.
+        """
+
+        # Resize viewpoints
+        batch, _, height, width = z.size()
+        v = v.contiguous().view(batch, -1, 1, 1).repeat(1, 1, height, width)
+
+        lstm_input = self.conv(u)
+        h, c = self.lstm_cell(torch.cat([z, v, lstm_input], dim=1), (h, c))
+        u = u + self.deconv(h)
+
+        return u, h, c
