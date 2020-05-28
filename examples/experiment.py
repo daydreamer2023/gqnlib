@@ -31,7 +31,6 @@ class Trainer:
     * batch_size (int): Batch size.
     * max_steps (int): Number of max iteration steps.
     * log_save_interval (int): Number of interval epochs to save checkpoints.
-    * device (str): Device to be used.
     * gpus (str): Comma separated list of GPU IDs (ex. '0,1').
 
     Args:
