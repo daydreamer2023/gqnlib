@@ -1,4 +1,5 @@
 
+from .consistent_gqn import ConsistentGQN
 from .generation import ConvolutionalDRAW
 from .gqn import GenerativeQueryNetwork
 from .renderer import LatentDistribution, Renderer, DRAWRenderer
