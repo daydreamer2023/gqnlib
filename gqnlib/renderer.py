@@ -6,7 +6,7 @@ from typing import Tuple
 import torch
 from torch import nn, Tensor
 
-from .generation import Conv2dLSTMCell
+from .generation import Conv2dLSTMCell, kl_divergence_normal
 
 
 class LatentDistribution(nn.Module):
@@ -113,3 +113,113 @@ class Renderer(nn.Module):
         u = u + self.deconv(h)
 
         return u, h, c
+
+
+class DRAWRenderer(nn.Module):
+    """DRAW Renderer class for generation and inference.
+
+    Args:
+        x_channel (int): Number of channels in the observations.
+        u_channel (int): Number of channels in the hidden layer between
+            LSTM states and the canvas (nf_to_obs).
+        r_channel (int): Number of channels in representation.
+        e_channel (int): Number of channels in the conv. layer mapping input
+            images to LSTM input (nf_enc).
+        d_channel (int): Number of channels in the conv. layer mapping the
+            canvas state to the LSTM input (nf_dec).
+        h_channel (int): Number of channels in LSTM layer (nf_to_hidden).
+        z_channel (int): Number of channels in the stochastic latent in each
+            DRAW step (nf_z).
+        stride (int): Kernel size of transposed conv. layer (stride_to_obs).
+        v_dim (int): Dimension size of viewpoints.
+        n_layer (int, optional): Number of recurrent layers.
+        scale (int, optional): Scale of image generation process.
+    """
+
+    def __init__(self, x_channel: int, u_channel: int, r_channel: int,
+                 e_channel: int, d_channel: int, h_channel: int,
+                 z_channel: int, stride: int, v_dim: int, n_layer: int = 8,
+                 scale: int = 4):
+        super().__init__()
+
+        self.u_channel = u_channel
+        self.h_channel = h_channel
+        self.z_channel = z_channel
+        self.stride = stride
+        self.n_layer = n_layer
+        self.scale = scale
+
+        self.prior = LatentDistribution(r_channel, e_channel, h_channel,
+                                        z_channel, stride)
+        self.posterior = LatentDistribution(r_channel * 2, e_channel,
+                                            h_channel, z_channel, stride)
+        self.renderer = Renderer(h_channel, d_channel, z_channel, u_channel,
+                                 v_dim, stride)
+
+        self.observations = nn.ConvTranspose2d(u_channel, x_channel,
+                                               kernel_size=4, stride=4)
+
+    def forward(self, x: Tensor, v: Tensor, r_c: Tensor, r_q: Tensor
+                ) -> Tuple[Tensor, Tensor]:
+        """Inferences given query pair (x, v) and representation r.
+
+        Args:
+            x (torch.Tensor): True queried iamges `x_q`, size `(b, c, h, w)`.
+            v (torch.Tensor): Query of viewpoints `v_q`, size `(b, v)`.
+            r_c (torch.Tensor): Representation of context, size `(b, c, h, w)`.
+            r_q (torch.Tensor): Representation of query, size `(b, c, h, w)`.
+
+        Returns:
+            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+            kl_loss (torch.Tensor): Calculated KL loss, size `(1)`.
+        """
+
+        # Data size
+        batch_size, _, h, w = x.size()
+        h_scale = h // (self.scale * self.stride)
+        w_scale = w // (self.scale * self.stride)
+
+        # Prior initial state
+        h_phi = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_phi = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+
+        # Posterior initial state
+        h_psi = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_psi = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+
+        # Renderer initial state
+        h_rnd = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_rnd = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+
+        # Canvas that data is drawn on
+        u = x.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
+                         w_scale * self.stride))
+
+        # Latent state
+        z = x.new_zeros((batch_size, self.z_channel, h_scale, w_scale))
+
+        # KL loss value
+        kl_loss = 0
+
+        for _ in range(self.n_layer):
+            # Prior
+            p_mu, p_logvar, h_phi, c_phi = self.prior(r_c, z, h_phi, c_phi)
+
+            # Posterior
+            q_mu, q_logvar, h_psi, c_psi = self.posterior(
+                torch.cat([r_c, r_q], dim=1), z, h_psi, c_psi)
+
+            # Posterior sample
+            z = q_mu + (0.5 * q_logvar).exp() * torch.randn_like(q_logvar)
+
+            # Generator state update
+            u, h_rnd, c_rnd = self.renderer(z, v, u, h_rnd, c_rnd)
+
+            # Calculate loss
+            _kl_tmp = kl_divergence_normal(q_mu, q_logvar.exp(), p_mu,
+                                           p_logvar.exp(), reduce=False)
+            kl_loss += _kl_tmp.sum([1, 2, 3]).mean()
+
+        canvas = torch.sigmoid(self.observations(u))
+
+        return canvas, kl_loss
