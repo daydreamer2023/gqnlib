@@ -200,8 +200,8 @@ def main():
                         help="Mode {train, test}")
     parser.add_argument("--first-n", type=int, default=-1,
                         help="Read only first n data (-1 means all data)")
-    parser.add_argument("--batch-size", type=int, default=16,
-                        help="Batch size of each tfrecord")
+    parser.add_argument("--batch-size", type=int, default=-1,
+                        help="Batch size of each tfrecord (-1 means all data)")
     args = parser.parse_args()
 
     if args.dataset not in _DATASETS:

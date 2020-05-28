@@ -1,6 +1,6 @@
 
 # Download utility
-# bash bin/downloasd.sh <dataset-name> <batch-size>
+# bash bin/downloasd.sh <dataset-name>
 
 # Dataset name mast be one of the following
 # * jaco
@@ -13,7 +13,6 @@
 
 # Kwargs
 export DATASET_NAME=${1:-shepard_metzler_5_parts}
-export BATCH_SIZE=${2:-64}
 
 # Path
 export DATA_DIR=./data/
@@ -45,9 +44,9 @@ echo "Convert tfrecord to gzip files"
 
 # Convert tfrecords to gzip files
 python3 ./examples/convert_tfrecord_torch.py --dataset ${DATASET_NAME} \
-    --mode train --batch-size ${BATCH_SIZE}
+    --mode train
 
 python3 ./examples/convert_tfrecord_torch.py --dataset ${DATASET_NAME} \
-    --mode test --batch-size ${BATCH_SIZE}
+    --mode test
 
 echo "Completed"
