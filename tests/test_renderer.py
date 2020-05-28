@@ -102,6 +102,26 @@ class TestDRAWRenderer(unittest.TestCase):
         self.assertTupleEqual(canvas.size(), x.size())
         self.assertGreater(kl_loss, 0)
 
+    def test_sample(self):
+        x_channel = 3
+        u_channel = 128
+        r_channel = 32
+        e_channel = 128
+        d_channel = 128
+        h_channel = 64
+        z_channel = 3
+        stride = 2
+        v_dim = 7
+        model = gqnlib.DRAWRenderer(
+            x_channel, u_channel, r_channel, e_channel, d_channel, h_channel,
+            z_channel, stride, v_dim)
+
+        v = torch.randn(4, v_dim)
+        r = torch.randn(4, r_channel, 16, 16)
+        canvas = model.sample(v, r)
+
+        self.assertTupleEqual(canvas.size(), (4, x_channel, 64, 64))
+
 
 if __name__ == "__main__":
     unittest.main()

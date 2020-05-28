@@ -224,3 +224,48 @@ class DRAWRenderer(nn.Module):
         canvas = torch.sigmoid(self.observations(u))
 
         return canvas, kl_loss
+
+    def sample(self, v: Tensor, r: Tensor, x_shape: Tuple[int, int] = (64, 64)
+               ) -> Tensor:
+        """Samples images from the prior given viewpoint and representation.
+
+        Args:
+            v (torch.Tensor): Query of viewpoints `v_q`, size `(b, v)`.
+            r (torch.Tensor): Representation of context, size `(b, c, h, w)`.
+            x_shape (tuple of int, optional): Sampled x shape.
+
+        Returns:
+            canvas (torch.Tensor): Sampled data, size `(b, c, h, w)`.
+        """
+
+        batch_size = v.size(0)
+        h, w = x_shape
+        h_scale = h // (self.scale * self.stride)
+        w_scale = w // (self.scale * self.stride)
+
+        # Prior initial state
+        h_phi = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_phi = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+
+        # Renderer initial state
+        h_rnd = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_rnd = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+
+        # Latent state
+        z = v.new_zeros((batch_size, self.z_channel, h_scale, w_scale))
+
+        # Canvas that data is drawn on
+        u = v.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
+                         w_scale * self.stride))
+
+        for _ in range(self.n_layer):
+            # Sample prior
+            p_mu, p_logvar, h_phi, c_phi = self.prior(r, z, h_phi, c_phi)
+            z = p_mu + (0.5 * p_logvar).exp() * torch.randn_like(p_logvar)
+
+            # Generator state update
+            u, h_rnd, c_rnd = self.renderer(z, v, u, h_rnd, c_rnd)
+
+        canvas = torch.sigmoid(self.observations(u))
+
+        return canvas
