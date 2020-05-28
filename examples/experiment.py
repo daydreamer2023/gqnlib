@@ -12,7 +12,7 @@ import time
 import tqdm
 
 import torch
-from torch import optim
+from torch import nn, optim, distributed
 import tensorboardX as tb
 
 import gqnlib
@@ -31,6 +31,7 @@ class Trainer:
     * max_steps (int): Number of max iteration steps.
     * log_save_interval (int): Number of interval epochs to save checkpoints.
     * device (str): Device to be used.
+    * gpus (str): Comma separated list of GPU IDs (ex. '0,1').
 
     Args:
         model (gqnlib.GenerativeQueryNetwork): GQN model.
@@ -263,16 +264,25 @@ class Trainer:
         test_dir = hparams.pop("test_dir", "./data/tmp/test")
         self.max_steps = hparams.pop("steps", 10)
         log_save_interval = hparams.pop("log_save_interval", 5)
+        gpus = hparams.pop("gpus", None)
 
         # Data
         self.load_dataloader(train_dir, test_dir)
 
         # Model to device
-        if self.hparams["gpus"] is None:
-            self.device = torch.device("cpu")
+        if gpus:
+            device_ids = list(map(int, gpus.split(",")))
+            self.device = torch.device(f"cuda:{device_ids[0]}")
         else:
-            self.device = torch.device(f"cuda:{self.hparams['gpus']}")
+            device_ids = []
+            self.device = torch.device("cpu")
+
         self.model = self.model.to(self.device)
+
+        if len(device_ids) > 1:
+            distributed.init_process_group()
+            self.model = nn.parallel.DistributedDataParallel(
+                self.model, device_ids)
 
         # Optimizer
         self.optimizer = optim.Adam(self.model.parameters(), lr=5e-4)
