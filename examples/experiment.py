@@ -52,7 +52,7 @@ class Trainer:
             logdir = pathlib.Path("./logs/tmp/")
 
         self.logdir = logdir / time.strftime("%Y%m%d%H%M")
-        self.logdir.mkdir(parents=True)
+        self.logdir.mkdir(parents=True, exist_ok=True)
 
     def init_logger(self, save_file: bool = True) -> None:
         """Initalizes logger.
@@ -127,14 +127,19 @@ class Trainer:
             # Data to device
             data = (x.to(self.device) for x in data)
 
+            # Pixel variance annealing
+            var = next(self.sigma_scheduler) ** 2
+
             # Forward
             self.optimizer.zero_grad()
-            _tmp_loss_dict = self.model.loss_func(*data)
+            _tmp_loss_dict = self.model.loss_func(*data, var)
             loss = _tmp_loss_dict["loss"]
 
             # Backward
             loss.backward()
             self.optimizer.step()
+
+            self.lr_scheduler.step()
 
             # Save loss
             for key, value in _tmp_loss_dict.items():
@@ -242,7 +247,12 @@ class Trainer:
         self.model = self.model.to(self.device)
 
         # Optimizer
-        self.optimizer = optim.Adam(self.model.parameters())
+        self.optimizer = optim.Adam(self.model.parameters(), lr=5e-4)
+
+        # Annealing scheduler
+        self.lr_scheduler = gqnlib.AnnealingStepLR(self.optimizer, 5e-4, 5e-5,
+                                                   1.6e6)
+        self.sigma_scheduler = gqnlib.Annealer(2.0, 0.7, 80000)
 
         # Run training
         self.logger.info("Start training")
