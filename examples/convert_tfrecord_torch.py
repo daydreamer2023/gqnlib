@@ -198,8 +198,8 @@ def main():
                         help="Dataset name.")
     parser.add_argument("--mode", type=str, default="train",
                         help="Mode {train, test}")
-    parser.add_argument("--first-n", type=int, default=100,
-                        help="Read only first n data")
+    parser.add_argument("--first-n", type=int, default=-1,
+                        help="Read only first n data (-1 means all data)")
     parser.add_argument("--batch-size", type=int, default=16,
                         help="Batch size of each tfrecord")
     args = parser.parse_args()
@@ -219,7 +219,7 @@ def main():
 
     # File list of original dataset
     record_list = sorted(tf_dir.glob("*.tfrecord"))
-    if args.first_n is not None:
+    if args.first_n > 0:
         record_list = record_list[:args.first_n]
 
     # Multi process
