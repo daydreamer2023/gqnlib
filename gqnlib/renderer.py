@@ -46,18 +46,18 @@ class LatentDistribution(nn.Module):
             c (torch.Tensor): Previous cell states, size `(b, h, 8, 8)`.
 
         Returns:
-            h (torch.Tensor): Current hidden states, size `(b, h, 8, 8)`.
-            c (torch.Tensor): Current cell states, size `(b, h, 8, 8)`.
             mu (torch.Tensor): Mean of `z` distribution, size `(b, z, 8, 8)`.
             logvar (torch.Tensor): Log variance of `z` distribution, size
                 `(b, z, 8, 8)`.
+            h (torch.Tensor): Current hidden states, size `(b, h, 8, 8)`.
+            c (torch.Tensor): Current cell states, size `(b, h, 8, 8)`.
         """
 
         lstm_input = self.conv1(r)
         h, c = self.lstm_cell(torch.cat([lstm_input, z], dim=1), (h, c))
         mu, logvar = torch.chunk(self.conv2(h), 2, dim=1)
 
-        return h, c, mu, logvar
+        return mu, logvar, h, c
 
 
 class Renderer(nn.Module):

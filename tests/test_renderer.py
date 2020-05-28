@@ -22,12 +22,12 @@ class TestLatentDistribution(unittest.TestCase):
         h = torch.randn(4, h_channel, 8, 8)
         c = torch.randn(4, h_channel, 8, 8)
 
-        h_n, c_n, mu, logvar = model(r, z, h, c)
+        mu, logvar, h_n, c_n = model(r, z, h, c)
 
-        self.assertTupleEqual(h_n.size(), h.size())
-        self.assertTupleEqual(c_n.size(), c.size())
         self.assertTupleEqual(mu.size(), z.size())
         self.assertTupleEqual(logvar.size(), z.size())
+        self.assertTupleEqual(h_n.size(), h.size())
+        self.assertTupleEqual(c_n.size(), c.size())
 
     def test_posterior(self):
         r_channel = 32
@@ -43,12 +43,12 @@ class TestLatentDistribution(unittest.TestCase):
         h = torch.randn(4, h_channel, 8, 8)
         c = torch.randn(4, h_channel, 8, 8)
 
-        h_n, c_n, mu, logvar = model(torch.cat([r, r], dim=1), z, h, c)
+        mu, logvar, h_n, c_n = model(torch.cat([r, r], dim=1), z, h, c)
 
-        self.assertTupleEqual(h_n.size(), h.size())
-        self.assertTupleEqual(c_n.size(), c.size())
         self.assertTupleEqual(mu.size(), z.size())
         self.assertTupleEqual(logvar.size(), z.size())
+        self.assertTupleEqual(h_n.size(), h.size())
+        self.assertTupleEqual(c_n.size(), c.size())
 
 
 class TestRenderer(unittest.TestCase):
