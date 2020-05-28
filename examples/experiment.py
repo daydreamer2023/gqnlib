@@ -5,6 +5,7 @@ import collections
 import copy
 import json
 import logging
+import math
 import pathlib
 import time
 
@@ -19,6 +20,11 @@ import gqnlib
 
 class Trainer:
     """Trainer class for neural process.
+
+    **Note**
+
+    * If both `epochs` and `steps` are specified, smaller one limit the
+      training iteration.
 
     Args:
         model (gqnlib.GenerativeQueryNetwork): GQN model.
@@ -38,6 +44,7 @@ class Trainer:
         self.test_loader = None
         self.optimizer = None
         self.device = None
+        self.global_steps = 0
 
     def check_logdir(self) -> None:
         """Checks log directory.
@@ -138,12 +145,16 @@ class Trainer:
             # Backward
             loss.backward()
             self.optimizer.step()
-
             self.lr_scheduler.step()
+            self.global_steps += 1
 
             # Save loss
             for key, value in _tmp_loss_dict.items():
                 loss_dict[key] += value.item()
+
+            # Check step limit
+            if self.global_steps >= self.hparams["steps"]:
+                break
 
         # Summary
         for key, value in loss_dict.items():
@@ -254,10 +265,13 @@ class Trainer:
                                                    1.6e6)
         self.sigma_scheduler = gqnlib.Annealer(2.0, 0.7, 80000)
 
-        # Run training
-        self.logger.info("Start training")
-        pbar = tqdm.trange(1, self.hparams["epochs"] + 1)
+        # Training iteration
+        max_epochs = math.ceil(self.hparams["steps"] / len(self.train_loader))
+        pbar = tqdm.trange(1, max_epochs + 1)
         postfix = {"train/loss": 0, "test/loss": 0}
+        self.global_steps = 0
+
+        # Run training
         for epoch in pbar:
             # Training
             train_loss = self.train(epoch)
@@ -273,7 +287,12 @@ class Trainer:
             # Update postfix
             pbar.set_postfix(postfix)
 
+            if self.global_steps >= self.hparams["steps"]:
+                break
+
         # Post process
+        test_loss = self.test(max_epochs)
+        self.save_checkpoint(max_epochs, test_loss)
         self.save_configs()
         self.quit()
 
