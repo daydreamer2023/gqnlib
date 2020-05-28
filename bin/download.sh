@@ -41,9 +41,13 @@ else
     echo "Specified dataset already exists"
 fi
 
+echo "Convert tfrecord to gzip files"
+
 # Convert tfrecords to gzip files
 python3 ./examples/convert_tfrecord_torch.py --dataset ${DATASET_NAME} \
     --mode train --batch-size ${BATCH_SIZE}
 
 python3 ./examples/convert_tfrecord_torch.py --dataset ${DATASET_NAME} \
     --mode test --batch-size ${BATCH_SIZE}
+
+echo "Completed"
