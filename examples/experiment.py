@@ -119,13 +119,18 @@ class Trainer:
 
         self.logger.info("Load dataset")
 
+        if torch.cuda.is_available():
+            kwargs = {"num_workers": 0, "pin_memory": True}
+        else:
+            kwargs = {}
+
         self.train_loader = torch.utils.data.DataLoader(
             gqnlib.SceneDataset(train_dir), shuffle=True,
-            batch_size=batch_size)
+            batch_size=batch_size, **kwargs)
 
         self.test_loader = torch.utils.data.DataLoader(
             gqnlib.SceneDataset(test_dir), shuffle=False,
-            batch_size=batch_size)
+            batch_size=batch_size, **kwargs)
 
     def train(self, epoch: int) -> float:
         """Trains model.
@@ -277,10 +282,7 @@ class Trainer:
             "sigma_scheduler_params",
             {"init": 2.0, "final": 0.7, "steps": 80000})
 
-        # Data
-        self.load_dataloader(train_dir, test_dir, batch_size)
-
-        # Model to device
+        # Device
         if gpus:
             device_ids = list(map(int, gpus.split(",")))
             self.device = torch.device(f"cuda:{device_ids[0]}")
@@ -288,9 +290,14 @@ class Trainer:
             device_ids = []
             self.device = torch.device("cpu")
 
+        # Data
+        self.load_dataloader(train_dir, test_dir, batch_size, gpus)
+
+        # Model
         self.model = self.model.to(self.device)
 
         if len(device_ids) > 1:
+            # Distributed data parallel
             distributed.init_process_group()
             self.model = nn.parallel.DistributedDataParallel(
                 self.model, device_ids)
