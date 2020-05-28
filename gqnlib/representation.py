@@ -105,3 +105,43 @@ class Tower(nn.Module):
             r = self.pool(r)
 
         return r
+
+
+class Simple(nn.Module):
+    """Simple.
+
+    Args:
+        n_channel (int, optional): Number of channel of images.
+        n_target (int, optional): Dimension of viewpoints.
+    """
+
+    def __init__(self, n_channel: int = 3, n_target: int = 7):
+        super().__init__()
+
+        self.conv = nn.Sequential(
+            nn.Conv2d(n_channel + n_target, 8, kernel_size=2, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(8, 16, kernel_size=2, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+        )
+
+    def forward(self, x: Tensor, v: Tensor) -> Tensor:
+        """Represents r given images `x` and viewpoints `v`.
+
+        Args:
+            x (torch.Tensor): Images tensor, size `(batch, c, 64, 64)`.
+            v (torch.Tensor): Viewpoints tensor, size `(batch, 7)`.
+
+        Returns:
+            r (torch.Tensor): Representation tensor, size
+                `(batch, 32, 16, 16)`.
+        """
+
+        v = v.view(-1, 7, 1, 1).repeat(1, 1, 64, 64)
+        r = self.conv(torch.cat([x, v], dim=1))
+
+        return r
