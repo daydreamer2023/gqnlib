@@ -157,8 +157,8 @@ class DRAWRenderer(nn.Module):
         self.renderer = Renderer(h_channel, d_channel, z_channel, u_channel,
                                  v_dim, stride)
 
-        self.observations = nn.ConvTranspose2d(u_channel, x_channel,
-                                               kernel_size=4, stride=4)
+        self.translation = nn.ConvTranspose2d(u_channel, x_channel,
+                                              kernel_size=4, stride=4)
 
     def forward(self, x: Tensor, v: Tensor, r_c: Tensor, r_q: Tensor
                 ) -> Tuple[Tensor, Tensor]:
@@ -221,7 +221,7 @@ class DRAWRenderer(nn.Module):
                                            p_logvar.exp(), reduce=False)
             kl_loss += _kl_tmp.sum([1, 2, 3]).mean()
 
-        canvas = torch.sigmoid(self.observations(u))
+        canvas = torch.sigmoid(self.translation(u))
 
         return canvas, kl_loss
 
@@ -266,6 +266,6 @@ class DRAWRenderer(nn.Module):
             # Generator state update
             u, h_rnd, c_rnd = self.renderer(z, v, u, h_rnd, c_rnd)
 
-        canvas = torch.sigmoid(self.observations(u))
+        canvas = torch.sigmoid(self.translation(u))
 
         return canvas
