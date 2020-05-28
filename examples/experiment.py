@@ -312,7 +312,7 @@ class Trainer:
         self.sigma_scheduler = gqnlib.Annealer(**sigma_scheduler_params)
 
         # Training iteration
-        per_step = math.ceil(len(self.train_loader) / batch_size)
+        per_step = len(self.train_loader) // batch_size
         max_epochs = math.ceil(self.max_steps / per_step)
         pbar = tqdm.trange(1, max_epochs + 1)
         postfix = {"steps": 0, "train/loss": 0, "test/loss": 0}
