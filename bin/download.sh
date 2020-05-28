@@ -19,6 +19,14 @@ export BATCH_SIZE=${2:-64}
 export DATA_DIR=./data/
 export DATASET_DIR=${DATA_DIR}/${DATASET_NAME}/
 
+# Check gsutil command
+if type gsutil > /dev/null/ 2>&1; then
+    echo "gsutil command does exist"
+else
+    echo "gsutil command does not exist"
+    exit 1
+fi
+
 # Check data dir
 if [[ ! -d ${DATA_DIR} ]]; then
     echo "Make data dir"
@@ -28,7 +36,7 @@ fi
 # Download dataset
 if [[ ! -d ${DATASET_DIR} ]]; then
     echo "Download dataset"
-    gsutil cp -r gs://gqn-dataset/${DATASET_NAME}/ .
+    gsutil -m cp -r gs://gqn-dataset/${DATASET_NAME}/ ./${DATA_DIR}/
 else
     echo "Specified dataset already exists"
 fi
