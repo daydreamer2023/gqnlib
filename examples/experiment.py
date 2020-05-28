@@ -305,9 +305,10 @@ class Trainer:
         self.sigma_scheduler = gqnlib.Annealer(**sigma_scheduler_params)
 
         # Training iteration
-        max_epochs = math.ceil(self.max_steps / len(self.train_loader))
+        per_step = math.ceil(len(self.train_loader) / batch_size)
+        max_epochs = math.ceil(self.max_steps / per_step)
         pbar = tqdm.trange(1, max_epochs + 1)
-        postfix = {"train/loss": 0, "test/loss": 0}
+        postfix = {"steps": 0, "train/loss": 0, "test/loss": 0}
         self.global_steps = 0
 
         # Run training
@@ -324,6 +325,7 @@ class Trainer:
                 self.save_plot(epoch)
 
             # Update postfix
+            postfix["steps"] = self.global_steps
             pbar.set_postfix(postfix)
 
             if self.global_steps >= self.max_steps:
