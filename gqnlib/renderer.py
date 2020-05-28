@@ -13,7 +13,7 @@ class LatentDistribution(nn.Module):
     """Latent Distribution p(z|r).
 
     * prior: p(z|r_c)
-    * posterior: p(z|r_c, r_t)
+    * posterior: p(z|r_c, r_q)
 
     Args:
         r_channel (int): Number of channels in representation.
