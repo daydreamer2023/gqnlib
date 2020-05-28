@@ -73,7 +73,7 @@ def init_args():
                              "ex. '0,1'. 'null' means cpu device.")
     parser.add_argument("--seed", type=int, default=0,
                         help="Random seed.")
-    parser.add_argument("--batch-size", type=int, default=8,
+    parser.add_argument("--batch-size", type=int, default=2,
                         help="Batch size.")
     parser.add_argument("--steps", type=int, default=100,
                         help="Number of training steps.")
