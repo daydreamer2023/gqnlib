@@ -33,6 +33,7 @@ import collections
 import functools
 import gzip
 import multiprocessing as mp
+import os
 import pathlib
 
 import tensorflow as tf
@@ -209,7 +210,7 @@ def main():
                          f"Available datasets are {_DATASETS.keys()}.")
 
     # Path
-    root = pathlib.Path("./data/")
+    root = pathlib.Path(os.getenv("DATA_DIR", "./data/"))
     tf_dir = root / f"{args.dataset}/{args.mode}/"
     torch_dir = root / f"{args.dataset}_torch/{args.mode}/"
     torch_dir.mkdir(parents=True, exist_ok=True)
