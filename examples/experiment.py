@@ -21,10 +21,16 @@ import gqnlib
 class Trainer:
     """Trainer class for neural process.
 
-    **Note**
+    **Notes**
 
-    * If both `epochs` and `steps` are specified, smaller one limit the
-      training iteration.
+    `hparams` should include the following keys.
+
+    * logdir (str): Path to log direcotry. This is updated to `logdir/<date>`.
+    * train_dir (str): Path to training data.
+    * test_dir (str): Path to test data.
+    * max_steps (int): Number of max iteration steps.
+    * log_save_interval (int): Number of interval epochs to save checkpoints.
+    * device (str): Device to be used.
 
     Args:
         model (gqnlib.GenerativeQueryNetwork): GQN model.
@@ -37,7 +43,7 @@ class Trainer:
         self.hparams = hparams
 
         # Attributes
-        self.logdir = None
+        self.logdir = pathlib.Path()
         self.logger = None
         self.writer = None
         self.train_loader = None
@@ -45,6 +51,7 @@ class Trainer:
         self.optimizer = None
         self.device = None
         self.global_steps = 0
+        self.max_steps = 0
 
     def check_logdir(self) -> None:
         """Checks log directory.
@@ -99,18 +106,21 @@ class Trainer:
 
         self.writer = tb.SummaryWriter(str(self.logdir))
 
-    def load_dataloader(self) -> None:
-        """Loads data loader for training and test."""
+    def load_dataloader(self, train_dir: str, test_dir: str) -> None:
+        """Loads data loader for training and test.
+
+        Args:
+            train_dir (str): Path to train directory.
+            test_dir (str): Path to test directory.
+        """
 
         self.logger.info("Load dataset")
 
         self.train_loader = torch.utils.data.DataLoader(
-            gqnlib.SceneDataset(self.hparams["train_dir"]),
-            shuffle=True, batch_size=1)
+            gqnlib.SceneDataset(train_dir), shuffle=True, batch_size=1)
 
         self.test_loader = torch.utils.data.DataLoader(
-            gqnlib.SceneDataset(self.hparams["test_dir"]),
-            shuffle=False, batch_size=1)
+            gqnlib.SceneDataset(test_dir), shuffle=False, batch_size=1)
 
     def train(self, epoch: int) -> float:
         """Trains model.
@@ -153,7 +163,7 @@ class Trainer:
                 loss_dict[key] += value.item()
 
             # Check step limit
-            if self.global_steps >= self.hparams["steps"]:
+            if self.global_steps >= self.max_steps:
                 break
 
         # Summary
@@ -247,8 +257,15 @@ class Trainer:
 
         self.logger.info("Start experiment")
 
+        # Pop hyper parameters
+        hparams = copy.deepcopy(self.hparams)
+        train_dir = hparams.pop("train_dir", "./data/tmp/train")
+        test_dir = hparams.pop("test_dir", "./data/tmp/test")
+        self.max_steps = hparams.pop("steps", 10)
+        log_save_interval = hparams.pop("log_save_interval", 5)
+
         # Data
-        self.load_dataloader()
+        self.load_dataloader(train_dir, test_dir)
 
         # Model to device
         if self.hparams["gpus"] is None:
@@ -266,7 +283,7 @@ class Trainer:
         self.sigma_scheduler = gqnlib.Annealer(2.0, 0.7, 80000)
 
         # Training iteration
-        max_epochs = math.ceil(self.hparams["steps"] / len(self.train_loader))
+        max_epochs = math.ceil(self.max_steps / len(self.train_loader))
         pbar = tqdm.trange(1, max_epochs + 1)
         postfix = {"train/loss": 0, "test/loss": 0}
         self.global_steps = 0
@@ -277,7 +294,7 @@ class Trainer:
             train_loss = self.train(epoch)
             postfix["train/loss"] = train_loss
 
-            if epoch % self.hparams["log_save_interval"] == 0:
+            if epoch % log_save_interval == 0:
                 # Calculate test loss
                 test_loss = self.test(epoch)
                 postfix["test/loss"] = test_loss
@@ -287,7 +304,7 @@ class Trainer:
             # Update postfix
             pbar.set_postfix(postfix)
 
-            if self.global_steps >= self.hparams["steps"]:
+            if self.global_steps >= self.max_steps:
                 break
 
         # Post process
