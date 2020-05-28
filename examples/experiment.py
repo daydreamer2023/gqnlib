@@ -271,6 +271,12 @@ class Trainer:
         log_save_interval = hparams.pop("log_save_interval", 5)
         gpus = hparams.pop("gpus", None)
 
+        optimizer_params = hparams.pop("optimizer_params", {})
+        lr_scheduler_params = hparams.pop("lr_scheduler_params", {})
+        sigma_scheduler_params = hparams.pop(
+            "sigma_scheduler_params",
+            {"init": 2.0, "final": 0.7, "steps": 80000})
+
         # Data
         self.load_dataloader(train_dir, test_dir, batch_size)
 
@@ -290,12 +296,13 @@ class Trainer:
                 self.model, device_ids)
 
         # Optimizer
-        self.optimizer = optim.Adam(self.model.parameters(), lr=5e-4)
+        self.optimizer = optim.Adam(
+            self.model.parameters(), **optimizer_params)
 
         # Annealing scheduler
-        self.lr_scheduler = gqnlib.AnnealingStepLR(self.optimizer, 5e-4, 5e-5,
-                                                   1.6e6)
-        self.sigma_scheduler = gqnlib.Annealer(2.0, 0.7, 80000)
+        self.lr_scheduler = gqnlib.AnnealingStepLR(
+            self.optimizer, **lr_scheduler_params)
+        self.sigma_scheduler = gqnlib.Annealer(**sigma_scheduler_params)
 
         # Training iteration
         max_epochs = math.ceil(self.max_steps / len(self.train_loader))
