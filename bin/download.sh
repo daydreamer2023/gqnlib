@@ -20,7 +20,7 @@ export DATA_DIR=./data/
 export DATASET_DIR=${DATA_DIR}/${DATASET_NAME}/
 
 # Check gsutil command
-if type gsutil > /dev/null/ 2>&1; then
+if type gsutil > /dev/null 2>&1; then
     echo "gsutil command does exist"
 else
     echo "gsutil command does not exist"
