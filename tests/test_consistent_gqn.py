@@ -57,7 +57,6 @@ class TestConsistentGQN(unittest.TestCase):
         self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
 
     def test_query(self):
-        # Single query
         v_q = torch.randn(4, 2, 7)
         r_c = torch.randn(4, 2, 32, 16, 16)
 
