@@ -41,27 +41,28 @@ class SceneDataset(torch.utils.data.Dataset):
     def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
         """Loads data file and returns data with specified index.
 
-        This method reads `<index>.pt.gz` file, which includes list of tuples
-        `(images, viewpoints)`.
+        This method reads `<index>.pt.gz` file, which includes a tuple
+        `(images, viewpoints)`; images size = `(m, h, w, c)`, viewpoints
+        size `(m, v)`.
 
         Args:
             index (int): Index number.
 
         Returns:
             images (torch.Tensor): Image tensor, size
-                `(observations, num_points, 3, 64, 64)`.
+                `(num_points, 3, 64, 64)`.
             viewpoints (torch.Tensor): View points, size
-                `(observations, num_points, 7)`.
+                `(num_points, 7)`.
         """
 
         with gzip.open(self.record_list[index], "rb") as f:
-            dataset = torch.load(f)
+            images, viewpoints = torch.load(f)
 
-        images = torch.stack([torch.from_numpy(x[0]) for x in dataset])
-        viewpoints = torch.stack([torch.from_numpy(x[1]) for x in dataset])
+        images = torch.from_numpy(images)
+        viewpoints = torch.from_numpy(viewpoints)
 
-        # Convert data size: BNHWC -> BNCHW
-        images = images.permute(0, 1, 4, 2, 3)
+        # Convert data size: NHWC -> NCHW
+        images = images.permute(0, 3, 1, 2)
 
         # Transform viewpoints
         viewpoints = transform_viewpoint(viewpoints)
@@ -70,16 +71,16 @@ class SceneDataset(torch.utils.data.Dataset):
 
 
 def transform_viewpoint(viewpoints: Tensor) -> Tensor:
-    """Transforms viewpoints.
+    """Transforms viewpoints for single batch.
 
     (x, y, z, yaw, pitch)
         -> (x, y, z, cos(yaw), sin(yaw), cos(pitch), sin(pitch))
 
     Args:
-        viewpoints (torch.Tensor): Input viewpoints, size `(*, 5)`.
+        viewpoints (torch.Tensor): Input viewpoints, size `(num, 5)`.
 
     Returns:
-        converted (torch.Tensor): Transformed viewpoints, size `(*, 7)`.
+        converted (torch.Tensor): Transformed viewpoints, size `(num, 7)`.
     """
 
     pos, tmp = torch.split(viewpoints, 3, dim=-1)
@@ -98,32 +99,32 @@ def partition(images: Tensor, viewpoints: Tensor, num_query: int = 1
 
     Args:
         images (torch.Tensor): Image tensor, size
-            `(batch, observations, num_points, c, h, w)`.
+            `(batch, num_points, c, h, w)`.
         viewpoints (torch.Tensor): Viewpoints tensor, size
-            `(batch, observations, num_points, target)`.
+            `(batch, num_points, target)`.
         num_query (int, optional): Number of queries.
 
     Returns:
-        x_c (torch.Tensor): Context images, size `(b*m, num_context, c, h, w)`.
-        v_c (torch.Tensor): Context viewpoints, size `(b*m, num_context, t)`.
-        x_q (torch.Tensor): Query images, size `(b*m, num_query, c, h, w)`.
-        v_q (torch.Tensor): Query viewpoints, size `(b*m, num_query, t)`.
+        x_c (torch.Tensor): Context images, size `(b, num_context, c, h, w)`.
+        v_c (torch.Tensor): Context viewpoints, size `(b, num_context, t)`.
+        x_q (torch.Tensor): Query images, size `(b, num_query, c, h, w)`.
+        v_q (torch.Tensor): Query viewpoints, size `(b, num_query, t)`.
 
     Raises:
         ValueError: If `num_query` is equal or greater than `num_points`.
     """
 
     # Maximum number of context
-    _, _, num, *x_dims = images.size()
-    _, _, num, *v_dims = viewpoints.size()
+    batch, num, *x_dims = images.size()
+    _, _, *v_dims = viewpoints.size()
 
     if num_query >= num:
         raise ValueError(f"Number of queries (n={num_query}) must be less "
                          f"than -total data (n={num}).")
 
     # Squeeze dataset
-    images = images.view(-1, num, *x_dims)
-    viewpoints = viewpoints.view(-1, num, *v_dims)
+    images = images.view(batch, num, *x_dims)
+    viewpoints = viewpoints.view(batch, num, *v_dims)
 
     # Sample randum number of data
     n_data = random.randint(num_query + 1, num)
