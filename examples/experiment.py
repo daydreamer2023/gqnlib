@@ -141,6 +141,7 @@ class Trainer:
 
         # Logger for loss
         loss_dict = collections.defaultdict(float)
+        count = 0
 
         # Run
         self.model.train()
@@ -169,6 +170,7 @@ class Trainer:
             self.pbar.update(1)
 
             # Save loss
+            count += 1
             for key, value in _tmp_loss_dict.items():
                 loss_dict[key] += value.item()
 
@@ -178,7 +180,8 @@ class Trainer:
 
         # Summary
         for key, value in loss_dict.items():
-            self.writer.add_scalar(f"train/{key}", value, self.global_steps)
+            self.writer.add_scalar(
+                f"train/{key}", value / count, self.global_steps)
 
         return loss_dict["loss"]
 
@@ -191,6 +194,7 @@ class Trainer:
 
         # Logger for loss
         loss_dict = collections.defaultdict(float)
+        count = 0
 
         # Run
         self.model.eval()
@@ -204,12 +208,14 @@ class Trainer:
                 _tmp_loss_dict = self.model.loss_func(*data)
 
             # Save loss
+            count += 1
             for key, value in _tmp_loss_dict.items():
                 loss_dict[key] += value.item()
 
         # Summary
         for key, value in loss_dict.items():
-            self.writer.add_scalar(f"test/{key}", value, self.global_steps)
+            self.writer.add_scalar(
+                f"test/{key}", value / count, self.global_steps)
 
         return loss_dict["loss"]
 
