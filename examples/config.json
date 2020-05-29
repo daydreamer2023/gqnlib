@@ -1,0 +1,35 @@
+{
+    "gqn_params": {
+        "x_channel": 3,
+        "v_dim": 7,
+        "r_dim": 256,
+        "z_channel": 64,
+        "h_channel": 128,
+        "n_layer": 8
+    },
+    "cgqn_params": {
+        "x_channel": 3,
+        "u_channel": 128,
+        "r_channel": 32,
+        "e_channel": 128,
+        "d_channel": 128,
+        "h_channel": 64,
+        "stride": 2,
+        "v_dim": 7,
+        "n_layer": 8,
+        "scale": 4
+    },
+    "optimizer_params": {
+        "lr": 5e-4
+    },
+    "lr_scheduler_params": {
+        "mu_i": 5e-4,
+        "mu_f": 5e-5,
+        "n": 1.6e6
+    },
+    "sigma_scheduler_params": {
+        "init": 2.0,
+        "final": 0.7,
+        "steps": 80000
+    }
+}
