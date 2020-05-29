@@ -196,3 +196,33 @@ class ConsistentGQN(nn.Module):
         canvas = self.generator.sample(v_q, r)
 
         return canvas
+
+    def query(self, v_q: Tensor, r_c: Tensor) -> Tensor:
+        """Query images with context representation.
+
+        Args:
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
+            r_c (torch.Tensor): Representations of context, size
+                `(b, r, h, w)`.
+
+        Returns:
+            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+        """
+
+        # Reshape query viewpoints
+        original_dim = v_q.dim()
+
+        # Squeeze data: (b, n, k) -> (b*n, k)
+        if original_dim == 3:
+            b, n, v_dim = v_q.size()
+            v_q = v_q.view(-1, v_dim)
+            r_c = r_c.repeat_interleave(n, dim=0)
+
+        canvas = self.generator.sample(v_q, r_c)
+
+        # Restore the original shape: (b*n, c, h, w) -> (b, n, c, h, w)
+        if original_dim == 3:
+            _, *x_dims = canvas.size()
+            canvas = canvas.view(b, n, *x_dims)
+
+        return canvas
