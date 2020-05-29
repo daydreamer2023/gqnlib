@@ -130,3 +130,32 @@ class GenerativeQueryNetwork(BaseGQN):
         canvas = canvas.view(b, n, *x_dims)
 
         return canvas
+
+    def query(self, v_q: Tensor, r: Tensor) -> Tensor:
+        """Query images with context representation.
+
+        Args:
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
+            r (torch.Tensor): Representations of context, size
+                `(b, n, r, h, w)`.
+
+        Returns:
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
+        """
+
+        # Squeeze data: (b, n, k) -> (b*n, k)
+        b, n, v_dim = v_q.size()
+        v_q = v_q.view(-1, v_dim)
+
+        _, _, *r_dims = r.size()
+        r = r.view(-1, *r_dims)
+
+        # Sample data
+        canvas = self.generator.sample(v_q, r)
+
+        # Restore the original shape: (b*n, c, h, w) -> (b, n, c, h, w)
+        _, *x_dims = canvas.size()
+        canvas = canvas.view(b, n, *x_dims)
+
+        return canvas
