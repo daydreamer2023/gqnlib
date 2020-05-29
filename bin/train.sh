@@ -16,4 +16,5 @@ export DATASET_NAME=${DATASET}_torch
 # Config for training
 export CONFIG_PATH=./examples/config.json
 
-python3 ./examples/run.py --seed ${SEED} --steps 2000000 --log-save-interval 20
+python3 ./examples/train.py --seed ${SEED} --steps 2000000 \
+    --log-save-interval 20
