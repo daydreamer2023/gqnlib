@@ -3,7 +3,6 @@
 
 from typing import Dict, Tuple
 
-import torch
 from torch import Tensor
 
 from .base import BaseGQN
@@ -77,7 +76,8 @@ class GenerativeQueryNetwork(BaseGQN):
         canvas, kl_loss = self.generator(x_q, v_q, r)
 
         # Reconstruction loss
-        nll_loss = nll_normal(x_q, canvas, torch.tensor([var]), reduce=False)
+        nll_loss = nll_normal(x_q, canvas, x_q.new_ones((1)) * var,
+                              reduce=False)
         nll_loss = nll_loss.sum([1, 2, 3]).mean()
 
         # Returned loss
