@@ -11,7 +11,7 @@ import time
 import tqdm
 
 import torch
-from torch import nn, optim
+from torch import optim
 import tensorboardX as tb
 
 import gqnlib
