@@ -1,5 +1,5 @@
 
-from .base import CustomDataParallel
+from .base import WrappedDataParallel
 from .consistent_gqn import ConsistentGQN
 from .generation import ConvolutionalDRAW
 from .gqn import GenerativeQueryNetwork
