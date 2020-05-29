@@ -63,10 +63,12 @@ class ConsistentGQN(nn.Module):
             v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
 
         Returns:
-            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
             r_c (torch.Tensor): Representations of context, size
-                `(b, r, h, w)`.
-            r_q (torch.Tensor): Representations of query, size `(b, r, h, w)`.
+                `(b, n, r, h, w)`.
+            r_q (torch.Tensor): Representations of query, size
+                `(b, n, r, h, w)`.
         """
 
         canvas, r_c, r_q, _ = self.inference(x_c, v_c, x_q, v_q)
@@ -95,9 +97,6 @@ class ConsistentGQN(nn.Module):
                   ) -> Tuple[Tensor, Tensor, Tensor, Dict[str, Tensor]]:
         """Inference.
 
-        Input images size should be `(b, m, c, h, w)` or `(b, c, h, w)`. The
-        returned images have the same size as inputs.
-
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
             v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
@@ -112,12 +111,6 @@ class ConsistentGQN(nn.Module):
             r_q (torch.Tensor): Representations of query, size `(b, r, h, w)`.
             loss_dict (dict of [str, torch.Tensor]): Calculated losses.
         """
-
-        # Check input shape
-        original_dim = x_q.dim()
-        if original_dim == 4:
-            x_q = x_q.unsqueeze(1)
-            v_q = v_q.unsqueeze(1)
 
         # Reshape: (b, m, c, h, w) -> (b*m, c, h, w)
         b, m, *x_dims = x_c.size()
@@ -142,8 +135,8 @@ class ConsistentGQN(nn.Module):
         r_q = r_q.sum(1)
 
         # Copy representations for query
-        r_c = r_c.repeat(n, 1, 1, 1)
-        r_q = r_q.repeat(n, 1, 1, 1)
+        r_c = r_c.repeat_interleave(n, dim=0)
+        r_q = r_q.repeat_interleave(n, dim=0)
 
         # Query images by v_q, i.e. reconstruct
         canvas, kl_loss = self.generator(x_q, v_q, r_c, r_q)
@@ -156,11 +149,10 @@ class ConsistentGQN(nn.Module):
         loss_dict = {"loss": nll_loss + kl_loss, "nll_loss": nll_loss,
                      "kl_loss": kl_loss}
 
-        # Reshape
-        if original_dim == 5:
-            canvas = canvas.view(b, n, *x_dims)
-            r_c = r_c.view(b, n, *r_dims)
-            r_q = r_q.view(b, n, *r_dims)
+        # Restore original shape
+        canvas = canvas.view(b, n, *x_dims)
+        r_c = r_c.view(b, n, *r_dims)
+        r_q = r_q.view(b, n, *r_dims)
 
         return canvas, r_c, r_q, loss_dict
 
@@ -171,10 +163,11 @@ class ConsistentGQN(nn.Module):
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
             v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
-            v_q (torch.Tensor): Query viewpoints, size `(b, k)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
 
         Returns:
-            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
         """
 
         # Reshape: (b, m, c, h, w) -> (b*m, c, h, w)
@@ -184,6 +177,9 @@ class ConsistentGQN(nn.Module):
         x_c = x_c.view(-1, *x_dims)
         v_c = v_c.view(-1, *v_dims)
 
+        n = v_q.size(1)
+        v_q = v_q.view(-1, *v_dims)
+
         # Representation generated from context.
         r = self.representation(x_c, v_c)
         _, *r_dims = r.size()
@@ -191,9 +187,13 @@ class ConsistentGQN(nn.Module):
 
         # Sum over representations: (b, c, h, w)
         r = r.sum(1)
+        r = r.repeat_interleave(n, dim=0)
 
         # Sample query images
         canvas = self.generator.sample(v_q, r)
+
+        # Restore origina shape
+        canvas = canvas.view(b, n, *x_dims)
 
         return canvas
 
@@ -203,26 +203,25 @@ class ConsistentGQN(nn.Module):
         Args:
             v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
             r_c (torch.Tensor): Representations of context, size
-                `(b, r, h, w)`.
+                `(b, n, r, h, w)`.
 
         Returns:
-            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
         """
 
-        # Reshape query viewpoints
-        original_dim = v_q.dim()
-
         # Squeeze data: (b, n, k) -> (b*n, k)
-        if original_dim == 3:
-            b, n, v_dim = v_q.size()
-            v_q = v_q.view(-1, v_dim)
-            r_c = r_c.repeat_interleave(n, dim=0)
+        b, n, v_dim = v_q.size()
+        v_q = v_q.view(-1, v_dim)
 
+        _, _, *r_dims = r_c.size()
+        r_c = r_c.view(-1, *r_dims)
+
+        # Sample data
         canvas = self.generator.sample(v_q, r_c)
 
         # Restore the original shape: (b*n, c, h, w) -> (b, n, c, h, w)
-        if original_dim == 3:
-            _, *x_dims = canvas.size()
-            canvas = canvas.view(b, n, *x_dims)
+        _, *x_dims = canvas.size()
+        canvas = canvas.view(b, n, *x_dims)
 
         return canvas
