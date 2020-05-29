@@ -272,7 +272,7 @@ class Trainer:
         train_dir = hparams.pop("train_dir", "./data/tmp/train")
         test_dir = hparams.pop("test_dir", "./data/tmp/test")
         batch_size = hparams.pop("batch_size", 1)
-        self.max_steps = hparams.pop("steps", 10)
+        max_steps = hparams.pop("steps", 10)
         log_save_interval = hparams.pop("log_save_interval", 5)
         gpus = hparams.pop("gpus", None)
 
@@ -291,7 +291,7 @@ class Trainer:
             self.device = torch.device("cpu")
 
         # Data
-        self.load_dataloader(train_dir, test_dir, batch_size, gpus)
+        self.load_dataloader(train_dir, test_dir, batch_size)
 
         # Model
         self.model = self.model.to(self.device)
@@ -312,11 +312,12 @@ class Trainer:
         self.sigma_scheduler = gqnlib.Annealer(**sigma_scheduler_params)
 
         # Training iteration
-        per_step = len(self.train_loader) // batch_size
-        max_epochs = math.ceil(self.max_steps / per_step)
+        per_step = math.ceil(len(self.train_loader) / batch_size)
+        max_epochs = math.ceil(max_steps / per_step)
         pbar = tqdm.trange(1, max_epochs + 1)
         postfix = {"steps": 0, "train/loss": 0, "test/loss": 0}
         self.global_steps = 0
+        self.max_steps = max_steps
 
         # Run training
         for epoch in pbar:
