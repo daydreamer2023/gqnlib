@@ -114,30 +114,26 @@ def partition(images: Tensor, viewpoints: Tensor, num_query: int = 1
     _, _, num, *x_dims = images.size()
     _, _, num, *v_dims = viewpoints.size()
 
-    if num_query > num:
-        raise ValueError("Number of queries exceeds that of total data.")
+    if num_query >= num:
+        raise ValueError(f"Number of queries (n={num_query}) exceeds that of "
+                         f"total data (n={num}) - 1.")
 
     # Squeeze dataset
     images = images.view(-1, num, *x_dims)
     viewpoints = viewpoints.view(-1, num, *v_dims)
 
     # Sample randum number of data
-    n_data = random.randint(2, num - 1)
+    n_data = random.randint(num_query + 1, num)
     indices = random.sample(range(num), n_data)
 
     # Partition into context and query
     context_idx = indices[:-num_query]
-    query_idx = indices[-num_query]
+    query_idx = indices[-num_query:]
 
     x_c = images[:, context_idx]
     v_c = viewpoints[:, context_idx]
 
     x_q = images[:, query_idx]
     v_q = viewpoints[:, query_idx]
-
-    # Restore num_query axis
-    if x_q.dim() == 4:
-        x_q = x_q.unsqueeze(1)
-        v_q = v_q.unsqueeze(1)
 
     return x_c, v_c, x_q, v_q

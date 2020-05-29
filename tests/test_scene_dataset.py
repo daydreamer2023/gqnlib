@@ -70,31 +70,48 @@ class TestSceneDataset(unittest.TestCase):
             loader = torch.utils.data.DataLoader(dataset, batch_size=5)
             images, viewpoints = next(iter(loader))
 
+        # Query single data
         x_c, v_c, x_q, v_q = gqnlib.partition(images, viewpoints)
 
         # x_c
         self.assertEqual(x_c.size(0), 5 * 20)
-        self.assertLess(x_c.size(1), 15)
+        self.assertTrue(0 < x_c.size(1) < 15)
         self.assertEqual(x_c.size(2), 3)
         self.assertEqual(x_c.size(3), 64)
         self.assertEqual(x_c.size(4), 64)
 
         # v_c
         self.assertEqual(v_c.size(0), 5 * 20)
-        self.assertLess(v_c.size(1), 15)
+        self.assertTrue(0 < x_c.size(1) < 15)
         self.assertEqual(v_c.size(2), 7)
 
-        # x_q
-        self.assertEqual(x_q.size(0), 5 * 20)
-        self.assertEqual(x_q.size(1), 1)
-        self.assertEqual(x_q.size(2), 3)
-        self.assertEqual(x_q.size(3), 64)
-        self.assertEqual(x_q.size(4), 64)
+        # Query
+        self.assertTupleEqual(x_q.size(), (5 * 20, 1, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (5 * 20, 1, 7))
 
-        # v_q
-        self.assertEqual(v_q.size(0), 5 * 20)
-        self.assertEqual(v_q.size(1), 1)
-        self.assertEqual(v_q.size(2), 7)
+        # Query multiple data
+        num_query = 14
+        x_c, v_c, x_q, v_q = gqnlib.partition(images, viewpoints,
+                                              num_query=num_query)
+
+        # x_c
+        self.assertEqual(x_c.size(0), 5 * 20)
+        self.assertTrue(0 < x_c.size(1) < 15)
+        self.assertEqual(x_c.size(2), 3)
+        self.assertEqual(x_c.size(3), 64)
+        self.assertEqual(x_c.size(4), 64)
+
+        # v_c
+        self.assertEqual(v_c.size(0), 5 * 20)
+        self.assertTrue(0 < v_c.size(1) < 15)
+        self.assertEqual(v_c.size(2), 7)
+
+        self.assertTupleEqual(x_q.size(), (5 * 20, num_query, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (5 * 20, num_query, 7))
+
+        # Query size is too largs
+        with self.assertRaises(ValueError):
+            gqnlib.partition(images, viewpoints, num_query=15)
 
 
 if __name__ == "__main__":
