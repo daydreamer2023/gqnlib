@@ -295,7 +295,7 @@ class Trainer:
 
         if len(device_ids) > 1:
             # Distributed data parallel
-            distributed.init_process_group()
+            distributed.init_process_group("nccl")
             self.model = nn.parallel.DistributedDataParallel(
                 self.model, device_ids)
 
