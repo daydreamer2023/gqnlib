@@ -10,14 +10,15 @@ http://arxiv.org/abs/1807.02033
 from typing import Dict, Tuple
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor
 
+from .base import BaseGQN
 from .renderer import DRAWRenderer
 from .representation import Simple
 from .utils import nll_normal
 
 
-class ConsistentGQN(nn.Module):
+class ConsistentGQN(BaseGQN):
     """Consistent Generative Query Network (a.k.a. JUMP).
 
     Args:
@@ -51,46 +52,6 @@ class ConsistentGQN(nn.Module):
         self.generator = DRAWRenderer(
             x_channel, u_channel, r_channel, e_channel, d_channel, h_channel,
             z_channel, stride, v_dim, n_layer, scale)
-
-    def forward(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor
-                ) -> Tuple[Tensor, Tensor, Tensor]:
-        """Reconstructs queried images.
-
-        Args:
-            x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
-            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
-            x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
-            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
-
-        Returns:
-            canvas (torch.Tensor): Reconstructed images, size
-                `(b, n, c, h, w)`.
-            r_c (torch.Tensor): Representations of context, size
-                `(b, n, r, h, w)`.
-            r_q (torch.Tensor): Representations of query, size
-                `(b, n, r, h, w)`.
-        """
-
-        canvas, r_c, r_q, _ = self.inference(x_c, v_c, x_q, v_q)
-        return canvas, r_c, r_q
-
-    def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
-                  var: float = 1.0) -> Dict[str, Tensor]:
-        """ELBO loss.
-
-        Args:
-            x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
-            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
-            x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
-            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
-            var (float, optional): Variance of observations normal dist.
-
-        Returns:
-            loss_dict (dict of [str, torch.Tensor]): Calculated losses.
-        """
-
-        *_, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
-        return loss_dict
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0

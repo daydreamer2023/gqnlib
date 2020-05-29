@@ -4,14 +4,15 @@
 from typing import Dict, Tuple
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor
 
+from .base import BaseGQN
 from .generation import ConvolutionalDRAW
 from .representation import Tower
 from .utils import nll_normal
 
 
-class GenerativeQueryNetwork(nn.Module):
+class GenerativeQueryNetwork(BaseGQN):
     """Generative Query Network class.
 
     Args:
@@ -30,43 +31,6 @@ class GenerativeQueryNetwork(nn.Module):
         self.generator = ConvolutionalDRAW(x_channel, v_dim, r_dim, z_channel,
                                            h_channel, n_layer)
         self.representation = Tower(x_channel, v_dim)
-
-    def forward(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor
-                ) -> Tuple[Tensor, Tensor]:
-        """Reconstructs queried images.
-
-        Args:
-            x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
-            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
-            x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
-            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
-
-        Returns:
-            canvas (torch.Tensor): Reconstructed images, size
-                `(b, n, c, h, w)`.
-            r (torch.Tensor): Representations, size `(b, n, r, h, w)`.
-        """
-
-        canvas, r, _ = self.inference(x_c, v_c, x_q, v_q)
-        return canvas, r
-
-    def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
-                  var: float = 1.0) -> Dict[str, Tensor]:
-        """ELBO loss.
-
-        Args:
-            x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
-            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
-            x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
-            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
-            var (float, optional): Variance of observations normal dist.
-
-        Returns:
-            loss_dict (dict of [str, torch.Tensor]): Calculated losses.
-        """
-
-        *_, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
-        return loss_dict
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0
