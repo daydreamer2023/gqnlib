@@ -53,7 +53,7 @@ docker run --gpus all -it dgmvae bash
 
 Dataset is provided by deepmind, and you can see how to download them from [GitHub](https://github.com/deepmind/gqn-datasets).
 
-The following commant will download the specified dataset and convert tfrecords into torch gziped files. This shell script uses [`gsutil cp`]((https://cloud.google.com/storage/docs/gsutil/commands/cp)) command, which should be install in advance.
+The following commant will download the specified dataset and convert tfrecords into torch gziped files. This shell script uses [`gsutil`](https://cloud.google.com/storage/docs/gsutil/commands/cp) command, which should be install in advance.
 
 ```bash
 # Usage
