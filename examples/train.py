@@ -50,7 +50,11 @@ def main():
     # -------------------------------------------------------------------------
 
     # GQN model
-    model = gqnlib.GenerativeQueryNetwork(**config["model_params"])
+    model_dict = {
+        "gqn": gqnlib.GenerativeQueryNetwork,
+        "cgqn": gqnlib.ConsistentGQN,
+    }
+    model = model_dict[args.model](**config[f"{args.model}_params"])
 
     # Trainer
     params = {
@@ -71,6 +75,8 @@ def init_args():
     parser.add_argument("--cuda", type=str, default="0",
                         help="Number of CUDA device with comma separation, "
                              "ex. '0,1'. 'null' means cpu device.")
+    parser.add_argument("--model", type=str, default="gqn",
+                        help="Model name.")
     parser.add_argument("--seed", type=int, default=0,
                         help="Random seed.")
     parser.add_argument("--batch-size", type=int, default=2,
