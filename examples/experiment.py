@@ -11,7 +11,7 @@ import time
 import tqdm
 
 import torch
-from torch import nn, optim, distributed
+from torch import nn, optim
 import tensorboardX as tb
 
 import gqnlib
@@ -294,10 +294,8 @@ class Trainer:
         self.model = self.model.to(self.device)
 
         if len(device_ids) > 1:
-            # Distributed data parallel
-            distributed.init_process_group("nccl")
-            self.model = nn.parallel.DistributedDataParallel(
-                self.model, device_ids)
+            # Data parallel
+            self.model = nn.DataParallel(self.model, device_ids)
 
         # Optimizer
         self.optimizer = optim.Adam(
