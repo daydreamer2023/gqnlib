@@ -319,7 +319,6 @@ class Trainer:
                 self.save_plot()
 
             # Update postfix
-            postfix["steps"] = self.global_steps
             pbar.set_postfix(postfix)
 
             if self.global_steps >= self.max_steps:
