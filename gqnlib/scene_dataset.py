@@ -108,6 +108,9 @@ def partition(images: Tensor, viewpoints: Tensor, num_query: int = 1
         v_c (torch.Tensor): Context viewpoints, size `(b*m, num_context, t)`.
         x_q (torch.Tensor): Query images, size `(b*m, num_query, c, h, w)`.
         v_q (torch.Tensor): Query viewpoints, size `(b*m, num_query, t)`.
+
+    Raises:
+        ValueError: If `num_query` is equal or greater than `num_points`.
     """
 
     # Maximum number of context
@@ -115,8 +118,8 @@ def partition(images: Tensor, viewpoints: Tensor, num_query: int = 1
     _, _, num, *v_dims = viewpoints.size()
 
     if num_query >= num:
-        raise ValueError(f"Number of queries (n={num_query}) exceeds that of "
-                         f"total data (n={num}) - 1.")
+        raise ValueError(f"Number of queries (n={num_query}) must be less "
+                         f"than -total data (n={num}).")
 
     # Squeeze dataset
     images = images.view(-1, num, *x_dims)
