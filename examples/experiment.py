@@ -53,6 +53,7 @@ class Trainer:
         self.global_steps = 0
         self.max_steps = 0
         self.pbar = None
+        self.postfix = {}
 
     def check_logdir(self) -> None:
         """Checks log directory.
@@ -169,6 +170,9 @@ class Trainer:
             self.global_steps += 1
             self.pbar.update(1)
 
+            self.postfix["train/loss"] = loss.item()
+            self.pbar.set_postfix(self.postfix)
+
             # Save loss
             count += 1
             for key, value in _tmp_loss_dict.items():
@@ -206,6 +210,11 @@ class Trainer:
                 # Data to device
                 data = (v.to(self.device) for v in data)
                 _tmp_loss_dict = self.model.loss_func(*data)
+
+            # Update progress bar
+            loss = _tmp_loss_dict["loss"]
+            self.postfix["test/loss"] = loss.item()
+            self.pbar.set_postfix(self.postfix)
 
             # Save loss
             count += 1
@@ -312,23 +321,18 @@ class Trainer:
         self.pbar = tqdm.tqdm(total=max_steps)
         self.global_steps = 0
         self.max_steps = max_steps
-        postfix = {"train/loss": 0, "test/loss": 0}
+        self.postfix = {"train/loss": 0, "test/loss": 0}
 
         # Run training (actual for-loop is max_steps / batch_size)
         for step in range(1, max_steps + 1):
             # Training
-            train_loss = self.train()
-            postfix["train/loss"] = train_loss
+            _ = self.train()
 
             if step % log_save_interval == 0:
                 # Calculate test loss
                 test_loss = self.test()
-                postfix["test/loss"] = test_loss
                 self.save_checkpoint(test_loss)
                 self.save_plot()
-
-            # Update postfix of progress bar
-            self.pbar.set_postfix(postfix)
 
             if self.global_steps >= self.max_steps:
                 break
