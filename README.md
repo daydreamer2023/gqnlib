@@ -51,9 +51,9 @@ docker run --gpus all -it dgmvae bash
 
 ## Prepare dataset
 
-Dataset is provided by deepmind, and you can see how to download them from [GitHub](https://github.com/deepmind/gqn-datasets).
+Dataset is provided by deepmind, and you can see how to download them from [DeepMind GitHub](https://github.com/deepmind/gqn-datasets).
 
-The following commant will download the specified dataset and convert tfrecords into torch gziped files. This shell script uses [`gsutil`](https://cloud.google.com/storage/docs/gsutil/commands/cp) command, which should be install in advance.
+The following commant will download the specified dataset and convert tfrecords into torch gziped files. This shell script uses [`gsutil`](https://cloud.google.com/storage/docs/gsutil) command, which should be installed in advance ([read here](https://cloud.google.com/storage/docs/gsutil_install)).
 
 ```bash
 # Usage
@@ -80,6 +80,7 @@ bash bin/train.sh shepard_metzler_5_parts 0
 Original paper
 
 * S. M. Ali Eslami et al., "Neural scene representation and rendering," [Science Vol. 360, Issue 6394, pp.1204-1210 (15 Jun 2018)](https://science.sciencemag.org/content/360/6394/1204.full?ijkey=kGcNflzOLiIKQ&keytype=ref&siteid=sci)
+* A. Kumar et al., "Consistent Generative Query Network," [arXiv](http://arxiv.org/abs/1807.02033)
 * DeepMind, [Blog post](https://deepmind.com/blog/article/neural-scene-representation-and-rendering)
 * Datasets by DeepMind, [GitHub](https://github.com/deepmind/gqn-datasets)
 
