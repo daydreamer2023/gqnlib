@@ -5,7 +5,6 @@ import collections
 import copy
 import json
 import logging
-import math
 import pathlib
 import time
 
@@ -132,11 +131,8 @@ class Trainer:
             gqnlib.SceneDataset(test_dir), shuffle=False,
             batch_size=batch_size, **kwargs)
 
-    def train(self, epoch: int) -> float:
+    def train(self) -> float:
         """Trains model.
-
-        Args:
-            epoch (int): Current epoch.
 
         Returns:
             train_loss (float): Accumulated loss value.
@@ -178,15 +174,12 @@ class Trainer:
 
         # Summary
         for key, value in loss_dict.items():
-            self.writer.add_scalar(f"train/{key}", value, epoch)
+            self.writer.add_scalar(f"train/{key}", value, self.global_steps)
 
         return loss_dict["loss"]
 
-    def test(self, epoch: int) -> float:
+    def test(self) -> float:
         """Tests model.
-
-        Args:
-            epoch (int): Current epoch.
 
         Returns:
             test_loss (float): Accumulated loss per iteration.
@@ -212,30 +205,29 @@ class Trainer:
 
         # Summary
         for key, value in loss_dict.items():
-            self.writer.add_scalar(f"test/{key}", value, epoch)
+            self.writer.add_scalar(f"test/{key}", value, self.global_steps)
 
         return loss_dict["loss"]
 
-    def save_checkpoint(self, epoch: int, loss: float) -> None:
+    def save_checkpoint(self, loss: float) -> None:
         """Saves trained model and optimizer to checkpoint file.
 
         Args:
-            epoch (int): Current epoch number.
             loss (float): Saved loss value.
         """
 
         # Log
-        self.logger.debug(f"Eval loss (epoch={epoch}): {loss}")
+        self.logger.debug(f"Eval loss (steps={self.global_steps}): {loss}")
         self.logger.debug("Save trained model")
 
         # Save model
         state_dict = {
-            "epoch": epoch,
+            "steps": self.global_steps,
             "model_state_dict": self.model.state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
             "loss": loss,
         }
-        path = self.logdir / f"checkpoint_{epoch}.pt"
+        path = self.logdir / f"checkpoint_{self.global_steps}.pt"
         torch.save(state_dict, path)
 
     def save_configs(self) -> None:
@@ -247,13 +239,8 @@ class Trainer:
         with (self.logdir / "config.json").open("w") as f:
             json.dump(config, f)
 
-    def save_plot(self, epoch: int) -> None:
-        """Plot and save a figure.
-
-        Args:
-            epoch (int): Number of epoch.
-        """
-
+    def save_plot(self) -> None:
+        """Plot and save a figure."""
         pass
 
     def quit(self) -> None:
@@ -312,25 +299,24 @@ class Trainer:
         self.sigma_scheduler = gqnlib.Annealer(**sigma_scheduler_params)
 
         # Training iteration
-        per_step = math.ceil(len(self.train_loader) / batch_size)
-        max_epochs = math.ceil(max_steps / per_step)
-        pbar = tqdm.trange(1, max_epochs + 1)
-        postfix = {"steps": 0, "train/loss": 0, "test/loss": 0}
+        pbar = tqdm.tqdm(total=max_steps)
+        postfix = {"train/loss": 0, "test/loss": 0}
         self.global_steps = 0
         self.max_steps = max_steps
 
-        # Run training
-        for epoch in pbar:
+        # Run training (actual for-loop is max_steps / batch_size)
+        for step in range(1, max_steps + 1):
             # Training
-            train_loss = self.train(epoch)
+            train_loss = self.train()
             postfix["train/loss"] = train_loss
+            pbar.update(len(self.train_loader))
 
-            if epoch % log_save_interval == 0:
+            if step % log_save_interval == 0:
                 # Calculate test loss
-                test_loss = self.test(epoch)
+                test_loss = self.test()
                 postfix["test/loss"] = test_loss
-                self.save_checkpoint(epoch, test_loss)
-                self.save_plot(epoch)
+                self.save_checkpoint(test_loss)
+                self.save_plot()
 
             # Update postfix
             postfix["steps"] = self.global_steps
@@ -340,8 +326,8 @@ class Trainer:
                 break
 
         # Post process
-        test_loss = self.test(max_epochs)
-        self.save_checkpoint(max_epochs, test_loss)
+        test_loss = self.test()
+        self.save_checkpoint(test_loss)
         self.save_configs()
         self.quit()
 
