@@ -34,7 +34,7 @@ class GenerativeQueryNetwork(BaseGQN):
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0
-                  ) -> Tuple[Tensor, Tensor, Dict[str, Tensor]]:
+                  ) -> Tuple[Tuple[Tensor, ...], Dict[str, Tensor]]:
         """Inference.
 
         Input tensor size should be `(batch, num_points, *dims)`.
@@ -88,7 +88,7 @@ class GenerativeQueryNetwork(BaseGQN):
         canvas = canvas.view(b, n, *x_dims)
         r = r.view(b, n, *r_dims)
 
-        return canvas, r, loss_dict
+        return (canvas, r), loss_dict
 
     def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
         """Samples images `x_q` by context pair `(x, v)` and query viewpoint

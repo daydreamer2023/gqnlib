@@ -24,7 +24,7 @@ class BaseGQN(nn.Module):
                 is `(b, n, c, h, w)`.
         """
 
-        *data, _ = self.inference(x_c, v_c, x_q, v_q)
+        data, _ = self.inference(x_c, v_c, x_q, v_q)
         return data
 
     def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
@@ -42,7 +42,7 @@ class BaseGQN(nn.Module):
             loss_dict (dict of [str, torch.Tensor]): Calculated losses.
         """
 
-        *_, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
+        _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
         return loss_dict
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,

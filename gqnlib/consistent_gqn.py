@@ -55,7 +55,7 @@ class ConsistentGQN(BaseGQN):
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0
-                  ) -> Tuple[Tensor, Tensor, Tensor, Dict[str, Tensor]]:
+                  ) -> Tuple[Tuple[Tensor, ...], Dict[str, Tensor]]:
         """Inference.
 
         Args:
@@ -115,7 +115,7 @@ class ConsistentGQN(BaseGQN):
         r_c = r_c.view(b, n, *r_dims)
         r_q = r_q.view(b, n, *r_dims)
 
-        return canvas, r_c, r_q, loss_dict
+        return (canvas, r_c, r_q), loss_dict
 
     def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
         """Samples images `x_q` by context pair `(x, v)` and query viewpoint

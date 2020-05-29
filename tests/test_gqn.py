@@ -17,7 +17,7 @@ class TestGenerativeQueryNetwork(unittest.TestCase):
         x_q = torch.randn(4, 1, 3, 64, 64)
         v_q = torch.randn(4, 1, 7)
 
-        canvas, r, loss_dict = self.model.inference(x_c, v_c, x_q, v_q)
+        (canvas, r), loss_dict = self.model.inference(x_c, v_c, x_q, v_q)
 
         self.assertTupleEqual(canvas.size(), (4, 1, 3, 64, 64))
         self.assertTupleEqual(r.size(), (4, 1, 256, 1, 1))
