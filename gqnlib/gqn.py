@@ -37,13 +37,14 @@ class GenerativeQueryNetwork(nn.Module):
 
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
-            v_c (torch.Tensor): Context viewpoints, size `(b, k)`.
-            x_q (torch.Tensor): Query images, size `(b, m, c, h, w)`.
-            v_q (torch.Tensor): Query viewpoints, size `(b, k)`.
+            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
+            x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
 
         Returns:
-            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
-            r (torch.Tensor): Representations, size `(b, r, h, w)`.
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
+            r (torch.Tensor): Representations, size `(b, n, r, h, w)`.
         """
 
         canvas, r, _ = self.inference(x_c, v_c, x_q, v_q)
@@ -55,9 +56,9 @@ class GenerativeQueryNetwork(nn.Module):
 
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
-            v_c (torch.Tensor): Context viewpoints, size `(b, k)`.
-            x_q (torch.Tensor): Query images, size `(b, m, c, h, w)`.
-            v_q (torch.Tensor): Query viewpoints, size `(b, k)`.
+            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
+            x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
             var (float, optional): Variance of observations normal dist.
 
         Returns:
@@ -72,16 +73,19 @@ class GenerativeQueryNetwork(nn.Module):
                   ) -> Tuple[Tensor, Tensor, Dict[str, Tensor]]:
         """Inference.
 
+        Input tensor size should be `(batch, num_points, *dims)`.
+
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
-            v_c (torch.Tensor): Context viewpoints, size `(b, k)`.
-            x_q (torch.Tensor): Query images, size `(b, m, c, h, w)`.
-            v_q (torch.Tensor): Query viewpoints, size `(b, k)`.
+            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
+            x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
             var (float, optional): Variance of observations normal dist.
 
         Returns:
-            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
-            r (torch.Tensor): Representations, size `(b, r, h, w)`.
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
+            r (torch.Tensor): Representations, size `(b, n, r, h, w)`.
             loss_dict (dict of [str, torch.Tensor]): Calculated losses.
         """
 
@@ -92,13 +96,20 @@ class GenerativeQueryNetwork(nn.Module):
         x_c = x_c.view(-1, *x_dims)
         v_c = v_c.view(-1, *v_dims)
 
+        n = x_q.size(1)
+        x_q = x_q.view(-1, *x_dims)
+        v_q = v_q.view(-1, *v_dims)
+
         # Representation generated from context.
         r = self.representation(x_c, v_c)
         _, *r_dims = r.size()
         r = r.view(b, m, *r_dims)
 
-        # Sum over representations: (b, c, h, w)
+        # Sum over representations, and repeat n times: (b*n, c, h, w)
         r = r.sum(1)
+        r = r.repeat_interleave(n, dim=0)
+
+        print(x_q.size(), v_q.size(), r.size())
 
         # Query images by v_q, i.e. reconstruct
         canvas, kl_loss = self.generator(x_q, v_q, r)
@@ -111,6 +122,10 @@ class GenerativeQueryNetwork(nn.Module):
         loss_dict = {"loss": nll_loss + kl_loss, "nll_loss": nll_loss,
                      "kl_loss": kl_loss}
 
+        # Restore origina shape
+        canvas = canvas.view(b, n, *x_dims)
+        r = r.view(b, n, *r_dims)
+
         return canvas, r, loss_dict
 
     def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
@@ -119,11 +134,12 @@ class GenerativeQueryNetwork(nn.Module):
 
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
-            v_c (torch.Tensor): Context viewpoints, size `(b, k)`.
-            v_q (torch.Tensor): Query viewpoints, size `(b, k)`.
+            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
 
         Returns:
-            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
         """
 
         # Reshape: (b, m, c, h, w) -> (b*m, c, h, w)
@@ -133,6 +149,9 @@ class GenerativeQueryNetwork(nn.Module):
         x_c = x_c.view(-1, *x_dims)
         v_c = v_c.view(-1, *v_dims)
 
+        n = v_q.size(1)
+        v_q = v_q.view(-1, *v_dims)
+
         # Representation generated from context.
         r = self.representation(x_c, v_c)
         _, *r_dims = r.size()
@@ -140,8 +159,12 @@ class GenerativeQueryNetwork(nn.Module):
 
         # Sum over representations: (b, c, h, w)
         r = r.sum(1)
+        r = r.repeat_interleave(n, dim=0)
 
         # Sample query images
         canvas = self.generator.sample(v_q, r)
+
+        # Restore origina shape
+        canvas = canvas.view(b, n, *x_dims)
 
         return canvas
