@@ -11,7 +11,7 @@ import time
 import tqdm
 
 import torch
-from torch import optim
+from torch import nn, optim
 import tensorboardX as tb
 
 import gqnlib
@@ -304,7 +304,7 @@ class Trainer:
 
         if len(device_ids) > 1:
             # Data parallel
-            self.model = gqnlib.CustomDataParallel(self.model, device_ids)
+            self.model = nn.DataParallel(self.model, device_ids)
 
         # Optimizer
         self.optimizer = optim.Adam(

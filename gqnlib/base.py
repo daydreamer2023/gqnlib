@@ -83,9 +83,3 @@ class BaseGQN(nn.Module):
         """
 
         raise NotImplementedError
-
-
-class WrappedDataParallel(nn.DataParallel):
-
-    def __getattr__(self, name):
-        return getattr(self.module, name)
