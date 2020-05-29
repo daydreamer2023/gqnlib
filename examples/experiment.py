@@ -129,6 +129,9 @@ class Trainer:
             gqnlib.SceneDataset(test_dir), shuffle=False,
             batch_size=batch_size, **kwargs)
 
+        self.logger.info(f"Train dataset size: {len(self.train_loader)}")
+        self.logger.info(f"Test dataset size: {len(self.test_loader)}")
+
     def train(self) -> float:
         """Trains model.
 
