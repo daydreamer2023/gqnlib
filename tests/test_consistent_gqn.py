@@ -32,10 +32,10 @@ class TestConsistentGQN(unittest.TestCase):
         x_q = torch.randn(4, 1, 3, 64, 64)
         v_q = torch.randn(4, 1, 7)
 
-        canvas, r_c, r_q = self.model(x_c, v_c, x_q, v_q)
-        self.assertTupleEqual(canvas.size(), (4, 1, 3, 64, 64))
-        self.assertTupleEqual(r_c.size(), (4, 1, 32, 16, 16))
-        self.assertTupleEqual(r_q.size(), (4, 1, 32, 16, 16))
+        loss, nll_loss, kl_loss = self.model(x_c, v_c, x_q, v_q)
+        self.assertGreater(loss, 0)
+        self.assertGreater(nll_loss, 0)
+        self.assertGreater(kl_loss, 0)
 
     def test_loss_func(self):
         x_c = torch.randn(4, 15, 3, 64, 64)
@@ -47,6 +47,17 @@ class TestConsistentGQN(unittest.TestCase):
         self.assertGreater(loss_dict["loss"], 0)
         self.assertGreater(loss_dict["nll_loss"], 0)
         self.assertGreater(loss_dict["kl_loss"], 0)
+
+    def test_reconstruct(self):
+        x_c = torch.randn(4, 15, 3, 64, 64)
+        v_c = torch.randn(4, 15, 7)
+        x_q = torch.randn(4, 1, 3, 64, 64)
+        v_q = torch.randn(4, 1, 7)
+
+        canvas, r_c, r_q = self.model.reconstruct(x_c, v_c, x_q, v_q)
+        self.assertTupleEqual(canvas.size(), (4, 1, 3, 64, 64))
+        self.assertTupleEqual(r_c.size(), (4, 1, 32, 16, 16))
+        self.assertTupleEqual(r_q.size(), (4, 1, 32, 16, 16))
 
     def test_sample(self):
         x_c = torch.randn(4, 15, 3, 64, 64)
