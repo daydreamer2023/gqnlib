@@ -61,12 +61,9 @@ class Trainer:
         exist.
         """
 
-        if "logdir" in self.hparams:
-            logdir = pathlib.Path(self.hparams["logdir"])
-        else:
-            logdir = pathlib.Path("./logs/tmp/")
-
-        self.logdir = logdir / time.strftime("%Y%m%d%H%M")
+        logdir = (self.hparams["logdir"] if "logdir" in self.hparams
+                  else "./logs/tmp/")
+        self.logdir = pathlib.Path(logdir / time.strftime("%Y%m%d%H%M"))
         self.logdir.mkdir(parents=True, exist_ok=True)
 
     def init_logger(self, save_file: bool = True) -> None:
