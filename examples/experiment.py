@@ -158,8 +158,7 @@ class Trainer:
 
             # Forward
             self.optimizer.zero_grad()
-            _tmp_loss_dict = self.model.loss_func(*data, var)
-            loss = _tmp_loss_dict["loss"]
+            loss, nll_loss, kl_loss = self.model(*data, var)
 
             # Backward and update
             loss.backward()
@@ -175,7 +174,8 @@ class Trainer:
 
             # Save loss
             count += 1
-            for key, value in _tmp_loss_dict.items():
+            for key, value in zip(["loss", "nll_loss", "kl_loss"],
+                                  [loss, nll_loss, kl_loss]):
                 loss_dict[key] += value.item()
 
             # Check step limit
@@ -209,16 +209,16 @@ class Trainer:
 
                 # Data to device
                 data = (v.to(self.device) for v in data)
-                _tmp_loss_dict = self.model.loss_func(*data)
+                loss, nll_loss, kl_loss = self.model(*data)
 
             # Update progress bar
-            loss = _tmp_loss_dict["loss"]
             self.postfix["test/loss"] = loss.item()
             self.pbar.set_postfix(self.postfix)
 
             # Save loss
             count += 1
-            for key, value in _tmp_loss_dict.items():
+            for key, value in zip(["loss", "nll_loss", "kl_loss"],
+                                  [loss, nll_loss, kl_loss]):
                 loss_dict[key] += value.item()
 
         # Summary
