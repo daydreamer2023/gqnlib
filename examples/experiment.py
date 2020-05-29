@@ -305,6 +305,7 @@ class Trainer:
         self.max_steps = max_steps
 
         # Run training (actual for-loop is max_steps / batch_size)
+        self.logger.info("Start training")
         for step in range(1, max_steps + 1):
             # Training
             train_loss = self.train()
@@ -323,6 +324,8 @@ class Trainer:
 
             if self.global_steps >= self.max_steps:
                 break
+
+        self.logger.info("Finish training")
 
         # Post process
         test_loss = self.test()
