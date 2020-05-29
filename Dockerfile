@@ -32,5 +32,4 @@ COPY setup.py setup.py
 RUN pip install --no-cache-dir .
 
 # Install other requirements for examples
-RUN pip install --no-cache-dir matplotlib==3.2.1 tqdm==4.46.0 \
-        tensorflow==2.2.0 tensorboardX==2.0
+RUN pip install --no-cache-dir tqdm==4.46.0 tensorflow==2.2.0 tensorboardX==2.0
