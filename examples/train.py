@@ -82,7 +82,7 @@ def init_args():
     parser.add_argument("--batch-size", type=int, default=32,
                         help="Batch size.")
     parser.add_argument("--steps", type=int, default=100,
-                        help="Number of training steps.")
+                        help="Number of gradient steps.")
     parser.add_argument("--log-save-interval", type=int, default=5,
                         help="Interval epochs for saving logs.")
 
