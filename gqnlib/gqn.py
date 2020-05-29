@@ -109,8 +109,6 @@ class GenerativeQueryNetwork(nn.Module):
         r = r.sum(1)
         r = r.repeat_interleave(n, dim=0)
 
-        print(x_q.size(), v_q.size(), r.size())
-
         # Query images by v_q, i.e. reconstruct
         canvas, kl_loss = self.generator(x_q, v_q, r)
 
