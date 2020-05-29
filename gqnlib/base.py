@@ -64,3 +64,23 @@ class BaseGQN(nn.Module):
         """
 
         raise NotImplementedError
+
+
+class CustomDataParallel(nn.DataParallel):
+
+    def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
+                  var: float = 1.0) -> Dict[str, Tensor]:
+        """ELBO loss.
+
+        Args:
+            x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
+            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
+            x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
+            var (float, optional): Variance of observations normal dist.
+
+        Returns:
+            loss_dict (dict of [str, torch.Tensor]): Calculated losses.
+        """
+
+        return self.module.loss_func(x_c, v_c, x_q, v_q, var)

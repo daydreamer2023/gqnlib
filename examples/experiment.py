@@ -295,7 +295,7 @@ class Trainer:
 
         if len(device_ids) > 1:
             # Data parallel
-            self.model = nn.DataParallel(self.model, device_ids)
+            self.model = gqnlib.CustomDataParallel(self.model, device_ids)
 
         # Optimizer
         self.optimizer = optim.Adam(
