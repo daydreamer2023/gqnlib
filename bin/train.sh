@@ -3,7 +3,7 @@
 
 # Kwargs
 DATASET=${1:-shepard_metzler_5_parts}
-SEED=${2:-0}
+CUDA=${2:-0}
 
 # Log path
 export LOGDIR=./logs/
@@ -16,5 +16,5 @@ export DATASET_NAME=${DATASET}_torch
 # Config for training
 export CONFIG_PATH=./examples/config.json
 
-python3 ./examples/train.py --seed ${SEED} --steps 2000000 \
-    --log-save-interval 100000
+python3 ./examples/train.py --cuda ${CUDA} --steps 2000000 \
+    --log-save-interval 1
