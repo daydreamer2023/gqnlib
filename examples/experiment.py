@@ -52,6 +52,7 @@ class Trainer:
         self.device = None
         self.global_steps = 0
         self.max_steps = 0
+        self.pbar = None
 
     def check_logdir(self) -> None:
         """Checks log directory.
@@ -158,11 +159,14 @@ class Trainer:
             _tmp_loss_dict = self.model.loss_func(*data, var)
             loss = _tmp_loss_dict["loss"]
 
-            # Backward
+            # Backward and update
             loss.backward()
             self.optimizer.step()
             self.lr_scheduler.step()
+
+            # Progress bar update
             self.global_steps += 1
+            self.pbar.update(1)
 
             # Save loss
             for key, value in _tmp_loss_dict.items():
@@ -298,14 +302,15 @@ class Trainer:
             self.optimizer, **lr_scheduler_params)
         self.sigma_scheduler = gqnlib.Annealer(**sigma_scheduler_params)
 
+        self.logger.info("Start training")
+
         # Training iteration
-        pbar = tqdm.tqdm(total=max_steps)
-        postfix = {"train/loss": 0, "test/loss": 0}
+        self.pbar = tqdm.tqdm(total=max_steps)
         self.global_steps = 0
         self.max_steps = max_steps
+        postfix = {"train/loss": 0, "test/loss": 0}
 
         # Run training (actual for-loop is max_steps / batch_size)
-        self.logger.info("Start training")
         for step in range(1, max_steps + 1):
             # Training
             train_loss = self.train()
@@ -318,14 +323,13 @@ class Trainer:
                 self.save_checkpoint(test_loss)
                 self.save_plot()
 
-            # Update progress bar
-            pbar.set_postfix(postfix)
-            pbar.update(len(self.train_loader))
+            # Update postfix of progress bar
+            self.pbar.set_postfix(postfix)
 
             if self.global_steps >= self.max_steps:
                 break
 
-        pbar.close()
+        self.pbar.close()
         self.logger.info("Finish training")
 
         # Post process
