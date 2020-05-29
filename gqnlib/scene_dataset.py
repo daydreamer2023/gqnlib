@@ -90,29 +90,32 @@ def transform_viewpoint(viewpoints: Tensor) -> Tensor:
     return view
 
 
-def partition(images: Tensor, viewpoints: Tensor
+def partition(images: Tensor, viewpoints: Tensor, num_query: int = 1
               ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
     """Partitions given data into context and query sets.
 
-    * Number of context is randomly sampled.
-    * Number of query is 1.
+    Number of context is randomly sampled.
 
     Args:
         images (torch.Tensor): Image tensor, size
             `(batch, observations, num_points, c, h, w)`.
         viewpoints (torch.Tensor): Viewpoints tensor, size
             `(batch, observations, num_points, target)`.
+        num_query (int, optional): Number of queries.
 
     Returns:
         x_c (torch.Tensor): Context images, size `(b*m, num_context, c, h, w)`.
         v_c (torch.Tensor): Context viewpoints, size `(b*m, num_context, t)`.
-        x_q (torch.Tensor): Query images, size `(b*m, c, h, w)`.
-        v_q (torch.Tensor): Query viewpoints, size `(b*m, t)`.
+        x_q (torch.Tensor): Query images, size `(b*m, num_query, c, h, w)`.
+        v_q (torch.Tensor): Query viewpoints, size `(b*m, num_query, t)`.
     """
 
     # Maximum number of context
     _, _, num, *x_dims = images.size()
     _, _, num, *v_dims = viewpoints.size()
+
+    if num_query > num:
+        raise ValueError("Number of queries exceeds that of total data.")
 
     # Squeeze dataset
     images = images.view(-1, num, *x_dims)
@@ -123,13 +126,18 @@ def partition(images: Tensor, viewpoints: Tensor
     indices = random.sample(range(num), n_data)
 
     # Partition into context and query
-    context_idx = indices[:-1]
-    query_idx = indices[-1]
+    context_idx = indices[:-num_query]
+    query_idx = indices[-num_query]
 
     x_c = images[:, context_idx]
     v_c = viewpoints[:, context_idx]
 
     x_q = images[:, query_idx]
     v_q = viewpoints[:, query_idx]
+
+    # Restore num_query axis
+    if x_q.dim() == 4:
+        x_q = x_q.unsqueeze(1)
+        v_q = v_q.unsqueeze(1)
 
     return x_c, v_c, x_q, v_q

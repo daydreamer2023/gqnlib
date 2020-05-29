@@ -86,13 +86,15 @@ class TestSceneDataset(unittest.TestCase):
 
         # x_q
         self.assertEqual(x_q.size(0), 5 * 20)
-        self.assertEqual(x_q.size(1), 3)
-        self.assertEqual(x_q.size(2), 64)
+        self.assertEqual(x_q.size(1), 1)
+        self.assertEqual(x_q.size(2), 3)
         self.assertEqual(x_q.size(3), 64)
+        self.assertEqual(x_q.size(4), 64)
 
         # v_q
-        self.assertEqual(v_c.size(0), 5 * 20)
-        self.assertEqual(v_c.size(2), 7)
+        self.assertEqual(v_q.size(0), 5 * 20)
+        self.assertEqual(v_q.size(1), 1)
+        self.assertEqual(v_q.size(2), 7)
 
 
 if __name__ == "__main__":
