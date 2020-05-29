@@ -309,7 +309,6 @@ class Trainer:
             # Training
             train_loss = self.train()
             postfix["train/loss"] = train_loss
-            pbar.update(len(self.train_loader))
 
             if step % log_save_interval == 0:
                 # Calculate test loss
@@ -318,8 +317,9 @@ class Trainer:
                 self.save_checkpoint(test_loss)
                 self.save_plot()
 
-            # Update postfix
+            # Update progress bar
             pbar.set_postfix(postfix)
+            pbar.update(len(self.train_loader))
 
             if self.global_steps >= self.max_steps:
                 break
