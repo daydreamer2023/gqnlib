@@ -325,6 +325,7 @@ class Trainer:
             if self.global_steps >= self.max_steps:
                 break
 
+        pbar.close()
         self.logger.info("Finish training")
 
         # Post process
