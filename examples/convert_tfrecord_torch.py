@@ -2,14 +2,14 @@
 """Convert tfrecords to gziped files.
 
 This file converts tfrecords in deepmind gqn dataset to gzip files. Each
-tfrecord will be converted to a single gzip file.
+tfrecord will be converted to multiple gzip files which contains a tuple
+(images, poses).
 
-ex) 001-of-900.tfrecord -> 001-of-900.pt.gz
+For example, when converting `shepard_metzler_5_parts` dataset with batch size
+of 16, single tfrecord file is converted to 32 gzip files which contains tuple
+of size `((15, 64, 64, 3), (15, 5))`.
 
-Each gzip file contains a list of tuples (images, poses). For example, when
-converting shepard_metzler_5_parts dataset with batch size of 32, the zgip
-file contains a list of length 32 tuples, ((15, 64, 64, 3), (15, 5)), where
-15 is the sequence length.
+ex) 001-of-900.tfrecord -> 001-of-900-0.pt.gz, ..., 001-of-900-15.pt.gz
 
 (Dataset)
 
@@ -120,15 +120,12 @@ def convert_record(path: pathlib.Path, dataset_name: str,
     # Load tfrecord
     dataset = tf.data.TFRecordDataset(str(path))
 
-    # Preprocess for each data
-    scene_list = []
-    for raw_data in dataset.take(batch_size):
-        scene_list.append(convert_raw_to_gzip(dataset_info, raw_data))
-
-    # Save
-    save_path = save_dir / f"{path.stem}.pt.gz"
-    with gzip.open(str(save_path), "wb") as f:
-        torch.save(scene_list, f)
+    # Preprocess for each data and save to gzip file
+    for i, raw_data in enumerate(dataset.take(batch_size)):
+        scene = convert_raw_to_gzip(dataset_info, raw_data)
+        save_path = save_dir / f"{path.stem}-{i}.pt.gz"
+        with gzip.open(str(save_path), "wb") as f:
+            torch.save(scene, f)
 
 
 def convert_raw_to_gzip(dataset_info: collections.namedtuple,
