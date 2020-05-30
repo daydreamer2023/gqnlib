@@ -172,8 +172,7 @@ def _preprocess_frames(dataset_info, example):
     if dataset_info.frame_size != 64:
         frames = tf.reshape(frames, (-1,) + dataset_image_dimensions)
         new_frame_dimensions = (64,) * 2 + (_NUM_CHANNELS,)
-        frames = tf.image.resize(
-            frames, new_frame_dimensions[:2], align_corners=True)
+        frames = tf.image.resize(frames, new_frame_dimensions[:2])
         frames = tf.reshape(
             frames, (-1, dataset_info.sequence_size) + new_frame_dimensions)
 
