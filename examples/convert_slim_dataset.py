@@ -153,7 +153,7 @@ def _parse_proto(buf: tf.Tensor) -> dict:
     images = tf.concat(example["frames"], axis=0)
     images = tf.nest.map_structure(
         tf.stop_gradient,
-        tf.map_fn(tf.image.decode_jpeg, tf.reshape(images, [-1]), 
+        tf.map_fn(tf.image.decode_jpeg, tf.reshape(images, [-1]),
                   dtype=tf.uint8)
     )
     top_down = tf.image.decode_jpeg(tf.squeeze(example["top_down_frame"]))
