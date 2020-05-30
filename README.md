@@ -57,7 +57,7 @@ The following command will download the specified dataset and convert tfrecords 
 
 **Caution**: This process takes many hours, maybe 2~3 hours, although I did not exactly measure it. It also requires a lot of memory (I used 32 GB machine).
 
-**Caution**: This process creates many files. For example, original `shepard_metzler_5_parts` dataset contains 900 train files (17 GB) and 100 test files (5 GB), but converted dataset contains 810,000 train files (49 GB) and 200,000 test files (12 GB).
+**Caution**: This process creates many files. For example, original `shepard_metzler_5_parts` dataset contains 900 files (17 GB) for train and 100 files (5 GB) for test, but converted dataset contains 810,000 files (49 GB) for train and 200,000 files (12 GB) for test.
 
 ```bash
 # Usage
