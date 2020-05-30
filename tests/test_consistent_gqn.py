@@ -32,10 +32,8 @@ class TestConsistentGQN(unittest.TestCase):
         x_q = torch.randn(4, 1, 3, 64, 64)
         v_q = torch.randn(4, 1, 7)
 
-        loss, nll_loss, kl_loss = self.model(x_c, v_c, x_q, v_q)
+        loss = self.model(x_c, v_c, x_q, v_q)
         self.assertGreater(loss, 0)
-        self.assertGreater(nll_loss, 0)
-        self.assertGreater(kl_loss, 0)
 
     def test_loss_func(self):
         x_c = torch.randn(4, 15, 3, 64, 64)

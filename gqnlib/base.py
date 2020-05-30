@@ -10,8 +10,8 @@ class BaseGQN(nn.Module):
     """Base class for GQN models."""
 
     def forward(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
-                var: float = 1.0) -> Tuple[Tensor, Tensor, Tensor]:
-        """ELBO loss in tuple format.
+                var: float = 1.0) -> Tensor:
+        """ELBO loss.
 
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
@@ -22,16 +22,14 @@ class BaseGQN(nn.Module):
 
         Returns:
             loss (torch.Tensor): ELBO loss.
-            nll_loss (torch.Tensor): Negative log likelihood.
-            kl_loss (torch.Tensor): Kullback-Leibler divergence.
         """
 
         _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
-        return tuple(loss_dict.values())
+        return loss_dict["loss"]
 
     def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0) -> Dict[str, Tensor]:
-        """ELBO loss.
+        """ELBO loss with separated nll and kl loss in dict.
 
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
