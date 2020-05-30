@@ -122,14 +122,14 @@ def convert_record(path: pathlib.Path, dataset_name: str,
 
     # Preprocess for each data and save to gzip file
     for i, raw_data in enumerate(dataset.take(batch_size)):
-        scene = convert_raw_to_gzip(dataset_info, raw_data)
+        scene = _preprocess_data(dataset_info, raw_data)
         save_path = save_dir / f"{path.stem}-{i}.pt.gz"
         with gzip.open(str(save_path), "wb") as f:
             torch.save(scene, f)
 
 
-def convert_raw_to_gzip(dataset_info: collections.namedtuple,
-                        raw_data: tf.Tensor) -> None:
+def _preprocess_data(dataset_info: collections.namedtuple,
+                     raw_data: tf.Tensor):
     """Converts raw data to tensor and saves into torch gziped file.
 
     Args:
