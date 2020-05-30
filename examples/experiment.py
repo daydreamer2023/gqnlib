@@ -250,7 +250,7 @@ class Trainer:
         torch.save(state_dict, path)
 
     def save_configs(self) -> None:
-        """Saves setting including condig and args in json format."""
+        """Saves setting including config and args in json format."""
 
         config = copy.deepcopy(self.hparams)
         config["logdir"] = str(self.logdir)
