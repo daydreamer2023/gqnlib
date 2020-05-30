@@ -11,7 +11,7 @@ class BaseGQN(nn.Module):
 
     def forward(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                 var: float = 1.0) -> Dict[str, Tensor]:
-        """ELBO loss.
+        """Returns ELBO loss in dict.
 
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
@@ -22,19 +22,15 @@ class BaseGQN(nn.Module):
 
         Returns:
             loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
-                with size `(b*n,)`.
+                with size `(b, n)`.
         """
 
         _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
-
-        for key, value in loss_dict.items():
-            loss_dict[key] = value.view(-1)
-
         return loss_dict
 
     def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0) -> Dict[str, Tensor]:
-        """Returns ELBO loss with separated nll and kl losses in dict.
+        """Returns averaged ELBO loss with separated nll and kl losses in dict.
 
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.

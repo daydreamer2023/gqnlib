@@ -37,9 +37,9 @@ class TestGenerativeQueryNetwork(unittest.TestCase):
 
         loss_dict = self.model(x_c, v_c, x_q, v_q)
 
-        self.assertTupleEqual(loss_dict["loss"].size(), (8,))
-        self.assertTupleEqual(loss_dict["nll_loss"].size(), (8,))
-        self.assertTupleEqual(loss_dict["kl_loss"].size(), (8,))
+        self.assertTupleEqual(loss_dict["loss"].size(), (4, 2))
+        self.assertTupleEqual(loss_dict["nll_loss"].size(), (4, 2))
+        self.assertTupleEqual(loss_dict["kl_loss"].size(), (4, 2))
         self.assertGreater(loss_dict["loss"].mean(), 0)
         self.assertGreater(loss_dict["nll_loss"].mean(), 0)
         self.assertGreater(loss_dict["kl_loss"].mean(), 0)
