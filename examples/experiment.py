@@ -141,7 +141,7 @@ class Trainer:
         """
 
         # Logger for loss
-        loss_dict = collections.defaultdict(float)
+        loss_logger = collections.defaultdict(float)
         count = 0
 
         # Run
@@ -158,7 +158,8 @@ class Trainer:
 
             # Forward
             self.optimizer.zero_grad()
-            loss = self.model(*data, var)
+            loss_dict = self.model(*data, var)
+            loss = loss_dict["loss"].mean()
 
             # Backward and update
             loss.backward()
@@ -174,18 +175,19 @@ class Trainer:
 
             # Save loss
             count += 1
-            loss_dict["loss"] = loss.item()
+            for key, value in loss_dict.items():
+                loss_logger[key] = loss.mean().item()
 
             # Check step limit
             if self.global_steps >= self.max_steps:
                 break
 
         # Summary
-        for key, value in loss_dict.items():
+        for key, value in loss_logger.items():
             self.writer.add_scalar(
                 f"train/{key}", value / count, self.global_steps)
 
-        return loss_dict["loss"]
+        return loss_logger["loss"]
 
     def test(self) -> float:
         """Tests model.
@@ -195,7 +197,7 @@ class Trainer:
         """
 
         # Logger for loss
-        loss_dict = collections.defaultdict(float)
+        loss_logger = collections.defaultdict(float)
         count = 0
 
         # Run
@@ -207,7 +209,8 @@ class Trainer:
 
                 # Data to device
                 data = (v.to(self.device) for v in data)
-                loss = self.model(*data)
+                loss_dict = self.model(*data)
+                loss = loss_dict["loss"].mean()
 
             # Update progress bar
             self.postfix["test/loss"] = loss.item()
@@ -215,14 +218,15 @@ class Trainer:
 
             # Save loss
             count += 1
-            loss_dict["loss"] = loss.item()
+            for key, value in loss_dict.items():
+                loss_logger[key] = loss.mean().item()
 
         # Summary
-        for key, value in loss_dict.items():
+        for key, value in loss_logger.items():
             self.writer.add_scalar(
                 f"test/{key}", value / count, self.global_steps)
 
-        return loss_dict["loss"]
+        return loss_logger["loss"]
 
     def save_checkpoint(self, loss: float) -> None:
         """Saves trained model and optimizer to checkpoint file.
