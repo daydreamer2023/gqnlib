@@ -100,7 +100,8 @@ class TestDRAWRenderer(unittest.TestCase):
         canvas, kl_loss = model(x, v, r_c, r_q)
 
         self.assertTupleEqual(canvas.size(), x.size())
-        self.assertGreater(kl_loss, 0)
+        self.assertTupleEqual(kl_loss.size(), (4,))
+        self.assertGreater(kl_loss.mean(), 0)
 
     def test_sample(self):
         x_channel = 3

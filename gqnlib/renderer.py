@@ -172,7 +172,7 @@ class DRAWRenderer(nn.Module):
 
         Returns:
             canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
-            kl_loss (torch.Tensor): Calculated KL loss, size `(1)`.
+            kl_loss (torch.Tensor): Calculated KL loss, size `(b,)`.
         """
 
         # Data size
@@ -219,7 +219,7 @@ class DRAWRenderer(nn.Module):
             # Calculate loss
             _kl_tmp = kl_divergence_normal(q_mu, q_logvar.exp(), p_mu,
                                            p_logvar.exp(), reduce=False)
-            kl_loss += _kl_tmp.sum([1, 2, 3]).mean()
+            kl_loss += _kl_tmp.sum([1, 2, 3])
 
         canvas = torch.sigmoid(self.translation(u))
 
