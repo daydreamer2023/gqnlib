@@ -49,7 +49,8 @@ class GenerativeQueryNetwork(BaseGQN):
             canvas (torch.Tensor): Reconstructed images, size
                 `(b, n, c, h, w)`.
             r (torch.Tensor): Representations, size `(b, n, r, h, w)`.
-            loss_dict (dict of [str, torch.Tensor]): Calculated losses.
+            loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
+                with size `(b, n)`.
         """
 
         # Reshape: (b, m, c, h, w) -> (b*m, c, h, w)
@@ -78,9 +79,11 @@ class GenerativeQueryNetwork(BaseGQN):
         # Reconstruction loss
         nll_loss = nll_normal(x_q, canvas, x_q.new_ones((1)) * var,
                               reduce=False)
-        nll_loss = nll_loss.sum([1, 2, 3]).mean()
+        nll_loss = nll_loss.sum([1, 2, 3])
 
         # Returned loss
+        nll_loss = nll_loss.view(b, n)
+        kl_loss = kl_loss.view(b, n)
         loss_dict = {"loss": nll_loss + kl_loss, "nll_loss": nll_loss,
                      "kl_loss": kl_loss}
 

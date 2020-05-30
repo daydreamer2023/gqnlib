@@ -10,7 +10,7 @@ class BaseGQN(nn.Module):
     """Base class for GQN models."""
 
     def forward(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
-                var: float = 1.0) -> Tensor:
+                var: float = 1.0) -> Dict[str, Tensor]:
         """ELBO loss.
 
         Args:
@@ -21,11 +21,16 @@ class BaseGQN(nn.Module):
             var (float, optional): Variance of observations normal dist.
 
         Returns:
-            loss (torch.Tensor): ELBO loss.
+            loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
+                with size `(b*n,)`.
         """
 
         _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
-        return loss_dict["loss"]
+
+        for key, value in loss_dict.items():
+            loss_dict[key] = value.view(-1)
+
+        return loss_dict
 
     def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0) -> Dict[str, Tensor]:
@@ -39,10 +44,16 @@ class BaseGQN(nn.Module):
             var (float, optional): Variance of observations normal dist.
 
         Returns:
-            loss_dict (dict of [str, torch.Tensor]): Calculated losses.
+            loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
+                with size `(1,)`.
         """
 
         _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
+
+        # Mean for batch
+        for key, value in loss_dict.items():
+            loss_dict[key] = value.mean()
+
         return loss_dict
 
     def reconstruct(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor
@@ -79,7 +90,8 @@ class BaseGQN(nn.Module):
         Returns:
             data (tuple of torch.Tensor): Tuple of inferenced data. Size of
                 each tensor is `(b, n, c, h, w)`.
-            loss_dict (dict of [str, torch.Tensor]): Calculated losses.
+            loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
+                with size `(b, n)`.
         """
 
         raise NotImplementedError

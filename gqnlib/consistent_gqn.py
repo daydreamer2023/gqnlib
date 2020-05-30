@@ -69,7 +69,8 @@ class ConsistentGQN(BaseGQN):
             r_c (torch.Tensor): Representations of context, size
                 `(b, r, h, w)`.
             r_q (torch.Tensor): Representations of query, size `(b, r, h, w)`.
-            loss_dict (dict of [str, torch.Tensor]): Calculated losses.
+            loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
+                with size `(b, n)`.
         """
 
         # Reshape: (b, m, c, h, w) -> (b*m, c, h, w)
@@ -104,9 +105,11 @@ class ConsistentGQN(BaseGQN):
         # Reconstruction loss
         nll_loss = nll_normal(x_q, canvas, x_q.new_ones((1)) * var,
                               reduce=False)
-        nll_loss = nll_loss.sum([1, 2, 3]).mean()
+        nll_loss = nll_loss.sum([1, 2, 3])
 
         # Returned loss
+        nll_loss = nll_loss.view(b, n)
+        kl_loss = kl_loss.view(b, n)
         loss_dict = {"loss": nll_loss + kl_loss, "nll_loss": nll_loss,
                      "kl_loss": kl_loss}
 
