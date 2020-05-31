@@ -44,6 +44,7 @@ class Trainer:
         self.hparams = hparams
 
         # Attributes
+        self.model_name = ""
         self.logdir = pathlib.Path()
         self.logger = None
         self.writer = None
@@ -107,12 +108,11 @@ class Trainer:
 
         self.writer = tb.SummaryWriter(str(self.logdir))
 
-    def load_dataloader(self, model_name: str, train_dir: str, test_dir: str,
-                        batch_size: int) -> None:
+    def load_dataloader(self, train_dir: str, test_dir: str, batch_size: int
+                        ) -> None:
         """Loads data loader for training and test.
 
         Args:
-            model_name (str): Model name.
             train_dir (str): Path to train directory.
             test_dir (str): Path to test directory.
             batch_size (int): Batch size.
@@ -124,15 +124,15 @@ class Trainer:
         dataset_dict = {
             "gqn": gqnlib.SceneDataset,
             "cgqn": gqnlib.SceneDataset,
-            "sqgn": gqnlib.SlimDataset,
+            "sgqn": gqnlib.SlimDataset,
         }
-        dataset = dataset_dict[model_name]
+        dataset = dataset_dict[self.model_name]
 
         # Kwargs for dataset
-        train_kwrags = {"root": train_dir, "batch_size": batch_size}
-        test_kwargs = {"root": test_dir, "batch_size": batch_size}
+        train_kwrags = {"root_dir": train_dir, "batch_size": batch_size}
+        test_kwargs = {"root_dir": test_dir, "batch_size": batch_size}
 
-        if model_name == "sqgn":
+        if self.model_name == "sgqn":
             vectorizer = gqnlib.WordVectorizer()
             train_kwrags.update({"vectorizer": vectorizer, "train": True})
             test_kwargs.update({"vectorizer": vectorizer, "train": False})
@@ -155,12 +155,18 @@ class Trainer:
     def train(self) -> None:
         """Trains model."""
 
+        # Partition method
+        if self.model_name == "sgqn":
+            partition = gqnlib.partition_slim
+        else:
+            partition = gqnlib.partition_scene
+
         for dataset in self.train_loader:
             for data in dataset:
                 self.model.train()
 
                 # Split data into context and query
-                data = gqnlib.partition_scene(*data)
+                data = partition(*data)
 
                 # Data to device
                 data = (x.to(self.device) for x in data)
@@ -192,19 +198,21 @@ class Trainer:
 
                 # Tests
                 if self.global_steps % self.test_interval == 0:
-                    test_loss = self.test()
-                    self.save_checkpoint(test_loss)
+                    self.test()
+                    self.save_checkpoint()
 
                 # Check step limit
                 if self.global_steps >= self.max_steps:
                     break
 
-    def test(self) -> float:
-        """Tests model.
+    def test(self) -> None:
+        """Tests model."""
 
-        Returns:
-            test_loss (float): Accumulated loss per iteration.
-        """
+        # Partition method
+        if self.model_name == "sgqn":
+            partition = gqnlib.partition_slim
+        else:
+            partition = gqnlib.partition_scene
 
         # Logger for loss
         loss_logger = collections.defaultdict(float)
@@ -212,33 +220,35 @@ class Trainer:
 
         # Run
         self.model.eval()
-        for data in self.test_loader:
-            with torch.no_grad():
-                # Split data into context and query
-                data = gqnlib.partition_scene(*data)
+        for dataset in self.test_loader:
+            for data in dataset:
+                with torch.no_grad():
+                    # Split data into context and query
+                    data = partition(*data)
 
-                # Data to device
-                data = (v.to(self.device) for v in data)
-                loss_dict = self.model(*data)
-                loss = loss_dict["loss"]
+                    # Data to device
+                    data = (v.to(self.device) for v in data)
+                    loss_dict = self.model(*data)
+                    loss = loss_dict["loss"]
 
-            # Update progress bar
-            self.postfix["test/loss"] = loss.mean().item()
-            self.pbar.set_postfix(self.postfix)
+                # Update progress bar
+                self.postfix["test/loss"] = loss.mean().item()
+                self.pbar.set_postfix(self.postfix)
 
-            # Save loss
-            count += loss.size(0)
-            for key, value in loss_dict.items():
-                loss_logger[key] = value.sum().item()
+                # Save loss
+                count += loss.size(0)
+                for key, value in loss_dict.items():
+                    loss_logger[key] = value.sum().item()
 
         # Summary
         for key, value in loss_logger.items():
             self.writer.add_scalar(
                 f"test/{key}", value / count, self.global_steps)
 
-        return loss_logger["loss"]
+        self.logger.debug(
+            f"Eval loss (steps={self.global_steps}): {loss_logger}")
 
-    def save_checkpoint(self, loss: float) -> None:
+    def save_checkpoint(self) -> None:
         """Saves trained model and optimizer to checkpoint file.
 
         Args:
@@ -246,7 +256,6 @@ class Trainer:
         """
 
         # Log
-        self.logger.debug(f"Eval loss (steps={self.global_steps}): {loss}")
         self.logger.debug("Save trained model")
 
         # Save model
@@ -254,7 +263,6 @@ class Trainer:
             "steps": self.global_steps,
             "model_state_dict": self.model.state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
-            "loss": loss,
         }
         path = self.logdir / f"checkpoint_{self.global_steps}.pt"
         torch.save(state_dict, path)
@@ -262,7 +270,7 @@ class Trainer:
     def save_configs(self) -> None:
         """Saves setting including config and args in json format."""
 
-        self.logger.info("Save configs")
+        self.logger.debug("Save configs")
 
         config = copy.deepcopy(self.hparams)
         config["logdir"] = str(self.logdir)
@@ -273,7 +281,7 @@ class Trainer:
     def quit(self) -> None:
         """Post process."""
 
-        self.logger.info("No data loader is saved")
+        self.logger.info("Quit base run method")
         self.writer.close()
 
     def _base_run(self) -> None:
@@ -306,7 +314,8 @@ class Trainer:
             self.device = torch.device("cpu")
 
         # Data
-        self.load_dataloader(model_name, train_dir, test_dir, batch_size)
+        self.model_name = model_name
+        self.load_dataloader(train_dir, test_dir, batch_size)
 
         # Model
         self.model = self.model.to(self.device)
@@ -341,8 +350,7 @@ class Trainer:
         self.logger.info("Finish training")
 
         # Post process
-        test_loss = self.test()
-        self.save_checkpoint(test_loss)
+        self.save_checkpoint()
         self.save_configs()
         self.quit()
 
