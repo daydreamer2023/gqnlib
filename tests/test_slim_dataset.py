@@ -210,7 +210,8 @@ class TestSlimDataset(unittest.TestCase):
 
         # Query size is too largs
         with self.assertRaises(ValueError):
-            gqnlib.partition(images, viewpoints, num_query=15)
+            gqnlib.partition_slim_data(
+                images, viewpoints, captions, num_query=15)
 
 
 if __name__ == "__main__":
