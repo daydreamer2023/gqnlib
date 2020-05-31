@@ -22,7 +22,7 @@ class TestEmbeddingEncoder(unittest.TestCase):
         batch, length = x.size()
         d = model(x)
 
-        self.assertTupleEqual(d.size(), (batch, length, embed_dim))
+        self.assertTupleEqual(d.size(), (batch, embed_dim))
 
 
 class TestRepresentationNetwork(unittest.TestCase):

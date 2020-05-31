@@ -56,7 +56,7 @@ class EmbeddingEncoder(nn.Module):
             src (int): Source tensor, size `(b, l)`.
 
         Returns:
-            encoded (torch.Tensor): Encoded source, size `(b, l, embed_dim)`.
+            encoded (torch.Tensor): Encoded source, size `(b, embed_dim)`.
         """
 
         # Check mask size
@@ -66,6 +66,7 @@ class EmbeddingEncoder(nn.Module):
         src = self.embedding(src) * math.sqrt(self.embed_dim)
         src = self.pos_encoder(src)
         output = self.encoder(src, self.src_mask)
+        output = output.sum(1)
         return output
 
     def _generate_square_subsequent_mask(self, src: Tensor) -> None:
@@ -132,19 +133,20 @@ class RepresentationNetwork(nn.Module):
         vocab_dim (int): Vocabulary size.
         embed_dim (int): Dimension of embedding vectors.
         v_dim (int, optional): Dimension of viewpoints.
+        h_dim (int, optional): Dimension of converted viewpoints.
         r_dim (int, optional): Dimension of representations.
         embed_params (dict, optional): Parameters for embedding encoder.
     """
 
     def __init__(self, vocab_dim: int, embed_dim: int = 64, v_dim: int = 4,
-                 r_dim: int = 256, embed_params: dict = {}):
+                 h_dim: int = 32, r_dim: int = 256, embed_params: dict = {}):
         super().__init__()
 
         self.embedding_encoder = EmbeddingEncoder(
             vocab_dim, embed_dim, **embed_params)
-        self.viewpoint_encoder = nn.Linear(v_dim, 32)
+        self.viewpoint_encoder = nn.Linear(v_dim, h_dim)
         self.fc = nn.Sequential(
-            nn.Linear(32 + embed_dim, 512),
+            nn.Linear(h_dim + embed_dim, 512),
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
@@ -162,11 +164,10 @@ class RepresentationNetwork(nn.Module):
             r (torch.Tensor): Representations, size `(b, r, 1, 1)`.
         """
 
-        # Encode captions
+        # Encode captions: (b, embed_dim)
         c = self.embedding_encoder(c)
-        c = c.sum(1)
 
-        # Encode viewpoints
+        # Encode viewpoints: (b, h_dim)
         v = self.viewpoint_encoder(v)
 
         r = self.fc(torch.cat([c, v], dim=1))
