@@ -47,6 +47,10 @@ class WordVectorizer:
                        ) -> List[int]:
         """Convert sentence to indices list.
 
+        **Caution**: if `register` is `False` and unknown word is given, the
+        word is registered as a key of `self.word2index` dict, but
+        `self.n_words` is not incremented.
+
         Args:
             sentence (str): Sentence string.
             register (bool): If true, unknown words are registered to dict.
