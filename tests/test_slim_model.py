@@ -9,7 +9,7 @@ import gqnlib
 class TestCaptionedGQN(unittest.TestCase):
 
     def setUp(self):
-        self.model = gqnlib.CaptionedGQN(vocab_dim=100)
+        self.model = gqnlib.CaptionedGQN()
 
     def test_forwad(self):
         d_c = torch.randint(0, 80, (4, 15, 20))

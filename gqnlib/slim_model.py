@@ -17,7 +17,7 @@ class CaptionedGQN(BaseGQN):
     Implementation of SLIM (Spatial Language Integrating Model).
     """
 
-    def __init__(self, vocab_dim: int, representation_params: dict = {},
+    def __init__(self, vocab_dim: int = 5000, representation_params: dict = {},
                  generator_params: dict = {}):
         super().__init__()
 
