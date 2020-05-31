@@ -53,6 +53,19 @@ class TestWordVectorizer(unittest.TestCase):
         # Length
         self.assertEqual(len(self.vectrizer), 6)
 
+    def test_max_vocab(self):
+        self.vectrizer.vocab_dim = 4
+
+        sentence = "aA, ab. aa? aa! ba,.,., ba!?"
+        _ = self.vectrizer.sentence2index(sentence)
+
+        self.assertSetEqual(set(self.vectrizer.word2index.keys()),
+                            set(["aa", "ab", "ba"]))
+
+        self.assertEqual(self.vectrizer.word2index["aa"], 3)
+        self.assertEqual(self.vectrizer.word2index["ab"], 4)
+        self.assertEqual(self.vectrizer.word2index["ba"], 0)
+
     def test_sentence2index_no_register(self):
         sentence = "aA, ab. aa? aa! ba,.,., ba!?"
         self.vectrizer.sentence2index(sentence)

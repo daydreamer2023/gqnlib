@@ -24,6 +24,9 @@ class WordVectorizer:
     ref)
     https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html
 
+    Args:
+        vocab_dim (int, optional): Max dimension of vocabularies.
+
     Attributes:
         word2index (collections.defaultdict): Word to index dict.
         word2count (collections.defaultdict): Word to counts dict.
@@ -31,7 +34,9 @@ class WordVectorizer:
         n_words (int): Number of words.
     """
 
-    def __init__(self):
+    def __init__(self, vocab_dim: int = 5000):
+
+        self.vocab_dim = vocab_dim
 
         self.word2index = collections.defaultdict(int)
         self.word2count = collections.defaultdict(int)
@@ -67,7 +72,8 @@ class WordVectorizer:
 
             # Register
             if register:
-                if word not in self.word2index:
+                if (word not in self.word2index) and \
+                        (self.n_words <= self.vocab_dim):
                     self.word2index[word] = self.n_words
                     self.word2count[word] = 1
                     self.index2word[self.n_words] = word
