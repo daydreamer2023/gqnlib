@@ -126,7 +126,7 @@ class VisualDecoder(nn.Module):
 class SlimGenerator(nn.Module):
 
     def __init__(self, x_channel: int = 3, u_channel: int = 128,
-                 r_dim: int = 64, e_channel: int = 128, d_channel: int = 128,
+                 r_dim: int = 256, e_channel: int = 128, d_channel: int = 128,
                  h_channel: int = 128, z_channel: int = 3, stride: int = 2,
                  v_dim: int = 4, n_layer: int = 8, scale: int = 4):
         super().__init__()

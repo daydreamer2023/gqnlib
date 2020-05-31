@@ -13,7 +13,7 @@ class TestSlimGenerator(unittest.TestCase):
 
         x_q = torch.randn(10, 3, 64, 64)
         v_q = torch.randn(10, 4)
-        r_c = torch.randn(10, 64)
+        r_c = torch.randn(10, 256)
         canvas, kl_loss = model(x_q, v_q, r_c)
 
         self.assertTupleEqual(canvas.size(), (10, 3, 64, 64))
@@ -24,7 +24,7 @@ class TestSlimGenerator(unittest.TestCase):
         model = gqnlib.SlimGenerator()
 
         v_q = torch.randn(10, 4)
-        r_c = torch.randn(10, 64)
+        r_c = torch.randn(10, 256)
         canvas = model.sample(v_q, r_c)
 
         self.assertTupleEqual(canvas.size(), (10, 3, 64, 64))
