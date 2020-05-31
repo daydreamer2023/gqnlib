@@ -25,5 +25,24 @@ class TestEmbeddingEncoder(unittest.TestCase):
         self.assertTupleEqual(d.size(), (batch, length, embed_dim))
 
 
+class TestRepresentationNetwork(unittest.TestCase):
+
+    def test_forward(self):
+        vocab_dim = 10
+        embed_dim = 64
+        v_dim = 4
+        r_dim = 256
+        model = gqnlib.RepresentationNetwork(
+            vocab_dim, embed_dim, v_dim, r_dim)
+
+        batch = 9
+        v = torch.randn(batch, v_dim)
+        c = torch.arange(vocab_dim).repeat(2).unsqueeze(0)
+        c = c.repeat(batch, 1)
+        d = model(v, c)
+
+        self.assertTupleEqual(d.size(), (batch, r_dim))
+
+
 if __name__ == "__main__":
     unittest.main()

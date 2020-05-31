@@ -1,6 +1,6 @@
 
 from .consistent_gqn import ConsistentGQN
-from .embedding import EmbeddingEncoder
+from .embedding import EmbeddingEncoder, RepresentationNetwork
 from .generation import ConvolutionalDRAW
 from .gqn import GenerativeQueryNetwork
 from .renderer import LatentDistribution, Renderer, DRAWRenderer

@@ -19,16 +19,17 @@ class EmbeddingEncoder(nn.Module):
     Args:
         vocab_dim (int): Vocabulary size.
         embed_dim (int): Dimension of embedding layer.
-        n_head (int): Number of heads in multi-head attention models.
-        h_dim (int): Dimension of feed-forward network of
+        n_head (int, optional): Number of heads in multi-head attention models.
+        h_dim (int, optional): Dimension of feed-forward network of
             `TransformerEncoderLayer` class.
-        n_layer (int): Number of sub-encoder-layers in the encoder.
+        n_layer (int, optional): Number of sub-encoder-layers in the encoder.
         dropout (float, optional): Dropout rate (default=0.1).
         max_len (int, optional): Max length of input strings.
     """
 
-    def __init__(self, vocab_dim: int, embed_dim: int, n_head: int, h_dim: int,
-                 n_layer: int, dropout: float = 0.1, max_len: int = 5000):
+    def __init__(self, vocab_dim: int, embed_dim: int, n_head: int = 2,
+                 h_dim: int = 200, n_layer: int = 2, dropout: float = 0.1,
+                 max_len: int = 500):
         super().__init__()
 
         # Size
@@ -122,3 +123,52 @@ class PositionalEncoder(nn.Module):
 
         x = x + self.pe[:x.size(0)]
         return self.dropout(x)
+
+
+class RepresentationNetwork(nn.Module):
+    """Representation Network r = f(v, c).
+
+    Args:
+        vocab_dim (int): Vocabulary size.
+        embed_dim (int): Dimension of embedding vectors.
+        v_dim (int, optional): Dimension of viewpoints.
+        r_dim (int, optional): Dimension of representations.
+        embed_params (dict, optional): Parameters for embedding encoder.
+    """
+
+    def __init__(self, vocab_dim: int, embed_dim: int = 64, v_dim: int = 4,
+                 r_dim: int = 256, embed_params: dict = {}):
+        super().__init__()
+
+        self.viewpoint_encoder = nn.Linear(v_dim, 32)
+        self.embedding_encoder = EmbeddingEncoder(
+            vocab_dim, embed_dim, **embed_params)
+        self.fc = nn.Sequential(
+            nn.Linear(32 + embed_dim, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, r_dim),
+        )
+
+    def forward(self, v: Tensor, c: Tensor) -> Tensor:
+        """Forward: r = f(v, c)
+
+        Args:
+            v (torch.Tensor): Viewpoints, size `(b, v)`.
+            c (torch.Tensor): Captions, size `(b, c)`.
+
+        Returns:
+            r (torch.Tensor): Representations, size `(b, r)`.
+        """
+
+        # Encode viewpoints
+        v = self.viewpoint_encoder(v)
+
+        # Encode captions
+        c = self.embedding_encoder(c)
+        c = c.sum(1)
+
+        r = self.fc(torch.cat([v, c], dim=1))
+
+        return r
