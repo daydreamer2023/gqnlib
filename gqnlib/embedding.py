@@ -159,7 +159,7 @@ class RepresentationNetwork(nn.Module):
             c (torch.Tensor): Captions, size `(b, c)`.
 
         Returns:
-            r (torch.Tensor): Representations, size `(b, r)`.
+            r (torch.Tensor): Representations, size `(b, r, 1, 1)`.
         """
 
         # Encode viewpoints
@@ -170,5 +170,7 @@ class RepresentationNetwork(nn.Module):
         c = c.sum(1)
 
         r = self.fc(torch.cat([v, c], dim=1))
+
+        r = r.unsqueeze(-1).unsqueeze(-1)
 
         return r

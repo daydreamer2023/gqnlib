@@ -41,7 +41,7 @@ class TestRepresentationNetwork(unittest.TestCase):
         c = c.repeat(batch, 1)
         d = model(v, c)
 
-        self.assertTupleEqual(d.size(), (batch, r_dim))
+        self.assertTupleEqual(d.size(), (batch, r_dim, 1, 1))
 
 
 if __name__ == "__main__":
