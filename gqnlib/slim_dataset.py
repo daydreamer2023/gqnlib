@@ -36,6 +36,8 @@ class WordVectorizer:
         self.index2word = {0: "UNK", 1: "SOS", 2: "EOS"}
         self.n_words = 3
 
+        self.removal = ",.:;?!"
+
     def __len__(self) -> int:
         """Length of registered words."""
         return self.n_words
@@ -48,7 +50,7 @@ class WordVectorizer:
         """
 
         for word in sentence.split(" "):
-            word = word.lower().strip(",.:;?!")
+            word = word.lower().strip(self.removal)
             if word not in self.word2index:
                 self.word2index[word] = self.n_words
                 self.word2count[word] = 1
@@ -69,7 +71,7 @@ class WordVectorizer:
 
         indices = []
         for word in sentence.split(" "):
-            word = word.lower().strip(",.:;?!")
+            word = word.lower().strip(self.removal)
             indices.append(self.word2index[word])
 
         return indices
