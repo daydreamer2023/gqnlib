@@ -17,17 +17,19 @@ class SceneDataset(torch.utils.data.Dataset):
     SceneDataset class loads data files at each time accessed by index.
 
     Args:
-        root_dir (str): Path to root directory
+        root_dir (str): Path to root directory.
+        batch_size (int): Batch size.
 
     Attributes:
         record_list (list of pathlib.Path): List of path to data files.
     """
 
-    def __init__(self, root_dir: str):
+    def __init__(self, root_dir: str, batch_size: int):
         super().__init__()
 
         root_dir = pathlib.Path(root_dir)
         self.record_list = sorted(root_dir.glob("*.pt.gz"))
+        self.batch_size = batch_size
 
     def __len__(self) -> int:
         """Returns number of files and directories in root dir.
@@ -41,31 +43,50 @@ class SceneDataset(torch.utils.data.Dataset):
     def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
         """Loads data file and returns data with specified index.
 
-        This method reads `<index>.pt.gz` file, which includes a tuple
-        `(images, viewpoints)`; images size = `(m, h, w, c)`, viewpoints
-        size `(m, v)`.
+        This method reads `<index>.pt.gz` file, which includes a list of
+        tuples `(images, viewpoints)`; images of size = `(n, m, h, w, c)`,
+        viewpoints of size `(n, m, v)`.
 
         Args:
             index (int): Index number.
 
         Returns:
-            images (torch.Tensor): Image tensor, size
-                `(num_points, 3, 64, 64)`.
-            viewpoints (torch.Tensor): View points, size
-                `(num_points, 7)`.
+            images (torch.Tensor): Image tensor, size `(a, b, m, 3, 64, 64)`.
+            viewpoints (torch.Tensor): View points, size `(a, b, m, 7)`.
         """
 
         with gzip.open(self.record_list[index], "rb") as f:
-            images, viewpoints = torch.load(f)
+            dataset = torch.load(f)
 
-        images = torch.from_numpy(images)
-        viewpoints = torch.from_numpy(viewpoints)
+        # Read list of tuples
+        images = []
+        viewpoints = []
+        for img, view in dataset:
+            images.append(torch.from_numpy(img))
+            viewpoints.append(torch.from_numpy(view))
 
-        # Convert data size: NHWC -> NCHW
-        images = images.permute(0, 3, 1, 2)
+        images = torch.stack(images)
+        viewpoints = torch.stack(viewpoints)
+
+        # Convert data size: NMHWC -> NMCHW
+        images = images.permute(0, 1, 4, 2, 3)
 
         # Transform viewpoints
         viewpoints = transform_viewpoint(viewpoints)
+
+        # Cut length
+        batch_num = images.size(0) // self.batch_size
+        images = images[:self.batch_size * batch_num]
+        viewpoints = viewpoints[:self.batch_size * batch_num]
+
+        _, *i_dims = images.size()
+        _, *v_dims = viewpoints.size()
+
+        # Resize: (n, m, *) -> (a, b, m, *)
+        images = images.contiguous().view(
+            batch_num, self.batch_size, *i_dims)
+        viewpoints = viewpoints.contiguous().view(
+            batch_num, self.batch_size, *v_dims)
 
         return images, viewpoints
 
