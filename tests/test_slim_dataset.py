@@ -16,9 +16,12 @@ class TestWordVectorizer(unittest.TestCase):
     def setUp(self):
         self.vectrizer = gqnlib.WordVectorizer()
 
-    def test_add_sentence(self):
+    def test_sentence2index(self):
         sentence = "aA, ab. aa? aa! ba,.,., ba!?"
-        self.vectrizer.add_setence(sentence)
+        indices = self.vectrizer.sentence2index(sentence)
+
+        # Indices
+        self.assertListEqual(indices, [3, 4, 3, 3, 5, 5])
 
         # Word to index
         self.assertSetEqual(set(self.vectrizer.word2index.keys()),
@@ -50,17 +53,18 @@ class TestWordVectorizer(unittest.TestCase):
         # Length
         self.assertEqual(len(self.vectrizer), 6)
 
-    def test_sentence2index(self):
+    def test_sentence2index_no_register(self):
         sentence = "aA, ab. aa? aa! ba,.,., ba!?"
-        self.vectrizer.add_setence(sentence)
+        self.vectrizer.sentence2index(sentence)
 
-        sentence = "aa, ba, cc, aa"
-        indices = self.vectrizer.sentence2index(sentence)
-        self.assertListEqual(indices, [3, 5, 0, 3])
+        sentence = "ac, aa., BA?"
+        indices = self.vectrizer.sentence2index(sentence, register=False)
+
+        self.assertListEqual(indices, [0, 3, 5])
 
     def test_to_json(self):
         sentence = "aa, ab. aa? aa! ba,.,., ba!?"
-        self.vectrizer.add_setence(sentence)
+        self.vectrizer.sentence2index(sentence)
 
         with tempfile.TemporaryDirectory() as root:
             path = pathlib.Path(root, "tmp.json")
@@ -78,7 +82,7 @@ class TestWordVectorizer(unittest.TestCase):
 
     def test_read_json(self):
         sentence = "aa, ab. aa? aa! ba,.,., ba!?"
-        self.vectrizer.add_setence(sentence)
+        self.vectrizer.sentence2index(sentence)
 
         model = gqnlib.WordVectorizer()
 
@@ -120,7 +124,7 @@ class TestSlimDataset(unittest.TestCase):
     def test_getitem(self):
         # Vectorizer
         vectorizer = gqnlib.WordVectorizer()
-        vectorizer.add_setence("aa, ab. aa? aa! ba,.,., ba!?")
+        vectorizer.sentence2index("aa, ab. aa? aa! ba,.,., ba!?")
 
         # Dataset
         imgs = torch.empty(10, 64, 64, 3).numpy()

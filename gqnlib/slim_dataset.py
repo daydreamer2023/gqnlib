@@ -43,28 +43,13 @@ class WordVectorizer:
         """Length of registered words."""
         return self.n_words
 
-    def add_setence(self, sentence: str) -> None:
-        """Adds sentence to wors-index pairs.
-
-        Args:
-            sentence (str): Sentence string.
-        """
-
-        for word in sentence.split(" "):
-            word = word.lower().strip(self.removal)
-            if word not in self.word2index:
-                self.word2index[word] = self.n_words
-                self.word2count[word] = 1
-                self.index2word[self.n_words] = word
-                self.n_words += 1
-            else:
-                self.word2count[word] += 1
-
-    def sentence2index(self, sentence: str) -> List[int]:
+    def sentence2index(self, sentence: str, register: bool = True
+                       ) -> List[int]:
         """Convert sentence to indices list.
 
         Args:
             sentence (str): Sentence string.
+            register (bool): If true, unknown words are registered to dict.
 
         Returns:
             indices (list of int): Indices list.
@@ -72,7 +57,20 @@ class WordVectorizer:
 
         indices = []
         for word in sentence.split(" "):
+            # Preprocess
             word = word.lower().strip(self.removal)
+
+            # Register
+            if register:
+                if word not in self.word2index:
+                    self.word2index[word] = self.n_words
+                    self.word2count[word] = 1
+                    self.index2word[self.n_words] = word
+                    self.n_words += 1
+                else:
+                    self.word2count[word] += 1
+
+            # Get index
             indices.append(self.word2index[word])
 
         return indices
@@ -123,7 +121,7 @@ class WordVectorizer:
             dataset = torch.load(f)
 
         for _, _, _, cpt, *_ in dataset:
-            self.add_setence(cpt[0].decode())
+            self.sentence2index(cpt[0].decode())
 
 
 class SlimDataset(torch.utils.data.Dataset):
