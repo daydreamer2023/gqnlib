@@ -141,9 +141,10 @@ def convert_record(path: pathlib.Path, dataset_name: str,
             batch += 1
     else:
         # Save rest
-        save_path = save_dir / f"{path.stem}-{batch}.pt.gz"
-        with gzip.open(str(save_path), "wb") as f:
-            torch.save(scene_list, f)
+        if scene_list:
+            save_path = save_dir / f"{path.stem}-{batch}.pt.gz"
+            with gzip.open(str(save_path), "wb") as f:
+                torch.save(scene_list, f)
 
 
 def _preprocess_data(dataset_info: collections.namedtuple,
