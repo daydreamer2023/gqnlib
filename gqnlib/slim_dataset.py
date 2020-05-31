@@ -251,11 +251,11 @@ def partition_slim(images: Tensor, viewpoints: Tensor, captions: Tensor,
 
     Args:
         images (torch.Tensor): Image tensor, size
-            `(batch, num_points, c, h, w)`.
+            `(batch, b, num_points, c, h, w)`.
         viewpoints (torch.Tensor): Viewpoints tensor, size
-            `(batch, num_points, target)`.
+            `(batch, b, num_points, target)`.
         captions (torch.Tensor): Captions tensor, size
-            `(batch, num_points, length)`.
+            `(batch, b, num_points, length)`.
         num_query (int, optional): Number of queries.
         randomized (bool, optional): If `True`, the number of context data is
             randomly selected.
@@ -271,9 +271,9 @@ def partition_slim(images: Tensor, viewpoints: Tensor, captions: Tensor,
     """
 
     # Maximum number of context
-    batch, num, *x_dims = images.size()
-    _, _, *v_dims = viewpoints.size()
-    _, _, *d_dims = captions.size()
+    _, batch, num, *x_dims = images.size()
+    _, _, _, *v_dims = viewpoints.size()
+    _, _, _, *d_dims = captions.size()
 
     if num_query >= num:
         raise ValueError(f"Number of queries (n={num_query}) must be less "

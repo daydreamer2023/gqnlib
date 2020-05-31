@@ -167,9 +167,9 @@ class TestSlimDataset(unittest.TestCase):
         self.assertTupleEqual(captions.size(), (10, 8, 6))
 
     def test_partition_slim(self):
-        images = torch.empty(5, 15, 3, 64, 64)
-        viewpoints = torch.empty(5, 15, 4)
-        captions = torch.empty(5, 15, 20)
+        images = torch.empty(1, 5, 15, 3, 64, 64)
+        viewpoints = torch.empty(1, 5, 15, 4)
+        captions = torch.empty(1, 5, 15, 20)
 
         # Single query
         d_c, v_c, x_q, v_q = gqnlib.partition_slim(

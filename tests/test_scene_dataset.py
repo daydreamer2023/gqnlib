@@ -39,8 +39,8 @@ class TestSceneDataset(unittest.TestCase):
 
     def test_partition_scene(self):
         # Data
-        images = torch.empty(5, 15, 3, 64, 64)
-        viewpoints = torch.empty(5, 15, 7)
+        images = torch.empty(1, 5, 15, 3, 64, 64)
+        viewpoints = torch.empty(1, 5, 15, 7)
 
         # Query single data
         x_c, v_c, x_q, v_q = gqnlib.partition_scene(images, viewpoints)

@@ -125,9 +125,9 @@ def partition_scene(images: Tensor, viewpoints: Tensor, num_query: int = 1
 
     Args:
         images (torch.Tensor): Image tensor, size
-            `(batch, num_points, c, h, w)`.
+            `(batch, b, num_points, c, h, w)`.
         viewpoints (torch.Tensor): Viewpoints tensor, size
-            `(batch, num_points, target)`.
+            `(batch, b, num_points, target)`.
         num_query (int, optional): Number of queries.
 
     Returns:
@@ -141,8 +141,8 @@ def partition_scene(images: Tensor, viewpoints: Tensor, num_query: int = 1
     """
 
     # Maximum number of context
-    batch, num, *x_dims = images.size()
-    _, _, *v_dims = viewpoints.size()
+    _, batch, num, *x_dims = images.size()
+    _, _, _, *v_dims = viewpoints.size()
 
     if num_query >= num:
         raise ValueError(f"Number of queries (n={num_query}) must be less "
