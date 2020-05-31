@@ -79,23 +79,12 @@ class TestRenderer(unittest.TestCase):
 class TestDRAWRenderer(unittest.TestCase):
 
     def test_forward(self):
-        x_channel = 3
-        u_channel = 128
-        r_channel = 32
-        e_channel = 128
-        d_channel = 128
-        h_channel = 64
-        z_channel = 3
-        stride = 2
-        v_dim = 7
-        model = gqnlib.DRAWRenderer(
-            x_channel, u_channel, r_channel, e_channel, d_channel, h_channel,
-            z_channel, stride, v_dim)
+        model = gqnlib.DRAWRenderer()
 
-        x = torch.randn(4, x_channel, 64, 64)
-        v = torch.randn(4, v_dim)
-        r_c = torch.randn(4, r_channel, 16, 16)
-        r_q = torch.randn(4, r_channel, 16, 16)
+        x = torch.randn(4, 3, 64, 64)
+        v = torch.randn(4, 7)
+        r_c = torch.randn(4, 32, 16, 16)
+        r_q = torch.randn(4, 32, 16, 16)
 
         canvas, kl_loss = model(x, v, r_c, r_q)
 
@@ -104,24 +93,13 @@ class TestDRAWRenderer(unittest.TestCase):
         self.assertGreater(kl_loss.mean(), 0)
 
     def test_sample(self):
-        x_channel = 3
-        u_channel = 128
-        r_channel = 32
-        e_channel = 128
-        d_channel = 128
-        h_channel = 64
-        z_channel = 3
-        stride = 2
-        v_dim = 7
-        model = gqnlib.DRAWRenderer(
-            x_channel, u_channel, r_channel, e_channel, d_channel, h_channel,
-            z_channel, stride, v_dim)
+        model = gqnlib.DRAWRenderer()
 
-        v = torch.randn(4, v_dim)
-        r = torch.randn(4, r_channel, 16, 16)
+        v = torch.randn(4, 7)
+        r = torch.randn(4, 32, 16, 16)
         canvas = model.sample(v, r)
 
-        self.assertTupleEqual(canvas.size(), (4, x_channel, 64, 64))
+        self.assertTupleEqual(canvas.size(), (4, 3, 64, 64))
 
 
 if __name__ == "__main__":

@@ -15,21 +15,17 @@ class GenerativeQueryNetwork(BaseGQN):
     """Generative Query Network class.
 
     Args:
-        x_channel (int, optional): Number of channel in input images.
-        v_dim (int, optional): Dimensions of viewpoints.
-        r_dim (int, optional): Dimensions of representations.
-        z_channel (int, optional): Number of channel in latent variable.
-        h_channel (int, optional): Number of channel in hidden states.
-        n_layer (int, optional): Number of recurrent layers.
+        representation_params (dict, optional): Parameters of representation
+            network.
+        generator_params (dict, optional): Parameters of generator network.
     """
 
-    def __init__(self, x_channel: int = 3, v_dim: int = 7, r_dim: int = 256,
-                 z_channel: int = 64, h_channel: int = 128, n_layer: int = 8):
+    def __init__(self, representation_params: dict = {},
+                 generator_params: dict = {}):
         super().__init__()
 
-        self.generator = ConvolutionalDRAW(x_channel, v_dim, r_dim, z_channel,
-                                           h_channel, n_layer)
-        self.representation = Tower(x_channel, v_dim)
+        self.representation = Tower(**representation_params)
+        self.generator = ConvolutionalDRAW(**generator_params)
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0

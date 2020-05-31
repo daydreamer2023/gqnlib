@@ -120,26 +120,29 @@ class DRAWRenderer(nn.Module):
     """DRAW Renderer class for generation and inference.
 
     Args:
-        x_channel (int): Number of channels in the observations.
-        u_channel (int): Number of channels in the hidden layer between
-            LSTM states and the canvas (nf_to_obs).
-        r_channel (int): Number of channels in representation.
-        e_channel (int): Number of channels in the conv. layer mapping input
-            images to LSTM input (nf_enc).
-        d_channel (int): Number of channels in the conv. layer mapping the
-            canvas state to the LSTM input (nf_dec).
-        h_channel (int): Number of channels in LSTM layer (nf_to_hidden).
-        z_channel (int): Number of channels in the stochastic latent in each
-            DRAW step (nf_z).
-        stride (int): Kernel size of transposed conv. layer (stride_to_obs).
-        v_dim (int): Dimension size of viewpoints.
+        x_channel (int, optional): Number of channels in the observations.
+        u_channel (int, optional): Number of channels in the hidden layer
+            between LSTM states and the canvas (nf_to_obs).
+        r_channel (int, optional): Number of channels in representation.
+        e_channel (int, optional): Number of channels in the conv. layer
+            mapping input images to LSTM input (nf_enc).
+        d_channel (int, optional): Number of channels in the conv. layer
+            mapping the canvas state to the LSTM input (nf_dec).
+        h_channel (int, optional): Number of channels in LSTM layer
+            (nf_to_hidden).
+        z_channel (int, optional): Number of channels in the stochastic latent
+            in each DRAW step (nf_z).
+        stride (int, optional): Kernel size of transposed conv. layer
+            (stride_to_obs).
+        v_dim (int, optional): Dimension size of viewpoints.
         n_layer (int, optional): Number of recurrent layers.
         scale (int, optional): Scale of image generation process.
     """
 
-    def __init__(self, x_channel: int, u_channel: int, r_channel: int,
-                 e_channel: int, d_channel: int, h_channel: int,
-                 z_channel: int, stride: int, v_dim: int, n_layer: int = 8,
+    def __init__(self, x_channel: int = 3, u_channel: int = 128,
+                 r_channel: int = 32, e_channel: int = 128,
+                 d_channel: int = 128, h_channel: int = 64, z_channel: int = 3,
+                 stride: int = 2, v_dim: int = 7, n_layer: int = 8,
                  scale: int = 4):
         super().__init__()
 
