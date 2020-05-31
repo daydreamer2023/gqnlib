@@ -155,48 +155,49 @@ class Trainer:
     def train(self) -> None:
         """Trains model."""
 
-        for data in self.train_loader:
-            self.model.train()
+        for dataset in self.train_loader:
+            for data in dataset:
+                self.model.train()
 
-            # Split data into context and query
-            data = gqnlib.partition_scene(*data)
+                # Split data into context and query
+                data = gqnlib.partition_scene(*data)
 
-            # Data to device
-            data = (x.to(self.device) for x in data)
+                # Data to device
+                data = (x.to(self.device) for x in data)
 
-            # Pixel variance annealing
-            var = next(self.sigma_scheduler) ** 2
+                # Pixel variance annealing
+                var = next(self.sigma_scheduler) ** 2
 
-            # Forward
-            self.optimizer.zero_grad()
-            loss_dict = self.model(*data, var)
-            loss = loss_dict["loss"].mean()
+                # Forward
+                self.optimizer.zero_grad()
+                loss_dict = self.model(*data, var)
+                loss = loss_dict["loss"].mean()
 
-            # Backward and update
-            loss.backward()
-            self.optimizer.step()
-            self.lr_scheduler.step()
+                # Backward and update
+                loss.backward()
+                self.optimizer.step()
+                self.lr_scheduler.step()
 
-            # Progress bar update
-            self.global_steps += 1
-            self.pbar.update(1)
+                # Progress bar update
+                self.global_steps += 1
+                self.pbar.update(1)
 
-            self.postfix["train/loss"] = loss.item()
-            self.pbar.set_postfix(self.postfix)
+                self.postfix["train/loss"] = loss.item()
+                self.pbar.set_postfix(self.postfix)
 
-            # Summary
-            for key, value in loss_dict.items():
-                self.writer.add_scalar(
-                    f"train/{key}", value.mean(), self.global_steps)
+                # Summary
+                for key, value in loss_dict.items():
+                    self.writer.add_scalar(
+                        f"train/{key}", value.mean(), self.global_steps)
 
-            # Tests
-            if self.global_steps % self.test_interval == 0:
-                test_loss = self.test()
-                self.save_checkpoint(test_loss)
+                # Tests
+                if self.global_steps % self.test_interval == 0:
+                    test_loss = self.test()
+                    self.save_checkpoint(test_loss)
 
-            # Check step limit
-            if self.global_steps >= self.max_steps:
-                break
+                # Check step limit
+                if self.global_steps >= self.max_steps:
+                    break
 
     def test(self) -> float:
         """Tests model.
