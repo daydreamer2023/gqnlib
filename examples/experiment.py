@@ -29,7 +29,7 @@ class Trainer:
     * test_dir (str): Path to test data.
     * batch_size (int): Batch size.
     * max_steps (int): Number of max iteration steps.
-    * log_save_interval (int): Number of interval epochs to save checkpoints.
+    * test_interval (int): Number of interval epochs to save checkpoints.
     * gpus (str): Comma separated list of GPU IDs (ex. '0,1').
 
     Args:
@@ -54,6 +54,7 @@ class Trainer:
         self.max_steps = 0
         self.pbar = None
         self.postfix = {}
+        self.test_interval = 10000
 
     def check_logdir(self) -> None:
         """Checks log directory.
@@ -133,12 +134,8 @@ class Trainer:
         self.logger.info(f"Train dataset size: {len(self.train_loader)}")
         self.logger.info(f"Test dataset size: {len(self.test_loader)}")
 
-    def train(self) -> float:
-        """Trains model.
-
-        Returns:
-            train_loss (float): Accumulated loss value.
-        """
+    def train(self) -> None:
+        """Trains model."""
 
         # Logger for loss
         loss_logger = collections.defaultdict(float)
@@ -148,7 +145,7 @@ class Trainer:
         self.model.train()
         for data in self.train_loader:
             # Split data into context and query
-            data = gqnlib.partition(*data)
+            data = gqnlib.partition_scene(*data)
 
             # Data to device
             data = (x.to(self.device) for x in data)
@@ -178,6 +175,11 @@ class Trainer:
             for key, value in loss_dict.items():
                 loss_logger[key] = loss.mean().item()
 
+            # Tests
+            if self.global_steps % self.test_interval == 0:
+                test_loss = self.test()
+                self.save_checkpoint(test_loss)
+
             # Check step limit
             if self.global_steps >= self.max_steps:
                 break
@@ -186,8 +188,6 @@ class Trainer:
         for key, value in loss_logger.items():
             self.writer.add_scalar(
                 f"train/{key}", value / count, self.global_steps)
-
-        return loss_logger["loss"]
 
     def test(self) -> float:
         """Tests model.
@@ -205,7 +205,7 @@ class Trainer:
         for data in self.test_loader:
             with torch.no_grad():
                 # Split data into context and query
-                data = gqnlib.partition(*data)
+                data = gqnlib.partition_scene(*data)
 
                 # Data to device
                 data = (v.to(self.device) for v in data)
@@ -252,6 +252,8 @@ class Trainer:
     def save_configs(self) -> None:
         """Saves setting including config and args in json format."""
 
+        self.logger.info("Save configs")
+
         config = copy.deepcopy(self.hparams)
         config["logdir"] = str(self.logdir)
 
@@ -275,7 +277,7 @@ class Trainer:
         test_dir = hparams.pop("test_dir", "./data/tmp/test")
         batch_size = hparams.pop("batch_size", 1)
         max_steps = hparams.pop("steps", 10)
-        log_save_interval = hparams.pop("log_save_interval", 5)
+        test_interval = hparams.pop("test_interval", 5)
         gpus = hparams.pop("gpus", None)
 
         optimizer_params = hparams.pop("optimizer_params", {})
@@ -318,19 +320,11 @@ class Trainer:
         self.global_steps = 0
         self.max_steps = max_steps
         self.postfix = {"train/loss": 0, "test/loss": 0}
+        self.test_interval = test_interval
 
-        # Run training (actual for-loop is max_steps / batch_size)
-        for step in range(1, max_steps + 1):
-            # Training
-            _ = self.train()
-
-            if step % log_save_interval == 0:
-                # Calculate test loss
-                test_loss = self.test()
-                self.save_checkpoint(test_loss)
-
-            if self.global_steps >= self.max_steps:
-                break
+        # Run training
+        while self.global_steps < self.max_steps:
+            self.train()
 
         self.pbar.close()
         self.logger.info("Finish training")
