@@ -21,7 +21,7 @@ class TestCaptionedGQN(unittest.TestCase):
             d_c, v_c, x_q, v_q)
 
         self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
-        self.assertTupleEqual(r_c.size(), (4, 2, 256))
+        self.assertTupleEqual(r_c.size(), (4, 2, 256, 1, 1))
 
         self.assertTupleEqual(loss_dict["loss"].size(), (4, 2))
         self.assertTupleEqual(loss_dict["nll_loss"].size(), (4, 2))
@@ -64,7 +64,7 @@ class TestCaptionedGQN(unittest.TestCase):
 
         canvas, r_c = self.model.reconstruct(d_c, v_c, x_q, v_q)
         self.assertTupleEqual(canvas.size(), (4, 1, 3, 64, 64))
-        self.assertTupleEqual(r_c.size(), (4, 1, 256))
+        self.assertTupleEqual(r_c.size(), (4, 1, 256, 1, 1))
 
     # def test_sample(self):
     #     d_c = torch.randint(0, 80, (4, 15, 20))

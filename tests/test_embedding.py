@@ -41,7 +41,7 @@ class TestRepresentationNetwork(unittest.TestCase):
         v = torch.randn(batch, v_dim)
         d = model(c, v)
 
-        self.assertTupleEqual(d.size(), (batch, r_dim))
+        self.assertTupleEqual(d.size(), (batch, r_dim, 1, 1))
 
 
 if __name__ == "__main__":

@@ -170,4 +170,5 @@ class RepresentationNetwork(nn.Module):
         v = self.viewpoint_encoder(v)
 
         r = self.fc(torch.cat([c, v], dim=1))
+        r = r.contiguous().view(*r.size(), 1, 1)
         return r

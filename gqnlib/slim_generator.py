@@ -100,7 +100,7 @@ class VisualDecoder(nn.Module):
         Args:
             z (torch.Tensor): Latent states, size `(b, z, 8, 8)`.
             v (torch.Tensor): Query viewpoints, size `(b, v)`.
-            r (torch.Tensor): Context representations, size `(b, r)`.
+            r (torch.Tensor): Context representations, size `(b, r, 1, 1)`.
             u (torch.Tensor): Canvas for images, size `(b, u, h*st, w*st)`.
             h (torch.Tensor): Previous hidden states, size `(b, h, 8, 8)`.
             c (torch.Tensor): Previous cell states, size `(b, h, 8, 8)`.
@@ -154,7 +154,7 @@ class SlimGenerator(nn.Module):
         Args:
             x_q (torch.Tensor): True queried iamges, size `(b, c, h, w)`.
             v_q (torch.Tensor): Query of viewpoints, size `(b, v)`.
-            r_c (torch.Tensor): Representation of context, size `(b, r)`.
+            r_c (torch.Tensor): Representation of context, size `(b, r, x, y)`.
 
         Returns:
             canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
@@ -209,7 +209,7 @@ class SlimGenerator(nn.Module):
 
         Args:
             v_q (torch.Tensor): Query of viewpoints, size `(b, v)`.
-            r_c (torch.Tensor): Representation of context, size `(b, r)`.
+            r_c (torch.Tensor): Representation of context, size `(b, r, x, y)`.
             x_shape (tuple of int, optional): Sampled x shape.
 
         Returns:
