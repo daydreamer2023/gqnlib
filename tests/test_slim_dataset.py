@@ -1,6 +1,7 @@
 
 import unittest
 
+import gzip
 import json
 import pathlib
 import tempfile
@@ -80,6 +81,23 @@ class TestWordVectorizer(unittest.TestCase):
         self.assertDictEqual(self.vectrizer.word2count, model.word2count)
         self.assertDictEqual(self.vectrizer.index2word, model.index2word)
         self.assertEqual(self.vectrizer.n_words, model.n_words)
+
+    def test_read_ptgz(self):
+        c = torch.randn(10, 3, 64, 64).numpy()
+        cpt = [b"aa, ab. aa? aa! ba,.,., ba!?"]
+        data = [(c, c, c, cpt, c, c)] * 10
+
+        with tempfile.TemporaryDirectory() as root:
+            path = pathlib.Path(root, "tmp.json")
+            with gzip.open(path, "wb") as f:
+                torch.save(data, f)
+
+            self.vectrizer.read_ptgz(path)
+
+        self.assertEqual(self.vectrizer.word2index["aa"], 3)
+        self.assertEqual(self.vectrizer.word2count["aa"], 30)
+        self.assertEqual(self.vectrizer.index2word[3], "aa")
+        self.assertEqual(self.vectrizer.n_words, 6)
 
 
 class TestSlimDataset(unittest.TestCase):

@@ -71,7 +71,7 @@ class WordVectorizer:
             json.dump(data, f)
 
     def read_json(self, path: str) -> None:
-        """Saves to json file.
+        """Reads saved json file.
 
         Args:
             path (str): Path to json file.
@@ -87,6 +87,19 @@ class WordVectorizer:
         self.word2count = collections.defaultdict(int, word2count)
         self.index2word = {int(k): v for k, v in data["index2word"].items()}
         self.n_words = int(data["n_words"])
+
+    def read_ptgz(self, path: str) -> None:
+        """Reads '*.pt.gz' file.
+
+        Args:
+            path (str): Path to 'pt.gz' file.
+        """
+
+        with gzip.open(path, "rb") as f:
+            dataset = torch.load(f)
+
+        for _, _, _, cpt, *_ in dataset:
+            self.add_setence(cpt[0].decode())
 
 
 class SlimDataset(torch.utils.data.Dataset):
