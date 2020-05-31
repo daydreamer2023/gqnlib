@@ -48,7 +48,7 @@ class WordVectorizer:
         """
 
         for word in sentence.split(" "):
-            word = word.strip(",.:;?!")
+            word = word.lower().strip(",.:;?!")
             if word not in self.word2index:
                 self.word2index[word] = self.n_words
                 self.word2count[word] = 1

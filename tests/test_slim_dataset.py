@@ -17,7 +17,7 @@ class TestWordVectorizer(unittest.TestCase):
         self.vectrizer = gqnlib.WordVectorizer()
 
     def test_add_sentence(self):
-        sentence = "aa, ab. aa? aa! ba,.,., ba!?"
+        sentence = "aA, ab. aa? aa! ba,.,., ba!?"
         self.vectrizer.add_setence(sentence)
 
         # Word to index
