@@ -258,10 +258,6 @@ class Trainer:
         with (self.logdir / "config.json").open("w") as f:
             json.dump(config, f)
 
-    def save_plot(self) -> None:
-        """Plot and save a figure."""
-        pass
-
     def quit(self) -> None:
         """Post process."""
 
@@ -332,7 +328,6 @@ class Trainer:
                 # Calculate test loss
                 test_loss = self.test()
                 self.save_checkpoint(test_loss)
-                self.save_plot()
 
             if self.global_steps >= self.max_steps:
                 break
