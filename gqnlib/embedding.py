@@ -170,7 +170,4 @@ class RepresentationNetwork(nn.Module):
         c = c.sum(1)
 
         r = self.fc(torch.cat([v, c], dim=1))
-
-        r = r.unsqueeze(-1).unsqueeze(-1)
-
         return r
