@@ -61,6 +61,9 @@ class TestWordVectorizer(unittest.TestCase):
         indices = self.vectrizer.sentence2index(sentence, register=False)
 
         self.assertListEqual(indices, [0, 3, 5])
+        self.assertEqual(self.vectrizer.word2count["aa"], 3)
+        self.assertTrue("ac" in self.vectrizer.word2index)
+        self.assertTrue("ac" not in self.vectrizer.word2count)
 
     def test_to_json(self):
         sentence = "aa, ab. aa? aa! ba,.,., ba!?"
