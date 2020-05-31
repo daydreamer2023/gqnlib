@@ -202,3 +202,41 @@ class SlimGenerator(nn.Module):
         canvas = torch.sigmoid(self.translation(u))
 
         return canvas, kl_loss
+
+    def sample(self, v_q: Tensor, r_c: Tensor,
+               x_shape: Tuple[int, int] = (64, 64)) -> Tensor:
+        """Samples images from the prior given viewpoint and representations.
+
+        Args:
+            v_q (torch.Tensor): Query of viewpoints, size `(b, v)`.
+            r_c (torch.Tensor): Representation of context, size `(b, r)`.
+            x_shape (tuple of int, optional): Sampled x shape.
+
+        Returns:
+            canvas (torch.Tensor): Sampled data, size `(b, c, h, w)`.
+        """
+
+        # Data size
+        batch_size = v_q.size(0)
+        h, w = x_shape
+        h_scale = h // (self.scale * self.stride)
+        w_scale = w // (self.scale * self.stride)
+
+        # Decoder initial state
+        h_dec = v_q.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_dec = v_q.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+
+        # Canvas that data is drawn on
+        u = v_q.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
+                           w_scale * self.stride))
+
+        for _ in range(self.n_layer):
+            # Sample prior z ~ N(0, I)
+            z = torch.randn(batch_size, self.z_channel, h_scale, w_scale)
+
+            # Generator state update
+            u, h_dec, c_dec = self.decoder(z, v_q, r_c, u, h_dec, c_dec)
+
+        canvas = torch.sigmoid(self.translation(u))
+
+        return canvas
