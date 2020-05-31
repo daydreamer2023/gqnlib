@@ -66,13 +66,13 @@ class TestCaptionedGQN(unittest.TestCase):
         self.assertTupleEqual(canvas.size(), (4, 1, 3, 64, 64))
         self.assertTupleEqual(r_c.size(), (4, 1, 256, 1, 1))
 
-    # def test_sample(self):
-    #     d_c = torch.randint(0, 80, (4, 15, 20))
-    #     v_c = torch.randn(4, 15, 4)
-    #     v_q = torch.randn(4, 2, 4)
+    def test_sample(self):
+        d_c = torch.randint(0, 80, (4, 15, 20))
+        v_c = torch.randn(4, 15, 4)
+        v_q = torch.randn(4, 2, 4)
 
-    #     canvas = self.model.sample(d_c, v_c, v_q)
-    #     self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
+        canvas = self.model.sample(d_c, v_c, v_q)
+        self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
 
     # def test_query(self):
     #     v_q = torch.randn(4, 2, 4)

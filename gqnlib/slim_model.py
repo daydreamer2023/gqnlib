@@ -84,3 +84,45 @@ class CaptionedGQN(BaseGQN):
         r_c = r_c.view(b, n, *r_dims)
 
         return (canvas, r_c), loss_dict
+
+    def sample(self, d_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
+        """Samples images `x_q` by context pair `(d, v)` and query viewpoint
+        `v_q`.
+
+        Args:
+            d_c (torch.Tensor): Context captions, size `(b, m, l)`.
+            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
+
+        Returns:
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
+        """
+
+        # Reshape: (b, m, c, h, w) -> (b*m, c, h, w)
+        b, m, *d_dims = d_c.size()
+        _, _, *v_dims = v_c.size()
+
+        d_c = d_c.view(-1, *d_dims)
+        v_c = v_c.view(-1, *v_dims)
+
+        n = v_q.size(1)
+        v_q = v_q.view(-1, *v_dims)
+
+        # Representation generated from context.
+        r_c = self.representation(d_c, v_c)
+        _, *r_dims = r_c.size()
+        r_c = r_c.view(b, m, *r_dims)
+
+        # Sum over representations: (b, c, h, w)
+        r_c = r_c.sum(1)
+        r_c = r_c.repeat_interleave(n, dim=0)
+
+        # Sample query images
+        canvas = self.generator.sample(v_q, r_c)
+
+        # Restore origina shape
+        _, *x_dims = canvas.size()
+        canvas = canvas.view(b, n, *x_dims)
+
+        return canvas
