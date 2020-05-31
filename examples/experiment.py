@@ -18,7 +18,7 @@ import gqnlib
 
 
 class Trainer:
-    """Trainer class for neural process.
+    """Trainer class for Generative Query Netowork.
 
     **Notes**
 
@@ -137,13 +137,9 @@ class Trainer:
     def train(self) -> None:
         """Trains model."""
 
-        # Logger for loss
-        loss_logger = collections.defaultdict(float)
-        count = 0
-
-        # Run
-        self.model.train()
         for data in self.train_loader:
+            self.model.train()
+
             # Split data into context and query
             data = gqnlib.partition_scene(*data)
 
@@ -170,10 +166,10 @@ class Trainer:
             self.postfix["train/loss"] = loss.item()
             self.pbar.set_postfix(self.postfix)
 
-            # Save loss
-            count += 1
+            # Summary
             for key, value in loss_dict.items():
-                loss_logger[key] = loss.mean().item()
+                self.writer.add_scalar(
+                    f"train/{key}", value.mean(), self.global_steps)
 
             # Tests
             if self.global_steps % self.test_interval == 0:
@@ -183,11 +179,6 @@ class Trainer:
             # Check step limit
             if self.global_steps >= self.max_steps:
                 break
-
-        # Summary
-        for key, value in loss_logger.items():
-            self.writer.add_scalar(
-                f"train/{key}", value / count, self.global_steps)
 
     def test(self) -> float:
         """Tests model.
@@ -210,16 +201,16 @@ class Trainer:
                 # Data to device
                 data = (v.to(self.device) for v in data)
                 loss_dict = self.model(*data)
-                loss = loss_dict["loss"].mean()
+                loss = loss_dict["loss"]
 
             # Update progress bar
-            self.postfix["test/loss"] = loss.item()
+            self.postfix["test/loss"] = loss.mean().item()
             self.pbar.set_postfix(self.postfix)
 
             # Save loss
-            count += 1
+            count += loss.size(0)
             for key, value in loss_dict.items():
-                loss_logger[key] = loss.mean().item()
+                loss_logger[key] = value.sum().item()
 
         # Summary
         for key, value in loss_logger.items():
