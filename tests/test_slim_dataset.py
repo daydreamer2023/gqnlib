@@ -50,6 +50,14 @@ class TestWordVectorizer(unittest.TestCase):
         # Length
         self.assertEqual(len(self.vectrizer), 6)
 
+    def test_sentence2index(self):
+        sentence = "aA, ab. aa? aa! ba,.,., ba!?"
+        self.vectrizer.add_setence(sentence)
+
+        sentence = "aa, ba, cc, aa"
+        indices = self.vectrizer.sentence2index(sentence)
+        self.assertListEqual(indices, [3, 5, 0, 3])
+
     def test_to_json(self):
         sentence = "aa, ab. aa? aa! ba,.,., ba!?"
         self.vectrizer.add_setence(sentence)

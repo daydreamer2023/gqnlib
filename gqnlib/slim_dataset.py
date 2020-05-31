@@ -5,7 +5,7 @@ ref)
 https://github.com/deepmind/slim-dataset
 """
 
-from typing import Tuple
+from typing import Tuple, List
 
 import collections
 import gzip
@@ -44,7 +44,7 @@ class WordVectorizer:
         """Adds sentence to wors-index pairs.
 
         Args:
-            sentences (str): Sentence list.
+            sentence (str): Sentence string.
         """
 
         for word in sentence.split(" "):
@@ -56,6 +56,23 @@ class WordVectorizer:
                 self.n_words += 1
             else:
                 self.word2count[word] += 1
+
+    def sentence2index(self, sentence: str) -> List[int]:
+        """Convert sentence to indices list.
+
+        Args:
+            sentence (str): Sentence string.
+
+        Returns:
+            indices (list of int): Indices list.
+        """
+
+        indices = []
+        for word in sentence.split(" "):
+            word = word.lower().strip(",.:;?!")
+            indices.append(self.word2index[word])
+
+        return indices
 
     def to_json(self, path: str) -> None:
         """Saves to json file.
