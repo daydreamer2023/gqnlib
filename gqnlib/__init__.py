@@ -9,5 +9,5 @@ from .scene_dataset import SceneDataset, partition
 from .scheduler import AnnealingStepLR, Annealer
 from .slim_dataset import SlimDataset, WordVectorizer
 from .slim_generator import SlimGenerator
-from .slim_model import CaptionedGQN
+from .slim_model import SlimGQN
 from .utils import nll_normal, kl_divergence_normal

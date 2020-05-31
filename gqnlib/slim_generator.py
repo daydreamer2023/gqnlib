@@ -124,6 +124,25 @@ class VisualDecoder(nn.Module):
 
 
 class SlimGenerator(nn.Module):
+    """Generator class for SLIM.
+
+    Args:
+        x_channel (int, optional): Number of channels in input observation.
+        u_channel (int, optional): Number of channels in the hidden layer
+            between LSTM states and the canvas.
+        r_dim (int, optional): Dimension size of representations.
+        e_channel (int, optional): Number of channels in the conv. layer
+            mapping input images to LSTM input.
+        d_channel (int, optional): Number of channels in the conv. layer
+            mapping the canvas state to the LSTM input.
+        h_channel (int, optional): Number of channels in LSTM layer.
+        z_channel (int, optional): Number of channels in the stochastic latent
+            in each DRAW step.
+        stride (int, optional): Kernel size of transposed conv. layer.
+        v_dim (int, optional): Dimension size of viewpoints.
+        n_layer (int, optional): Number of recurrent layers in DRAW.
+        scale (int, optional): Scale of image in generation process.
+    """
 
     def __init__(self, x_channel: int = 3, u_channel: int = 128,
                  r_dim: int = 256, e_channel: int = 128, d_channel: int = 128,

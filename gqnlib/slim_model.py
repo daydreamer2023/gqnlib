@@ -11,10 +11,16 @@ from .slim_generator import SlimGenerator
 from .utils import nll_normal
 
 
-class CaptionedGQN(BaseGQN):
+class SlimGQN(BaseGQN):
     """Captioned Generative Query Network.
 
     Implementation of SLIM (Spatial Language Integrating Model).
+
+    Args:
+        vocab_dim (int, optional): Vocabulary size of caption data.
+        representation_params (dict, optional): Parameters of representation
+            network.
+        generator_params (dict, optional): Parameters of generator network.
     """
 
     def __init__(self, vocab_dim: int = 5000, representation_params: dict = {},

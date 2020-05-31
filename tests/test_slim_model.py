@@ -6,10 +6,10 @@ import torch
 import gqnlib
 
 
-class TestCaptionedGQN(unittest.TestCase):
+class TestSlimGQN(unittest.TestCase):
 
     def setUp(self):
-        self.model = gqnlib.CaptionedGQN()
+        self.model = gqnlib.SlimGQN()
 
     def test_forwad(self):
         d_c = torch.randint(0, 80, (4, 15, 20))
