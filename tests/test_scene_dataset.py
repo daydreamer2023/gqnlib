@@ -29,10 +29,13 @@ class TestSceneDataset(unittest.TestCase):
 
             # Access data
             dataset = gqnlib.SceneDataset(root, 5)
-            frames, cameras = dataset[0]
+            data_list = dataset[0]
 
-        self.assertTupleEqual(frames.size(), (2, 5, 4, 3, 64, 64))
-        self.assertTupleEqual(cameras.size(), (2, 5, 4, 7))
+        self.assertEqual(len(data_list), 2)
+
+        frames, viewpoints = data_list[0]
+        self.assertTupleEqual(frames.size(), (5, 4, 3, 64, 64))
+        self.assertTupleEqual(viewpoints.size(), (5, 4, 7))
 
     def test_partition_scene(self):
         # Data

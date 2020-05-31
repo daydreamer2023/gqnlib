@@ -1,7 +1,7 @@
 
 """Dataset class for GQN."""
 
-from typing import Tuple
+from typing import Tuple, List
 
 import gzip
 import pathlib
@@ -40,7 +40,7 @@ class SceneDataset(torch.utils.data.Dataset):
 
         return len(self.record_list)
 
-    def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
+    def __getitem__(self, index: int) -> List[Tuple[Tensor]]:
         """Loads data file and returns data with specified index.
 
         This method reads `<index>.pt.gz` file, which includes a list of
@@ -51,8 +51,9 @@ class SceneDataset(torch.utils.data.Dataset):
             index (int): Index number.
 
         Returns:
-            images (torch.Tensor): Image tensor, size `(a, b, m, 3, 64, 64)`.
-            viewpoints (torch.Tensor): View points, size `(a, b, m, 7)`.
+            data_list (torch.Tensor): List of tuples of tensors
+                `(images, viewpoints)`. Length of list is
+                `data_num // batch_size`.
         """
 
         with gzip.open(self.record_list[index], "rb") as f:
@@ -88,7 +89,11 @@ class SceneDataset(torch.utils.data.Dataset):
         viewpoints = viewpoints.contiguous().view(
             batch_num, self.batch_size, *v_dims)
 
-        return images, viewpoints
+        data_list = []
+        for i in range(batch_num):
+            data_list.append((images[i], viewpoints[i]))
+
+        return data_list
 
 
 def transform_viewpoint(viewpoints: Tensor) -> Tensor:

@@ -172,19 +172,24 @@ class SlimDataset(torch.utils.data.Dataset):
 
         return len(self.record_list)
 
-    def __getitem__(self, index: int) -> Tuple[Tensor, Tensor, Tensor]:
+    def __getitem__(self, index: int) -> List[Tuple[Tensor]]:
         """Loads data file and returns data with specified index.
 
-        This method reads `<index>.pt.gz` file, which includes a list of tuples
-        `(images, viewpoints, topdown, captions, *)`.
+        This method reads `<index>.pt.gz` file which includes a list of tuples
+        `(images, viewpoints, topdown, captions, *)`, and returns list of
+        tuples of tensors `(images, viewpoints, captions)`.
+
+        * Image size: `(b, m, 3, 64, 64)`
+        * Viewpoints size: `(b, m, 4)`
+        * Captions size: `(b, m, l)`
 
         Args:
             index (int): Index number.
 
         Returns:
-            images (torch.Tensor): Image tensor, size `(a, b, m, 3, 64, 64)`.
-            viewpoints (torch.Tensor): View points, size `(a, b, m, 4)`.
-            captions (torch.Tensor): Encoded captions, size `(a, b, m, l)`.
+            data_list (torch.Tensor): List of tuples of tensors
+                `(images, viewpoints, captions)`. Length of list is
+                `data_num // batch_size`.
         """
 
         with gzip.open(self.record_list[index], "rb") as f:
@@ -229,7 +234,11 @@ class SlimDataset(torch.utils.data.Dataset):
         captions = captions.contiguous().view(
             batch_num, self.batch_size, *c_dims)
 
-        return images, viewpoints, captions
+        data_list = []
+        for i in range(batch_num):
+            data_list.append((images[i], viewpoints[i], captions[i]))
+
+        return data_list
 
 
 def partition_slim_data(images: Tensor, viewpoints: Tensor, captions: Tensor,

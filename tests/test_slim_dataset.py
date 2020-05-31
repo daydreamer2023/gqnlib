@@ -157,11 +157,14 @@ class TestSlimDataset(unittest.TestCase):
 
             # Get data item
             dataset = gqnlib.SlimDataset(root, 10, vectorizer)
-            frames, viewpoints, captions = dataset[0]
+            data_list = dataset[0]
 
-        self.assertTupleEqual(frames.size(), (2, 10, 8, 3, 64, 64))
-        self.assertTupleEqual(viewpoints.size(), (2, 10, 8, 4))
-        self.assertTupleEqual(captions.size(), (2, 10, 8, 6))
+        self.assertEqual(len(data_list), 2)
+
+        frames, viewpoints, captions = data_list[0]
+        self.assertTupleEqual(frames.size(), (10, 8, 3, 64, 64))
+        self.assertTupleEqual(viewpoints.size(), (10, 8, 4))
+        self.assertTupleEqual(captions.size(), (10, 8, 6))
 
     def test_partition_slim_data(self):
         images = torch.empty(5, 15, 3, 64, 64)
