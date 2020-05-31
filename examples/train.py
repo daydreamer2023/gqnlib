@@ -82,9 +82,9 @@ def init_args():
                         help="Random seed.")
     parser.add_argument("--batch-size", type=int, default=20,
                         help="Batch size.")
-    parser.add_argument("--steps", type=int, default=10,
+    parser.add_argument("--steps", type=int, default=2,
                         help="Number of gradient steps.")
-    parser.add_argument("--test-interval", type=int, default=5,
+    parser.add_argument("--test-interval", type=int, default=2,
                         help="Interval epochs for saving logs.")
 
     return parser.parse_args()
