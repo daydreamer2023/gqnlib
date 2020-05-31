@@ -3,9 +3,11 @@
 
 This file convert tfrecords in DeepMind slim dataset to gzip files. Each
 tfrecord will be converted to a single gzip file which contains a list of
-tuples `(frames, cameras, top_down, captions, simple_captions)` and meta-data
-`(meta_shape, meta_color, meta_size, meta_obj_positions, meta_obj_rotations,
-meta_obj_colors)`.
+tuples.
+
+basic: `(frames, cameras, top_down, captions, simple_captions)`.
+metadata: `(meta_shape, meta_color, meta_size, meta_obj_positions,
+meta_obj_rotations, meta_obj_colors)`.
 
 ex) train.tfrecord -> train.pt.gz
 
