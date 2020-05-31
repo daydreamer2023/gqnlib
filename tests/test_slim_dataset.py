@@ -149,6 +149,69 @@ class TestSlimDataset(unittest.TestCase):
         self.assertTupleEqual(viewpoints.size(), (8, 10, 4))
         self.assertTupleEqual(captions.size(), (8, 10, 6))
 
+    def test_partition_slim_data(self):
+        images = torch.empty(5, 15, 3, 64, 64)
+        viewpoints = torch.empty(5, 15, 4)
+        captions = torch.empty(5, 15, 20)
+
+        # Single query
+        d_c, v_c, x_q, v_q = gqnlib.partition_slim_data(
+            images, viewpoints, captions)
+
+        # d_c
+        self.assertEqual(d_c.size(0), 5)
+        self.assertEqual(d_c.size(1), 14)
+        self.assertEqual(d_c.size(2), 20)
+
+        # v_c
+        self.assertEqual(v_c.size(0), 5)
+        self.assertEqual(d_c.size(1), 14)
+        self.assertEqual(v_c.size(2), 4)
+
+        # Query
+        self.assertTupleEqual(x_q.size(), (5, 1, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (5, 1, 4))
+
+        # Randomized
+        d_c, v_c, x_q, v_q = gqnlib.partition_slim_data(
+            images, viewpoints, captions, randomized=True)
+
+        # d_c
+        self.assertEqual(d_c.size(0), 5)
+        self.assertTrue(0 < d_c.size(1) < 15)
+        self.assertEqual(d_c.size(2), 20)
+
+        # v_c
+        self.assertEqual(v_c.size(0), 5)
+        self.assertTrue(0 < d_c.size(1) < 15)
+        self.assertEqual(v_c.size(2), 4)
+
+        # Query
+        self.assertTupleEqual(x_q.size(), (5, 1, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (5, 1, 4))
+
+        # Query multiple data
+        num_query = 14
+        d_c, v_c, x_q, v_q = gqnlib.partition_slim_data(
+            images, viewpoints, captions, num_query=num_query)
+
+        # d_c
+        self.assertEqual(d_c.size(0), 5)
+        self.assertEqual(d_c.size(1), 1)
+        self.assertEqual(d_c.size(2), 20)
+
+        # v_c
+        self.assertEqual(v_c.size(0), 5)
+        self.assertTrue(0 < v_c.size(1) < 15)
+        self.assertEqual(v_c.size(2), 4)
+
+        self.assertTupleEqual(x_q.size(), (5, num_query, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (5, num_query, 4))
+
+        # Query size is too largs
+        with self.assertRaises(ValueError):
+            gqnlib.partition(images, viewpoints, num_query=15)
+
 
 if __name__ == "__main__":
     unittest.main()

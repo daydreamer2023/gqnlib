@@ -11,6 +11,7 @@ import collections
 import gzip
 import json
 import pathlib
+import random
 
 import torch
 from torch import Tensor
@@ -196,3 +197,68 @@ class SlimDataset(torch.utils.data.Dataset):
         captions = pad_sequence(captions, padding_value=-1).permute(1, 2, 0)
 
         return images, viewpoints, captions
+
+
+def partition_slim_data(images: Tensor, viewpoints: Tensor, captions: Tensor,
+                        num_query: int = 1, randomized: bool = False
+                        ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
+    """Partitions given SLIM data in context and query sets.
+
+    * Context: (captions_context, viewpoints_context)
+    * Query: (images_query, viewpoints_query)
+
+    Args:
+        images (torch.Tensor): Image tensor, size
+            `(batch, num_points, c, h, w)`.
+        viewpoints (torch.Tensor): Viewpoints tensor, size
+            `(batch, num_points, target)`.
+        captions (torch.Tensor): Captions tensor, size
+            `(batch, num_points, length)`.
+        num_query (int, optional): Number of queries.
+        randomized (bool, optional): If `True`, the number of context data is
+            randomly selected.
+
+    Returns:
+        d_c (torch.Tensor): Context captions, size `(b, num_context, l)`.
+        v_c (torch.Tensor): Context viewpoints, size `(b, num_context, t)`.
+        x_q (torch.Tensor): Query images, size `(b, num_query, c, h, w)`.
+        v_q (torch.Tensor): Query viewpoints, size `(b, num_query, t)`.
+
+    Raises:
+        ValueError: If `num_query` is equal or greater than `num_points`.
+    """
+
+    # Maximum number of context
+    batch, num, *x_dims = images.size()
+    _, _, *v_dims = viewpoints.size()
+    _, _, *d_dims = captions.size()
+
+    if num_query >= num:
+        raise ValueError(f"Number of queries (n={num_query}) must be less "
+                         f"than -total data (n={num}).")
+
+    # Squeeze dataset
+    images = images.view(batch, num, *x_dims)
+    viewpoints = viewpoints.view(batch, num, *v_dims)
+    captions = captions.view(batch, num, *d_dims)
+
+    # Sample randum number for total data size
+    if randomized:
+        n_data = random.randint(num_query + 1, num)
+    else:
+        n_data = num
+
+    # Shuffle indices
+    indices = random.sample(range(num), n_data)
+
+    # Partition into context and query
+    context_idx = indices[:-num_query]
+    query_idx = indices[-num_query:]
+
+    d_c = captions[:, context_idx]
+    v_c = viewpoints[:, context_idx]
+
+    x_q = images[:, query_idx]
+    v_q = viewpoints[:, query_idx]
+
+    return d_c, v_c, x_q, v_q
