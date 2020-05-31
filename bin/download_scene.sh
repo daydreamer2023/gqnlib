@@ -43,10 +43,10 @@ fi
 echo "Convert tfrecord to gzip files"
 
 # Convert tfrecords to gzip files
-python3 ./examples/convert_tfrecord_torch.py --dataset ${DATASET_NAME} \
-    --mode train --first-n -1 --batch-size -1
+python3 ./examples/convert_scene_dataset.py --dataset ${DATASET_NAME} \
+    --mode train --first-n -1 --batch-size 500
 
-python3 ./examples/convert_tfrecord_torch.py --dataset ${DATASET_NAME} \
-    --mode test --first-n -1 --batch-size -1
+python3 ./examples/convert_scene_dataset.py --dataset ${DATASET_NAME} \
+    --mode test --first-n -1 --batch-size 500
 
 echo "Completed"
