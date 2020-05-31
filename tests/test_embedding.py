@@ -36,10 +36,10 @@ class TestRepresentationNetwork(unittest.TestCase):
             vocab_dim, embed_dim, v_dim, r_dim)
 
         batch = 9
-        v = torch.randn(batch, v_dim)
         c = torch.arange(vocab_dim).repeat(2).unsqueeze(0)
         c = c.repeat(batch, 1)
-        d = model(v, c)
+        v = torch.randn(batch, v_dim)
+        d = model(c, v)
 
         self.assertTupleEqual(d.size(), (batch, r_dim))
 

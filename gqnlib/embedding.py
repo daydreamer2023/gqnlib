@@ -140,9 +140,9 @@ class RepresentationNetwork(nn.Module):
                  r_dim: int = 256, embed_params: dict = {}):
         super().__init__()
 
-        self.viewpoint_encoder = nn.Linear(v_dim, 32)
         self.embedding_encoder = EmbeddingEncoder(
             vocab_dim, embed_dim, **embed_params)
+        self.viewpoint_encoder = nn.Linear(v_dim, 32)
         self.fc = nn.Sequential(
             nn.Linear(32 + embed_dim, 512),
             nn.ReLU(),
@@ -151,23 +151,23 @@ class RepresentationNetwork(nn.Module):
             nn.Linear(512, r_dim),
         )
 
-    def forward(self, v: Tensor, c: Tensor) -> Tensor:
-        """Forward: r = f(v, c)
+    def forward(self, c: Tensor, v: Tensor) -> Tensor:
+        """Forward: r = f(c, v)
 
         Args:
-            v (torch.Tensor): Viewpoints, size `(b, v)`.
             c (torch.Tensor): Captions, size `(b, c)`.
+            v (torch.Tensor): Viewpoints, size `(b, v)`.
 
         Returns:
             r (torch.Tensor): Representations, size `(b, r, 1, 1)`.
         """
 
-        # Encode viewpoints
-        v = self.viewpoint_encoder(v)
-
         # Encode captions
         c = self.embedding_encoder(c)
         c = c.sum(1)
 
-        r = self.fc(torch.cat([v, c], dim=1))
+        # Encode viewpoints
+        v = self.viewpoint_encoder(v)
+
+        r = self.fc(torch.cat([c, v], dim=1))
         return r
