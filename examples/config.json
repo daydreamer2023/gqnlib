@@ -19,6 +19,11 @@
         "n_layer": 8,
         "scale": 4
     },
+    "sgqn_params": {
+        "vocab_dim": 5000,
+        "representation_params": {},
+        "generator_params": {}
+    },
     "optimizer_params": {
         "lr": 5e-4
     },

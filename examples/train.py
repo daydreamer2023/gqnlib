@@ -53,6 +53,7 @@ def main():
     model_dict = {
         "gqn": gqnlib.GenerativeQueryNetwork,
         "cgqn": gqnlib.ConsistentGQN,
+        "sgqn": gqnlib.SlimGQN,
     }
     model = model_dict[args.model](**config[f"{args.model}_params"])
 
@@ -79,7 +80,7 @@ def init_args():
                         help="Model name.")
     parser.add_argument("--seed", type=int, default=0,
                         help="Random seed.")
-    parser.add_argument("--batch-size", type=int, default=32,
+    parser.add_argument("--batch-size", type=int, default=20,
                         help="Batch size.")
     parser.add_argument("--steps", type=int, default=10,
                         help="Number of gradient steps.")
