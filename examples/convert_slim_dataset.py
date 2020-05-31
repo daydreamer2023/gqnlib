@@ -1,15 +1,21 @@
 
 """Convert slim tfrecords to pt.gz files.
 
-This file convert tfrecords in DeepMind slim dataset to gzip files. Each
-tfrecord will be converted to a single gzip file which contains a list of
+This file converts tfrecords in DeepMind slim dataset to gzip files. Each
+tfrecord will be converted to multiple gzip files which contain a list of
 tuples.
+
+For example, when converting `turk_data` dataset with batch size of
+`100`, a single tfrecord file which contains `2000` sequences is converted
+to `20` gzip files which contain a list of `100` tuples.
+
+ex) train.tfrecord -> train-1.pt.gz, ..., train-20.pt.gz
+
+Each tuple has elements as following.
 
 basic: `(frames, cameras, top_down, captions, simple_captions)`.
 metadata: `(meta_shape, meta_color, meta_size, meta_obj_positions,
 meta_obj_rotations, meta_obj_colors)`.
-
-ex) train.tfrecord -> train.pt.gz
 
 ref)
 https://github.com/deepmind/slim-dataset/blob/master/reader.py
@@ -33,7 +39,7 @@ _PARSE_METADATA = True
 
 
 def convert_record(path: pathlib.Path, save_dir: pathlib.Path,
-                   batch_size: int) -> None:
+                   batch_size: int, first_n: int) -> None:
     """Main process for one tfrecord file.
 
     This method load one tfrecord file, and preprocess each (frames, cameras)
@@ -43,6 +49,7 @@ def convert_record(path: pathlib.Path, save_dir: pathlib.Path,
         path (pathlib.Path): Path to original data.
         save_dir (pathlib.Path): Path to saved data.
         batch_size (int): Batch size of dataset for each tfrecord.
+        first_n (int): Number of data to read (-1 means all).
     """
 
     # Load tfrecord
@@ -50,13 +57,24 @@ def convert_record(path: pathlib.Path, save_dir: pathlib.Path,
 
     # Preprocess for each data
     scene_list = []
-    for raw_data in dataset.take(batch_size):
+    batch = 1
+    for i, raw_data in enumerate(dataset.take(first_n)):
         scene_list.append(preprocess_data(raw_data))
 
-    # Save in gzip file
-    save_path = save_dir / f"{path.stem}.pt.gz"
-    with gzip.open(str(save_path), "wb") as f:
-        torch.save(scene_list, f)
+        # Save batch to a gzip file
+        if (i + 1) % batch_size == 0:
+            save_path = save_dir / f"{path.stem}-{batch}.pt.gz"
+            with gzip.open(str(save_path), "wb") as f:
+                torch.save(scene_list, f)
+
+            scene_list = []
+            batch += 1
+    else:
+        # Save rest
+        if scene_list:
+            save_path = save_dir / f"{path.stem}-{batch}.pt.gz"
+            with gzip.open(str(save_path), "wb") as f:
+                torch.save(scene_list, f)
 
 
 def preprocess_data(raw_data: tf.Tensor) -> tuple:
@@ -244,10 +262,11 @@ def main():
                         help="Dataset name.")
     parser.add_argument("--mode", type=str, default="train",
                         help="Mode {train, test, valid}")
-    parser.add_argument("--first-n", type=int, default=-1,
-                        help="Read only first n data (-1 means all data)")
-    parser.add_argument("--batch-size", type=int, default=-1,
-                        help="Batch size of each tfrecord (-1 means all data)")
+    parser.add_argument("--batch-size", type=int, default=10,
+                        help="Batch size of tfrecords.")
+    parser.add_argument("--first-n", type=int, default=10,
+                        help="Read only first n data in single a record "
+                             "(-1 means all data).")
     args = parser.parse_args()
 
     # Path
@@ -261,14 +280,12 @@ def main():
 
     # File list of original dataset
     record_list = sorted(tf_dir.glob("*.tfrecord"))
-    if args.first_n > 0:
-        record_list = record_list[:args.first_n]
 
     # Multi process
     num_proc = mp.cpu_count()
     with mp.Pool(processes=num_proc) as pool:
         f = functools.partial(convert_record, save_dir=torch_dir,
-                              batch_size=args.batch_size)
+                              batch_size=args.batch_size, first_n=args.first_n)
         pool.map(f, record_list)
 
 

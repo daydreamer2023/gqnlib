@@ -50,12 +50,12 @@ echo "Convert tfrecord to gzip files"
 
 # Convert tfrecords to gzip files
 python3 ./examples/convert_slim_dataset.py --dataset ${DATASET_NAME} \
-    --mode train --first-n -1 --batch-size -1
+    --mode train --first-n -1 --batch-size 500
 
 python3 ./examples/convert_slim_dataset.py --dataset ${DATASET_NAME} \
-    --mode valid --first-n -1 --batch-size -1
+    --mode valid --first-n -1 --batch-size 500
 
 python3 ./examples/convert_slim_dataset.py --dataset ${DATASET_NAME} \
-    --mode test --first-n -1 --batch-size -1
+    --mode test --first-n -1 --batch-size 500
 
 echo "Completed"
