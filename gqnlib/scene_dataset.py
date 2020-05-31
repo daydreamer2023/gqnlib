@@ -91,8 +91,8 @@ def transform_viewpoint(viewpoints: Tensor) -> Tensor:
     return view
 
 
-def partition(images: Tensor, viewpoints: Tensor, num_query: int = 1
-              ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
+def partition_scene(images: Tensor, viewpoints: Tensor, num_query: int = 1
+                    ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
     """Partitions given data into context and query sets.
 
     Number of context is randomly sampled.

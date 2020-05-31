@@ -53,7 +53,7 @@ class TestSceneDataset(unittest.TestCase):
                 self.assertTupleEqual(frames.size(), (5, 15, 3, 64, 64))
                 self.assertTupleEqual(cameras.size(), (5, 15, 7))
 
-    def test_partition(self):
+    def test_partition_scene(self):
         # Dummy data
         imgs = torch.empty(15, 64, 64, 3)
         tgts = torch.empty(15, 5)
@@ -71,7 +71,7 @@ class TestSceneDataset(unittest.TestCase):
             images, viewpoints = next(iter(loader))
 
         # Query single data
-        x_c, v_c, x_q, v_q = gqnlib.partition(images, viewpoints)
+        x_c, v_c, x_q, v_q = gqnlib.partition_scene(images, viewpoints)
 
         # x_c
         self.assertEqual(x_c.size(0), 5)
@@ -91,8 +91,8 @@ class TestSceneDataset(unittest.TestCase):
 
         # Query multiple data
         num_query = 14
-        x_c, v_c, x_q, v_q = gqnlib.partition(images, viewpoints,
-                                              num_query=num_query)
+        x_c, v_c, x_q, v_q = gqnlib.partition_scene(
+            images, viewpoints, num_query=num_query)
 
         # x_c
         self.assertEqual(x_c.size(0), 5)
@@ -111,7 +111,7 @@ class TestSceneDataset(unittest.TestCase):
 
         # Query size is too largs
         with self.assertRaises(ValueError):
-            gqnlib.partition(images, viewpoints, num_query=15)
+            gqnlib.partition_scene(images, viewpoints, num_query=15)
 
 
 if __name__ == "__main__":
