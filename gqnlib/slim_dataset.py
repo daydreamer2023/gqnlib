@@ -138,22 +138,30 @@ class WordVectorizer:
 class SlimDataset(torch.utils.data.Dataset):
     """SlimDataset class for SLIM.
 
-    SlimDataset class loads data files at each time accessed by index.
+    SlimDataset class loads data files at each time accessed by index. Each
+    `*.pt.gz` file includes list of tuples, and these are rearanged to mini
+    batches.
 
     Args:
         root_dir (str): Path to root directory.
+        batch_size (int): Batch size.
         vectorizer (WordVectorizer): Pre-trained vectorizer.
+        train (bool, optional): If `True`, register read sentences to
+            vectorizer.
 
     Attributes:
         record_list (list of pathlib.Path): List of path to data files.
     """
 
-    def __init__(self, root_dir: str, vectorizer: WordVectorizer):
+    def __init__(self, root_dir: str, batch_size: int,
+                 vectorizer: WordVectorizer, train: bool = True):
         super().__init__()
 
         root_dir = pathlib.Path(root_dir)
         self.record_list = sorted(root_dir.glob("*.pt.gz"))
+        self.batch_size = batch_size
         self.vectorizer = vectorizer
+        self.train = train
 
     def __len__(self) -> int:
         """Returns number of files and directories in root dir.
@@ -174,9 +182,9 @@ class SlimDataset(torch.utils.data.Dataset):
             index (int): Index number.
 
         Returns:
-            images (torch.Tensor): Image tensor, size `(b, m, 3, 64, 64)`.
-            viewpoints (torch.Tensor): View points, size `(b, m, 4)`.
-            captions (torch.Tensor): Encoded captions, size `(b, m, l)`.
+            images (torch.Tensor): Image tensor, size `(a, b, m, 3, 64, 64)`.
+            viewpoints (torch.Tensor): View points, size `(a, b, m, 4)`.
+            captions (torch.Tensor): Encoded captions, size `(a, b, m, l)`.
         """
 
         with gzip.open(self.record_list[index], "rb") as f:
@@ -193,14 +201,33 @@ class SlimDataset(torch.utils.data.Dataset):
             sentences = []
             for snt in cpt:
                 sentences.append(torch.tensor(
-                    self.vectorizer.sentence2index(snt.decode())))
+                    self.vectorizer.sentence2index(snt.decode(), self.train)))
 
             captions.append(pad_sequence(
                 sentences, batch_first=False, padding_value=-1))
 
+        # Stack loaded tensors (n, m, *)
         images = torch.stack(images)
         viewpoints = torch.stack(viewpoints)
         captions = pad_sequence(captions, padding_value=-1).permute(1, 2, 0)
+
+        # Cut length
+        batch_num = images.size(0) // self.batch_size
+        images = images[:self.batch_size * batch_num]
+        viewpoints = viewpoints[:self.batch_size * batch_num]
+        captions = captions[:self.batch_size * batch_num]
+
+        _, *i_dims = images.size()
+        _, *v_dims = viewpoints.size()
+        _, *c_dims = captions.size()
+
+        # Resize: (n, m, *) -> (a, b, m, *)
+        images = images.contiguous().view(
+            batch_num, self.batch_size, *i_dims)
+        viewpoints = viewpoints.contiguous().view(
+            batch_num, self.batch_size, *v_dims)
+        captions = captions.contiguous().view(
+            batch_num, self.batch_size, *c_dims)
 
         return images, viewpoints, captions
 

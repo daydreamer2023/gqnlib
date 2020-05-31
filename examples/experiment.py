@@ -24,6 +24,7 @@ class Trainer:
 
     `hparams` should include the following keys.
 
+    * model (str): Model name.
     * logdir (str): Path to log direcotry. This is updated to `logdir/<date>`.
     * train_dir (str): Path to training data.
     * test_dir (str): Path to test data.
@@ -106,11 +107,12 @@ class Trainer:
 
         self.writer = tb.SummaryWriter(str(self.logdir))
 
-    def load_dataloader(self, train_dir: str, test_dir: str, batch_size: int
-                        ) -> None:
+    def load_dataloader(self, model_name: str, train_dir: str, test_dir: str,
+                        batch_size: int) -> None:
         """Loads data loader for training and test.
 
         Args:
+            model_name (str): Model name.
             train_dir (str): Path to train directory.
             test_dir (str): Path to test directory.
             batch_size (int): Batch size.
@@ -118,18 +120,34 @@ class Trainer:
 
         self.logger.info("Load dataset")
 
+        # Dataset specification
+        dataset_dict = {
+            "gqn": gqnlib.SceneDataset,
+            "cgqn": gqnlib.SceneDataset,
+            "sqgn": gqnlib.SlimDataset,
+        }
+        dataset = dataset_dict[model_name]
+
+        # Kwargs for dataset
+        train_kwrags = {"root": train_dir, "batch_size": batch_size}
+        test_kwargs = {"root": test_dir, "batch_size": batch_size}
+
+        if model_name == "sqgn":
+            vectorizer = gqnlib.WordVectorizer()
+            train_kwrags.update({"vectorizer": vectorizer, "train": True})
+            test_kwargs.update({"vectorizer": vectorizer, "train": False})
+
+        # Params for GPU
         if torch.cuda.is_available():
             kwargs = {"num_workers": 0, "pin_memory": True}
         else:
             kwargs = {}
 
         self.train_loader = torch.utils.data.DataLoader(
-            gqnlib.SceneDataset(train_dir), shuffle=True,
-            batch_size=batch_size, **kwargs)
+            dataset(**train_kwrags), shuffle=True, batch_size=1, **kwargs)
 
         self.test_loader = torch.utils.data.DataLoader(
-            gqnlib.SceneDataset(test_dir), shuffle=False,
-            batch_size=batch_size, **kwargs)
+            dataset(**test_kwargs), shuffle=False, batch_size=1, **kwargs)
 
         self.logger.info(f"Train dataset size: {len(self.train_loader)}")
         self.logger.info(f"Test dataset size: {len(self.test_loader)}")
@@ -264,6 +282,7 @@ class Trainer:
 
         # Pop hyper parameters
         hparams = copy.deepcopy(self.hparams)
+        model_name = hparams.pop("model", "gqn")
         train_dir = hparams.pop("train_dir", "./data/tmp/train")
         test_dir = hparams.pop("test_dir", "./data/tmp/test")
         batch_size = hparams.pop("batch_size", 1)
@@ -286,7 +305,7 @@ class Trainer:
             self.device = torch.device("cpu")
 
         # Data
-        self.load_dataloader(train_dir, test_dir, batch_size)
+        self.load_dataloader(model_name, train_dir, test_dir, batch_size)
 
         # Model
         self.model = self.model.to(self.device)

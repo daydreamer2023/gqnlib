@@ -134,7 +134,8 @@ class TestWordVectorizer(unittest.TestCase):
 class TestSlimDataset(unittest.TestCase):
 
     def test_len(self):
-        dataset = gqnlib.SlimDataset(".", None)
+        batch_size = 10
+        dataset = gqnlib.SlimDataset(".", batch_size, None)
         self.assertGreaterEqual(len(dataset), 0)
 
     def test_getitem(self):
@@ -143,10 +144,10 @@ class TestSlimDataset(unittest.TestCase):
         vectorizer.sentence2index("aa, ab. aa? aa! ba,.,., ba!?")
 
         # Dataset
-        imgs = torch.empty(10, 64, 64, 3).numpy()
-        tgts = torch.empty(10, 4).numpy()
-        cpts = [b"aa, ab. aa? aa! ba,.,., ba!?"] * 10
-        data = [(imgs, tgts, tgts, cpts, tgts)] * 8
+        imgs = torch.empty(8, 64, 64, 3).numpy()
+        tgts = torch.empty(8, 4).numpy()
+        cpts = [b"aa, ab. aa? aa! ba,.,., ba!?"] * 8
+        data = [(imgs, tgts, tgts, cpts, tgts)] * 20
 
         # Save and load
         with tempfile.TemporaryDirectory() as root:
@@ -155,12 +156,12 @@ class TestSlimDataset(unittest.TestCase):
                 torch.save(data, f)
 
             # Get data item
-            dataset = gqnlib.SlimDataset(root, vectorizer)
+            dataset = gqnlib.SlimDataset(root, 10, vectorizer)
             frames, viewpoints, captions = dataset[0]
 
-        self.assertTupleEqual(frames.size(), (8, 10, 3, 64, 64))
-        self.assertTupleEqual(viewpoints.size(), (8, 10, 4))
-        self.assertTupleEqual(captions.size(), (8, 10, 6))
+        self.assertTupleEqual(frames.size(), (2, 10, 8, 3, 64, 64))
+        self.assertTupleEqual(viewpoints.size(), (2, 10, 8, 4))
+        self.assertTupleEqual(captions.size(), (2, 10, 8, 6))
 
     def test_partition_slim_data(self):
         images = torch.empty(5, 15, 3, 64, 64)
