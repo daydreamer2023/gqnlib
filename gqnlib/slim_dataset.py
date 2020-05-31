@@ -241,9 +241,9 @@ class SlimDataset(torch.utils.data.Dataset):
         return data_list
 
 
-def partition_slim_data(images: Tensor, viewpoints: Tensor, captions: Tensor,
-                        num_query: int = 1, randomized: bool = False
-                        ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
+def partition_slim(images: Tensor, viewpoints: Tensor, captions: Tensor,
+                   num_query: int = 1, randomized: bool = False
+                   ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
     """Partitions given SLIM data in context and query sets.
 
     * Context: (captions_context, viewpoints_context)

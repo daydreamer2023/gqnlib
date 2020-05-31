@@ -166,13 +166,13 @@ class TestSlimDataset(unittest.TestCase):
         self.assertTupleEqual(viewpoints.size(), (10, 8, 4))
         self.assertTupleEqual(captions.size(), (10, 8, 6))
 
-    def test_partition_slim_data(self):
+    def test_partition_slim(self):
         images = torch.empty(5, 15, 3, 64, 64)
         viewpoints = torch.empty(5, 15, 4)
         captions = torch.empty(5, 15, 20)
 
         # Single query
-        d_c, v_c, x_q, v_q = gqnlib.partition_slim_data(
+        d_c, v_c, x_q, v_q = gqnlib.partition_slim(
             images, viewpoints, captions)
 
         # d_c
@@ -190,7 +190,7 @@ class TestSlimDataset(unittest.TestCase):
         self.assertTupleEqual(v_q.size(), (5, 1, 4))
 
         # Randomized
-        d_c, v_c, x_q, v_q = gqnlib.partition_slim_data(
+        d_c, v_c, x_q, v_q = gqnlib.partition_slim(
             images, viewpoints, captions, randomized=True)
 
         # d_c
@@ -209,7 +209,7 @@ class TestSlimDataset(unittest.TestCase):
 
         # Query multiple data
         num_query = 14
-        d_c, v_c, x_q, v_q = gqnlib.partition_slim_data(
+        d_c, v_c, x_q, v_q = gqnlib.partition_slim(
             images, viewpoints, captions, num_query=num_query)
 
         # d_c
@@ -227,7 +227,7 @@ class TestSlimDataset(unittest.TestCase):
 
         # Query size is too largs
         with self.assertRaises(ValueError):
-            gqnlib.partition_slim_data(
+            gqnlib.partition_slim(
                 images, viewpoints, captions, num_query=15)
 
 

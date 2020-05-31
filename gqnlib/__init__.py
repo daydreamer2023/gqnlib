@@ -7,7 +7,7 @@ from .renderer import LatentDistribution, Renderer, DRAWRenderer
 from .representation import Pyramid, Tower, Simple
 from .scene_dataset import SceneDataset, partition_scene
 from .scheduler import AnnealingStepLR, Annealer
-from .slim_dataset import SlimDataset, WordVectorizer, partition_slim_data
+from .slim_dataset import SlimDataset, WordVectorizer, partition_slim
 from .slim_generator import SlimGenerator
 from .slim_model import SlimGQN
 from .utils import nll_normal, kl_divergence_normal
