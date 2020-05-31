@@ -14,6 +14,7 @@ import pathlib
 
 import torch
 from torch import Tensor
+from torch.nn.utils.rnn import pad_sequence
 
 
 class WordVectorizer:
@@ -157,18 +158,16 @@ class SlimDataset(torch.utils.data.Dataset):
     def __getitem__(self, index: int) -> Tuple[Tensor, Tensor, Tensor]:
         """Loads data file and returns data with specified index.
 
-        This method reads `<index>.pt.gz` file, which includes a tuple
-        `(images, viewpoints)`; images size = `(m, h, w, c)`, viewpoints
-        size `(m, v)`.
+        This method reads `<index>.pt.gz` file, which includes a list of tuples
+        `(images, viewpoints, topdown, captions, *)`.
 
         Args:
             index (int): Index number.
 
         Returns:
-            images (torch.Tensor): Image tensor, size
-                `(num_points, 3, 64, 64)`.
-            viewpoints (torch.Tensor): View points, size
-                `(num_points, 7)`.
+            images (torch.Tensor): Image tensor, size `(b, m, 3, 64, 64)`.
+            viewpoints (torch.Tensor): View points, size `(b, m, 4)`.
+            captions (torch.Tensor): Encoded captions, size `(b, m, l)`.
         """
 
         with gzip.open(self.record_list[index], "rb") as f:
@@ -178,16 +177,20 @@ class SlimDataset(torch.utils.data.Dataset):
         images = []
         viewpoints = []
         captions = []
-        for i, v, _, c, *_ in dataset:
-            images.append(i)
-            viewpoints.append(v)
-            captions.append(c[0].decode())
+        for img, vwp, _, cpt, *_ in dataset:
+            images.append(torch.from_numpy(img).permute(0, 3, 1, 2))
+            viewpoints.append(torch.from_numpy(vwp))
 
-        images = torch.from_numpy(images)
-        viewpoints = torch.from_numpy(viewpoints)
-        captions = torch.from_numpy(captions)
+            sentences = []
+            for snt in cpt:
+                sentences.append(torch.tensor(
+                    self.vectorizer.sentence2index(snt.decode())))
 
-        # Post process
-        images = images.permute(0, 3, 1, 2)
+            captions.append(pad_sequence(
+                sentences, batch_first=False, padding_value=-1))
+
+        images = torch.stack(images)
+        viewpoints = torch.stack(viewpoints)
+        captions = pad_sequence(captions, padding_value=-1).permute(1, 2, 0)
 
         return images, viewpoints, captions

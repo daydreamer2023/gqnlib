@@ -117,6 +117,31 @@ class TestSlimDataset(unittest.TestCase):
         dataset = gqnlib.SlimDataset(".", None)
         self.assertGreaterEqual(len(dataset), 0)
 
+    def test_getitem(self):
+        # Vectorizer
+        vectorizer = gqnlib.WordVectorizer()
+        vectorizer.add_setence("aa, ab. aa? aa! ba,.,., ba!?")
+
+        # Dataset
+        imgs = torch.empty(10, 64, 64, 3).numpy()
+        tgts = torch.empty(10, 4).numpy()
+        cpts = [b"aa, ab. aa? aa! ba,.,., ba!?"] * 10
+        data = [(imgs, tgts, tgts, cpts, tgts)] * 8
+
+        # Save and load
+        with tempfile.TemporaryDirectory() as root:
+            path = pathlib.Path(root, "tmp.pt.gz")
+            with gzip.open(path, "wb") as f:
+                torch.save(data, f)
+
+            # Get data item
+            dataset = gqnlib.SlimDataset(root, vectorizer)
+            frames, viewpoints, captions = dataset[0]
+
+        self.assertTupleEqual(frames.size(), (8, 10, 3, 64, 64))
+        self.assertTupleEqual(viewpoints.size(), (8, 10, 4))
+        self.assertTupleEqual(captions.size(), (8, 10, 6))
+
 
 if __name__ == "__main__":
     unittest.main()
