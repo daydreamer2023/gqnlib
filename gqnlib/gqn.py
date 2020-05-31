@@ -48,7 +48,7 @@ class GenerativeQueryNetwork(BaseGQN):
         Returns:
             canvas (torch.Tensor): Reconstructed images, size
                 `(b, n, c, h, w)`.
-            r (torch.Tensor): Representations, size `(b, n, r, h, w)`.
+            r (torch.Tensor): Representations, size `(b, n, r, x, y)`.
             loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
                 with size `(b, n)`.
         """
@@ -69,7 +69,7 @@ class GenerativeQueryNetwork(BaseGQN):
         _, *r_dims = r.size()
         r = r.view(b, m, *r_dims)
 
-        # Sum over representations, and repeat n times: (b*n, c, h, w)
+        # Sum over representations, and repeat n times: (b*n, c, x, y)
         r = r.sum(1)
         r = r.repeat_interleave(n, dim=0)
 
@@ -122,7 +122,7 @@ class GenerativeQueryNetwork(BaseGQN):
         _, *r_dims = r.size()
         r = r.view(b, m, *r_dims)
 
-        # Sum over representations: (b, c, h, w)
+        # Sum over representations: (b, c, x, y)
         r = r.sum(1)
         r = r.repeat_interleave(n, dim=0)
 
@@ -140,7 +140,7 @@ class GenerativeQueryNetwork(BaseGQN):
         Args:
             v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
             r (torch.Tensor): Representations of context, size
-                `(b, n, r, h, w)`.
+                `(b, n, r, x, y)`.
 
         Returns:
             canvas (torch.Tensor): Reconstructed images, size

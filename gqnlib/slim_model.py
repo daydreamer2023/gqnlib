@@ -40,7 +40,7 @@ class CaptionedGQN(BaseGQN):
         Returns:
             canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
             r_c (torch.Tensor): Representations of context, size
-                `(b, r, 1, 1)`.
+                `(b, r, x, y)`.
             loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
                 with size `(b, n)`.
         """
