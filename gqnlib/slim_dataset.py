@@ -208,13 +208,12 @@ class SlimDataset(torch.utils.data.Dataset):
                 sentences.append(torch.tensor(
                     self.vectorizer.sentence2index(snt.decode(), self.train)))
 
-            captions.append(pad_sequence(
-                sentences, batch_first=False, padding_value=-1))
+            captions.append(pad_sequence(sentences, batch_first=False))
 
         # Stack loaded tensors (n, m, *)
         images = torch.stack(images)
         viewpoints = torch.stack(viewpoints)
-        captions = pad_sequence(captions, padding_value=-1).permute(1, 2, 0)
+        captions = pad_sequence(captions).permute(1, 2, 0)
 
         # Cut length
         batch_num = images.size(0) // self.batch_size
