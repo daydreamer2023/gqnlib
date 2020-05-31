@@ -36,6 +36,10 @@ class WordVectorizer:
         self.index2word = {0: "UNK", 1: "SOS", 2: "EOS"}
         self.n_words = 3
 
+    def __len__(self) -> int:
+        """Length of registered words."""
+        return self.n_words
+
     def add_setence(self, sentence: str) -> None:
         """Adds sentence to wors-index pairs.
 

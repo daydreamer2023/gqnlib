@@ -47,6 +47,9 @@ class TestWordVectorizer(unittest.TestCase):
         # N words
         self.assertEqual(self.vectrizer.n_words, 6)
 
+        # Length
+        self.assertEqual(len(self.vectrizer), 6)
+
     def test_to_json(self):
         sentence = "aa, ab. aa? aa! ba,.,., ba!?"
         self.vectrizer.add_setence(sentence)
