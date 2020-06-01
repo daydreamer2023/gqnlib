@@ -14,77 +14,77 @@ import gqnlib
 class TestWordVectorizer(unittest.TestCase):
 
     def setUp(self):
-        self.vectrizer = gqnlib.WordVectorizer()
+        self.vectorizer = gqnlib.WordVectorizer()
 
     def test_sentence2index(self):
         sentence = "aA, ab. aa? aa! ba,.,., ba!?"
-        indices = self.vectrizer.sentence2index(sentence)
+        indices = self.vectorizer.sentence2index(sentence)
 
         # Indices
         self.assertListEqual(indices, [3, 4, 3, 3, 5, 5])
 
         # Word to index
-        self.assertSetEqual(set(self.vectrizer.word2index.keys()),
+        self.assertSetEqual(set(self.vectorizer.word2index.keys()),
                             set(["aa", "ab", "ba"]))
 
-        self.assertEqual(self.vectrizer.word2index["aa"], 3)
-        self.assertEqual(self.vectrizer.word2index["ab"], 4)
-        self.assertEqual(self.vectrizer.word2index["ba"], 5)
+        self.assertEqual(self.vectorizer.word2index["aa"], 3)
+        self.assertEqual(self.vectorizer.word2index["ab"], 4)
+        self.assertEqual(self.vectorizer.word2index["ba"], 5)
 
-        self.assertEqual(self.vectrizer.word2index["c"], 0)
-        self.assertEqual(self.vectrizer.word2index["d"], 0)
+        self.assertEqual(self.vectorizer.word2index["c"], 0)
+        self.assertEqual(self.vectorizer.word2index["d"], 0)
 
         # Word to count
-        self.assertEqual(self.vectrizer.word2count["aa"], 3)
-        self.assertEqual(self.vectrizer.word2count["ab"], 1)
-        self.assertEqual(self.vectrizer.word2count["ba"], 2)
+        self.assertEqual(self.vectorizer.word2count["aa"], 3)
+        self.assertEqual(self.vectorizer.word2count["ab"], 1)
+        self.assertEqual(self.vectorizer.word2count["ba"], 2)
 
-        self.assertEqual(self.vectrizer.word2count["c"], 0)
-        self.assertEqual(self.vectrizer.word2count["d"], 0)
+        self.assertEqual(self.vectorizer.word2count["c"], 0)
+        self.assertEqual(self.vectorizer.word2count["d"], 0)
 
         # Index to word
-        self.assertEqual(self.vectrizer.index2word[0], "UNK")
-        self.assertEqual(self.vectrizer.index2word[3], "aa")
-        self.assertEqual(self.vectrizer.index2word[4], "ab")
+        self.assertEqual(self.vectorizer.index2word[0], "UNK")
+        self.assertEqual(self.vectorizer.index2word[3], "aa")
+        self.assertEqual(self.vectorizer.index2word[4], "ab")
 
         # N words
-        self.assertEqual(self.vectrizer.n_words, 6)
+        self.assertEqual(self.vectorizer.n_words, 6)
 
         # Length
-        self.assertEqual(len(self.vectrizer), 6)
+        self.assertEqual(len(self.vectorizer), 6)
 
     def test_max_vocab(self):
-        self.vectrizer.vocab_dim = 4
+        self.vectorizer.vocab_dim = 4
 
         sentence = "aA, ab. aa? aa! ba,.,., ba!?"
-        _ = self.vectrizer.sentence2index(sentence)
+        _ = self.vectorizer.sentence2index(sentence)
 
-        self.assertSetEqual(set(self.vectrizer.word2index.keys()),
+        self.assertSetEqual(set(self.vectorizer.word2index.keys()),
                             set(["aa", "ab", "ba"]))
 
-        self.assertEqual(self.vectrizer.word2index["aa"], 3)
-        self.assertEqual(self.vectrizer.word2index["ab"], 4)
-        self.assertEqual(self.vectrizer.word2index["ba"], 0)
+        self.assertEqual(self.vectorizer.word2index["aa"], 3)
+        self.assertEqual(self.vectorizer.word2index["ab"], 4)
+        self.assertEqual(self.vectorizer.word2index["ba"], 0)
 
     def test_sentence2index_no_register(self):
         sentence = "aA, ab. aa? aa! ba,.,., ba!?"
-        self.vectrizer.sentence2index(sentence)
+        self.vectorizer.sentence2index(sentence)
 
         sentence = "ac, aa., BA?"
-        indices = self.vectrizer.sentence2index(sentence, register=False)
+        indices = self.vectorizer.sentence2index(sentence, register=False)
 
         self.assertListEqual(indices, [0, 3, 5])
-        self.assertEqual(self.vectrizer.word2count["aa"], 3)
-        self.assertTrue("ac" in self.vectrizer.word2index)
-        self.assertTrue("ac" not in self.vectrizer.word2count)
+        self.assertEqual(self.vectorizer.word2count["aa"], 3)
+        self.assertTrue("ac" in self.vectorizer.word2index)
+        self.assertTrue("ac" not in self.vectorizer.word2count)
 
     def test_to_json(self):
         sentence = "aa, ab. aa? aa! ba,.,., ba!?"
-        self.vectrizer.sentence2index(sentence)
+        self.vectorizer.sentence2index(sentence)
 
         with tempfile.TemporaryDirectory() as root:
             path = pathlib.Path(root, "tmp.json")
-            self.vectrizer.to_json(path)
+            self.vectorizer.to_json(path)
 
             with path.open() as f:
                 data = json.load(f)
@@ -98,20 +98,20 @@ class TestWordVectorizer(unittest.TestCase):
 
     def test_read_json(self):
         sentence = "aa, ab. aa? aa! ba,.,., ba!?"
-        self.vectrizer.sentence2index(sentence)
+        self.vectorizer.sentence2index(sentence)
 
         model = gqnlib.WordVectorizer()
 
         with tempfile.TemporaryDirectory() as root:
             path = pathlib.Path(root, "tmp.json")
-            self.vectrizer.to_json(path)
+            self.vectorizer.to_json(path)
 
             model.read_json(path)
 
-        self.assertDictEqual(self.vectrizer.word2index, model.word2index)
-        self.assertDictEqual(self.vectrizer.word2count, model.word2count)
-        self.assertDictEqual(self.vectrizer.index2word, model.index2word)
-        self.assertEqual(self.vectrizer.n_words, model.n_words)
+        self.assertDictEqual(self.vectorizer.word2index, model.word2index)
+        self.assertDictEqual(self.vectorizer.word2count, model.word2count)
+        self.assertDictEqual(self.vectorizer.index2word, model.index2word)
+        self.assertEqual(self.vectorizer.n_words, model.n_words)
 
     def test_read_ptgz(self):
         c = torch.randn(10, 3, 64, 64).numpy()
@@ -123,12 +123,12 @@ class TestWordVectorizer(unittest.TestCase):
             with gzip.open(path, "wb") as f:
                 torch.save(data, f)
 
-            self.vectrizer.read_ptgz(path)
+            self.vectorizer.read_ptgz(path)
 
-        self.assertEqual(self.vectrizer.word2index["aa"], 3)
-        self.assertEqual(self.vectrizer.word2count["aa"], 300)
-        self.assertEqual(self.vectrizer.index2word[3], "aa")
-        self.assertEqual(self.vectrizer.n_words, 6)
+        self.assertEqual(self.vectorizer.word2index["aa"], 3)
+        self.assertEqual(self.vectorizer.word2count["aa"], 300)
+        self.assertEqual(self.vectorizer.index2word[3], "aa")
+        self.assertEqual(self.vectorizer.n_words, 6)
 
 
 class TestSlimDataset(unittest.TestCase):
