@@ -29,7 +29,7 @@ class EmbeddingEncoder(nn.Module):
 
     def __init__(self, vocab_dim: int, embed_dim: int, n_head: int = 2,
                  h_dim: int = 200, n_layer: int = 2, dropout: float = 0.1,
-                 max_len: int = 500):
+                 max_len: int = 1000):
         super().__init__()
 
         # Size
@@ -53,20 +53,27 @@ class EmbeddingEncoder(nn.Module):
         """Forward through encoder.
 
         Args:
-            src (int): Source tensor, size `(b, l)`.
+            src (int): Source tensor, size `(batch, length)`.
 
         Returns:
-            encoded (torch.Tensor): Encoded source, size `(b, embed_dim)`.
+            encoded (torch.Tensor): Encoded source, size `(batch, embed_dim)`.
         """
+
+        # Convert input tensor to batch-second tensor: (b, l) -> (l, b)
+        src = src.t()
 
         # Check mask size
         if (self.src_mask is None) or (self.src_mask.size(0) != len(src)):
             self._generate_square_subsequent_mask(src)
 
+        # Encode: (l, b) -> (l, b, e)
         src = self.embedding(src) * math.sqrt(self.embed_dim)
         src = self.pos_encoder(src)
         output = self.encoder(src, self.src_mask)
-        output = output.sum(1)
+
+        # Average aggregation over sentence dimension: (l, b, e) -> (b, e)
+        output = output.mean(0)
+
         return output
 
     def _generate_square_subsequent_mask(self, src: Tensor) -> None:
@@ -76,7 +83,7 @@ class EmbeddingEncoder(nn.Module):
         are filled with 0.
 
         Args:
-            src (torch.Tensor): Source tensor.
+            src (torch.Tensor): Source tensor, size `(l, b)`.
         """
 
         size = src.size(0)
@@ -91,13 +98,13 @@ class PositionalEncoder(nn.Module):
     """Postional encoder for Transformer.
 
     Args:
-        d_model (int): Dimension size of model.
+        d_model (int): Dimension size of model (embedding size).
         dropout (float, optional): Dropout rate.
         max_len (int, optional): Max length of given sequences.
     """
 
     def __init__(self, d_model: int, dropout: float = 0.1,
-                 max_len: int = 5000):
+                 max_len: int = 1000):
         super().__init__()
 
         self.dropout = nn.Dropout(dropout)
@@ -115,11 +122,11 @@ class PositionalEncoder(nn.Module):
         """Forward through positional emcode.
 
         Args:
-            x (torch.Tensor): Input tensor, size `(l, n, d)`, where length `l`
-                <= max_len.
+            x (torch.Tensor): Input tensor, size `(seqlen, batch, dim)`, where
+                `seqlen` <= `max_len`.
 
         Returns:
-            encoded (torch.Tensor): Output tensor, size `(l, n, d)`.
+            encoded (torch.Tensor): Output tensor, size `(seqlen, batch, dim)`.
         """
 
         x = x + self.pe[:x.size(0)]
@@ -170,6 +177,6 @@ class RepresentationNetwork(nn.Module):
         # Encode viewpoints: (b, h_dim)
         v = self.viewpoint_encoder(v)
 
-        r = self.fc(torch.cat([c, v], dim=1))
+        r = self.fc(torch.cat([c, v], dim=-1))
         r = r.contiguous().view(*r.size(), 1, 1)
         return r
