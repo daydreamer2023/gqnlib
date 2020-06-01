@@ -51,7 +51,7 @@ docker run --gpus all -it dgmvae bash
 
 ## Prepare dataset
 
-Dataset is provided by DeepMind, and you can see how to download them from [DeepMind GitHub](https://github.com/deepmind/gqn-datasets).
+Dataset is provided by DeepMind as [GQN dataset](https://github.com/deepmind/gqn-datasets) and [SLIM dataset](https://github.com/deepmind/slim-dataset).
 
 The following command will download the specified dataset and convert tfrecords into torch gziped files. This shell script uses [`gsutil`](https://cloud.google.com/storage/docs/gsutil) command, which should be installed in advance ([read here](https://cloud.google.com/storage/docs/gsutil_install)).
 
@@ -60,23 +60,12 @@ The following command will download the specified dataset and convert tfrecords 
 **Caution**: This process creates very large size files. For example, original `shepard_metzler_5_parts` dataset contains 900 files (17 GB) for train and 100 files (5 GB) for test, and converted dataset contains 2,100 files (47 GB) for train and 400 files (12 GB) for test.
 
 ```bash
-bash bin/download.sh
+bash bin/download_scene.sh shepard_metzler_5_parts
 ```
 
 ## Run experiment
 
-Shell script `bin/train.sh` contains the necessary settings.
-
-```bash
-# bin/train.sh
-MODEL=gqn  # Model name (gqn, cgqn, sgqn)
-DATASET=shepard_metzler_5_parts  # Dataset name
-CUDA=0,1  # GPU IDs
-STEPS=2000000  # Max steps
-TEST_INTERVAL=200000  # Test interval (steps)
-```
-
-Run training. This takes a very long time, 10~30 hours.
+Run training. `bin/train.sh` contains the necessary settings. This takes a very long time, 10~30 hours.
 
 ```bash
 bash bin/train.sh
