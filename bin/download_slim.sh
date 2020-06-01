@@ -1,6 +1,6 @@
 
 # Download utility for SLIM dataset
-# bash bin/downloasd.sh <dataset-name>
+# bash bin/download.sh <dataset-name>
 
 # Dataset name mast be one of the following
 # * turk_data
