@@ -224,7 +224,7 @@ class DRAWRenderer(nn.Module):
                                            p_logvar.exp(), reduce=False)
             kl_loss += _kl_tmp.sum([1, 2, 3])
 
-        canvas = torch.sigmoid(self.translation(u))
+        canvas = self.translation(u)
 
         return canvas, kl_loss
 
@@ -269,6 +269,6 @@ class DRAWRenderer(nn.Module):
             # Generator state update
             u, h_rnd, c_rnd = self.renderer(z, v, u, h_rnd, c_rnd)
 
-        canvas = torch.sigmoid(self.translation(u))
+        canvas = self.translation(u)
 
         return canvas

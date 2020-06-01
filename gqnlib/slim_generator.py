@@ -218,7 +218,7 @@ class SlimGenerator(nn.Module):
                 q_mu, q_logvar.exp(), p_mu, p_logvar.exp(), reduce=False)
             kl_loss += _kl_tmp.sum([1, 2, 3])
 
-        canvas = torch.sigmoid(self.translation(u))
+        canvas = self.translation(u)
 
         return canvas, kl_loss
 
@@ -256,6 +256,6 @@ class SlimGenerator(nn.Module):
             # Generator state update
             u, h_dec, c_dec = self.decoder(z, v_q, r_c, u, h_dec, c_dec)
 
-        canvas = torch.sigmoid(self.translation(u))
+        canvas = self.translation(u)
 
         return canvas

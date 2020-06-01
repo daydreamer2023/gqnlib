@@ -9,6 +9,7 @@ http://arxiv.org/abs/1807.02033
 
 from typing import Dict, Tuple
 
+import torch
 from torch import Tensor
 
 from .base import BaseGQN
@@ -99,6 +100,9 @@ class ConsistentGQN(BaseGQN):
         r_c = r_c.view(b, n, *r_dims)
         r_q = r_q.view(b, n, *r_dims)
 
+        # Squash images to (0, 1)
+        canvas = torch.sigmoid(canvas)
+
         return (canvas, r_c, r_q), loss_dict
 
     def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
@@ -140,6 +144,9 @@ class ConsistentGQN(BaseGQN):
         # Restore origina shape
         canvas = canvas.view(b, n, *x_dims)
 
+        # Squash images to (0, 1)
+        canvas = torch.sigmoid(canvas)
+
         return canvas
 
     def query(self, v_q: Tensor, r_c: Tensor) -> Tensor:
@@ -168,5 +175,8 @@ class ConsistentGQN(BaseGQN):
         # Restore the original shape: (b*n, c, h, w) -> (b, n, c, h, w)
         _, *x_dims = canvas.size()
         canvas = canvas.view(b, n, *x_dims)
+
+        # Squash images to (0, 1)
+        canvas = torch.sigmoid(canvas)
 
         return canvas

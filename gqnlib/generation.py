@@ -194,7 +194,7 @@ class ConvolutionalDRAW(nn.Module):
             kl_loss += _kl_tmp.sum([1, 2, 3])
 
         # Returned values
-        canvas = torch.sigmoid(self.observation(u))
+        canvas = self.observation(u)
 
         return canvas, kl_loss
 
@@ -240,6 +240,6 @@ class ConvolutionalDRAW(nn.Module):
             # Draw canvas
             u = u + self.write_head(h_dec)
 
-        canvas = torch.sigmoid(self.observation(u))
+        canvas = self.observation(u)
 
         return canvas
