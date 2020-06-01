@@ -70,6 +70,10 @@ class WordVectorizer:
             # Preprocess
             word = word.lower().strip(self.removal)
 
+            # Ignore empty string
+            if not word:
+                continue
+
             # Register
             if register:
                 if (word not in self.word2index) and \
@@ -124,6 +128,8 @@ class WordVectorizer:
     def read_ptgz(self, path: str) -> None:
         """Reads '*.pt.gz' file.
 
+        '*.pt.gz' file is expexted to include a list of tuples of tensors.
+
         Args:
             path (str): Path to 'pt.gz' file.
         """
@@ -132,7 +138,8 @@ class WordVectorizer:
             dataset = torch.load(f)
 
         for _, _, _, cpt, *_ in dataset:
-            self.sentence2index(cpt[0].decode())
+            for snt in cpt:
+                self.sentence2index(snt.decode())
 
 
 class SlimDataset(torch.utils.data.Dataset):
