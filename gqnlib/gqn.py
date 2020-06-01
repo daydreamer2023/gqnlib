@@ -3,7 +3,6 @@
 
 from typing import Dict, Tuple
 
-import torch
 from torch import Tensor
 
 from .base import BaseGQN
@@ -88,8 +87,8 @@ class GenerativeQueryNetwork(BaseGQN):
         canvas = canvas.view(b, n, *x_dims)
         r = r.view(b, n, *r_dims)
 
-        # Squash images to (0, 1)
-        canvas = torch.sigmoid(canvas)
+        # Squash images to [0, 1]
+        canvas = canvas.clamp(0.0, 1.0)
 
         return (canvas, r), loss_dict
 
@@ -132,8 +131,8 @@ class GenerativeQueryNetwork(BaseGQN):
         # Restore origina shape
         canvas = canvas.view(b, n, *x_dims)
 
-        # Squash images to (0, 1)
-        canvas = torch.sigmoid(canvas)
+        # Squash images to [0, 1]
+        canvas = canvas.clamp(0.0, 1.0)
 
         return canvas
 
@@ -164,7 +163,7 @@ class GenerativeQueryNetwork(BaseGQN):
         _, *x_dims = canvas.size()
         canvas = canvas.view(b, n, *x_dims)
 
-        # Squash images to (0, 1)
-        canvas = torch.sigmoid(canvas)
+        # Squash images to [0, 1]
+        canvas = canvas.clamp(0.0, 1.0)
 
         return canvas

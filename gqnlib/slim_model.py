@@ -3,7 +3,6 @@
 
 from typing import Tuple, Dict
 
-import torch
 from torch import Tensor
 
 from .base import BaseGQN
@@ -90,8 +89,8 @@ class SlimGQN(BaseGQN):
         canvas = canvas.view(b, n, *x_dims)
         r_c = r_c.view(b, n, *r_dims)
 
-        # Squash images to (0, 1)
-        canvas = torch.sigmoid(canvas)
+        # Squash images to [0, 1]
+        canvas = canvas.clamp(0.0, 1.0)
 
         return (canvas, r_c), loss_dict
 
@@ -135,8 +134,8 @@ class SlimGQN(BaseGQN):
         _, *x_dims = canvas.size()
         canvas = canvas.view(b, n, *x_dims)
 
-        # Squash images to (0, 1)
-        canvas = torch.sigmoid(canvas)
+        # Squash images to [0, 1]
+        canvas = canvas.clamp(0.0, 1.0)
 
         return canvas
 
@@ -167,7 +166,7 @@ class SlimGQN(BaseGQN):
         _, *x_dims = canvas.size()
         canvas = canvas.view(b, n, *x_dims)
 
-        # Squash images to (0, 1)
-        canvas = torch.sigmoid(canvas)
+        # Squash images to [0, 1]
+        canvas = canvas.clamp(0.0, 1.0)
 
         return canvas
