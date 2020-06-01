@@ -6,7 +6,7 @@ MODEL=gqn
 DATASET=shepard_metzler_5_parts
 CUDA=0,1
 STEPS=2000000
-LOG_INTERVAL=200000
+TEST_INTERVAL=200000
 
 # Log path
 export LOGDIR=./logs/
@@ -20,4 +20,4 @@ export DATASET_NAME=${DATASET}_torch
 export CONFIG_PATH=./examples/config.json
 
 python3 ./examples/train.py --cuda ${CUDA} --model ${MODEL} --steps ${STEPS} \
-    --log-interval ${LOG_INTERVAL}
+    --test-interval ${TEST_INTERVAL}
