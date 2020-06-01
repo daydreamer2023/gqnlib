@@ -43,7 +43,7 @@ class WordVectorizer:
         self.index2word = {0: "UNK", 1: "SOS", 2: "EOS"}
         self.n_words = 3
 
-        self.removal = ",.:;?!"
+        self.removal = """!@#$%^&*()_-+=|¥~`[]{}:;"',.<>/?"""
 
     def __len__(self) -> int:
         """Length of registered words."""
