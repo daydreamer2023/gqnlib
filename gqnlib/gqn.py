@@ -128,7 +128,7 @@ class GenerativeQueryNetwork(BaseGQN):
         # Sample query images
         canvas = self.generator.sample(v_q, r)
 
-        # Restore origina shape
+        # Restore original shape
         canvas = canvas.view(b, n, *x_dims)
 
         # Squash images to [0, 1]

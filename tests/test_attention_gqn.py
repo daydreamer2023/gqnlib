@@ -64,7 +64,8 @@ class TestAttentionGQN(unittest.TestCase):
         x_q = torch.randn(4, 2, 3, 64, 64)
         v_q = torch.randn(4, 2, 7)
 
-        canvas, key, value, r_stack = self.model.reconstruct(x_c, v_c, x_q, v_q)
+        canvas, key, value, r_stack = self.model.reconstruct(
+            x_c, v_c, x_q, v_q)
         self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
         self.assertTupleEqual(key.size(), (4, 15 * 49, 64, 8, 8))
         self.assertTupleEqual(value.size(), (4, 15 * 49, 76, 8, 8))
