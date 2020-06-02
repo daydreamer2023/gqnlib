@@ -126,6 +126,15 @@ class AttentionGenerator(nn.Module):
     """Generator with attentive representation.
 
     Args:
+        x_channel (int, optional): Number of channel in input images.
+        v_dim (int, optional): Dimensions of viewpoints.
+        z_channel (int, optional): Number of channel in latent variable.
+        h_channel (int, optional): Number of channel in hidden states.
+        u_channel (int, optional): Number of channel in hidden layer for
+            canvas.
+        n_layer (int, optional): Number of recurrent layers.
+        scale (int, optional): Scale of image generation process.
+        stride (int, optional): Kernel size of transposed conv. layer.
     """
 
     def __init__(self, x_channel: int = 3, v_dim: int = 7, z_channel: int = 64,
