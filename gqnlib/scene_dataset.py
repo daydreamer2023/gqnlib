@@ -75,7 +75,7 @@ class SceneDataset(torch.utils.data.Dataset):
         # Transform viewpoints
         viewpoints = transform_viewpoint(viewpoints)
 
-        # Cut length
+        # Trim off extra elements
         batch_num = images.size(0) // self.batch_size
         images = images[:self.batch_size * batch_num]
         viewpoints = viewpoints[:self.batch_size * batch_num]

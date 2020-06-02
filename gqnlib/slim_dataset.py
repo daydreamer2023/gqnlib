@@ -222,7 +222,7 @@ class SlimDataset(torch.utils.data.Dataset):
         viewpoints = torch.stack(viewpoints)
         captions = pad_sequence(captions).permute(1, 2, 0)
 
-        # Cut length
+        # Trim off extra elements
         batch_num = images.size(0) // self.batch_size
         images = images[:self.batch_size * batch_num]
         viewpoints = viewpoints[:self.batch_size * batch_num]
