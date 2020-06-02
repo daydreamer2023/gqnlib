@@ -142,6 +142,8 @@ class AttentionGenerator(nn.Module):
                  scale: int = 4, stride: int = 2):
         super().__init__()
 
+        self.x_channel = x_channel
+        self.v_dim = v_dim
         self.z_channel = z_channel
         self.h_channel = h_channel
         self.u_channel = u_channel
@@ -183,7 +185,7 @@ class AttentionGenerator(nn.Module):
         self.observation = nn.ConvTranspose2d(u_channel, x_channel, **kwargs)
 
     def forward(self, x: Tensor, v: Tensor, key: Tensor, value: Tensor
-                ) -> Tuple[Tensor, Tensor]:
+                ) -> Tuple[Tensor, Tensor, Tensor]:
         """Inferences given query pair (x, v) and representation r.
 
         Args:
@@ -195,6 +197,8 @@ class AttentionGenerator(nn.Module):
 
         Returns:
             canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+            r_stack (torch.Tensor): Stacked representations, size
+                `(b, c+v+2+64, 8, 8)`.
             kl_loss (torch.Tensor): Calculated KL loss, size `(b,)`.
         """
 
@@ -215,6 +219,10 @@ class AttentionGenerator(nn.Module):
         u = x.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
                          w_scale * self.stride))
 
+        # Representations
+        _, *val_dims = value.size()
+        r_stack = x.new_zeros(batch_size, *val_dims)
+
         # KL loss value
         kl_loss = 0
 
@@ -229,6 +237,7 @@ class AttentionGenerator(nn.Module):
             # Query representation by attention
             query = self.query_gen(h_enc)
             r = self.attention(query, key, value)
+            r_stack += r
 
             # Inference state update
             h_enc, c_enc = self.encoder(torch.cat([h_dec, x, v, r], dim=1),
@@ -255,10 +264,10 @@ class AttentionGenerator(nn.Module):
         # Returned value
         canvas = self.observation(u)
 
-        return canvas, kl_loss
+        return canvas, r_stack, kl_loss
 
     def sample(self, v: Tensor, key: Tensor, value: Tensor,
-               x_shape: Tuple[int, int] = (64, 64)) -> Tensor:
+               x_shape: Tuple[int, int] = (64, 64)) -> Tuple[Tensor, Tensor]:
         """Samples images from the prior given viewpoint and representation.
 
         Args:
@@ -270,6 +279,8 @@ class AttentionGenerator(nn.Module):
 
         Returns:
             canvas (torch.Tensor): Sampled data, size `(b, c, h, w)`.
+            r_stack (torch.Tensor): Stacked representations, size
+                `(b, c+v+2+64, 8, 8)`.
         """
 
         batch_size = v.size(0)
@@ -285,6 +296,10 @@ class AttentionGenerator(nn.Module):
         u = v.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
                          w_scale * self.stride))
 
+        # Representations
+        _, *val_dims = value.size()
+        r_stack = v.new_zeros(batch_size, *val_dims)
+
         # Upsample v and r
         v = v.view(batch_size, -1, 1, 1).repeat(1, 1, h_scale, w_scale)
 
@@ -296,6 +311,7 @@ class AttentionGenerator(nn.Module):
             # Query representation by attention
             query = self.query_gen(h_dec)
             r = self.attention(query, key, value)
+            r_stack += r
 
             # Decode
             h_dec, c_dec = self.decoder(torch.cat([z, v, r], dim=1),
@@ -306,4 +322,4 @@ class AttentionGenerator(nn.Module):
 
         canvas = self.observation(u)
 
-        return canvas
+        return canvas, r_stack
