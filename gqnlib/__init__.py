@@ -1,5 +1,5 @@
 
-from .attention_layer import DictionaryEncoder
+from .attention_layer import DictionaryEncoder, AttentionGenerator
 from .consistent_gqn import ConsistentGQN
 from .embedding import EmbeddingEncoder, RepresentationNetwork
 from .generation import ConvolutionalDRAW

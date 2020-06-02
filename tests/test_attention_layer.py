@@ -14,10 +14,27 @@ class TestDictionaryEncoder(unittest.TestCase):
 
         x = torch.randn(10, 3, 64, 64)
         v = torch.randn(10, 7)
-        keys, values = model(x, v)
+        key, value = model(x, v)
 
-        self.assertTupleEqual(keys.size(), (490, 64, 8, 8))
-        self.assertTupleEqual(values.size(), (490, 76, 8, 8))
+        self.assertTupleEqual(key.size(), (490, 64, 8, 8))
+        self.assertTupleEqual(value.size(), (490, 76, 8, 8))
+
+
+class TestAttentionGenerator(unittest.TestCase):
+
+    def test_forward(self):
+        model = gqnlib.AttentionGenerator()
+
+        x = torch.randn(9, 3, 64, 64)
+        v = torch.randn(9, 7)
+        key = torch.randn(490, 64, 8, 8)
+        value = torch.randn(490, 76, 8, 8)
+
+        canvas, kl_loss = model(x, v, key, value)
+
+        self.assertTupleEqual(canvas.size(), (9, 3, 64, 64))
+        self.assertTupleEqual(kl_loss.size(), (9,))
+        self.assertTrue((kl_loss > 0).all())
 
 
 if __name__ == "__main__":
