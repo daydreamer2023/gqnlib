@@ -39,14 +39,14 @@ pip3 install tqdm==4.46.0 tensorflow==2.2.0 tensorboardX==2.0
 Or use [Docker](https://docs.docker.com/get-docker/) and [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker).
 
 ```bash
-docker build -t dgmvae .
-docker run -it dgmvae bash
+docker build -t gqnlib .
+docker run -it gqnlib bash
 ```
 
 You can run container with GPUs by Docker 19.03.
 
 ```bash
-docker run --gpus all -it dgmvae bash
+docker run --gpus all -it gqnlib bash
 ```
 
 ## Prepare dataset
