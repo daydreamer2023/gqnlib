@@ -65,7 +65,7 @@ class AttentionGQN(BaseGQN):
         x_q = x_q.view(-1, *x_dims)
         v_q = v_q.view(-1, *v_dims)
 
-        # Attention key and value from context
+        # Attention (key, value) pairs from context
         key, value = self.representation(x_c, v_c)
 
         # Inference
@@ -95,3 +95,77 @@ class AttentionGQN(BaseGQN):
         canvas = canvas.clamp(0.0, 1.0)
 
         return (canvas, key, value), loss_dict
+
+    def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
+        """Samples images `x_q` by context pair `(x, v)` and query viewpoint
+        `v_q`.
+
+        Args:
+            x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
+            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
+
+        Returns:
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
+        """
+
+        # Reshape: (b, m, c, h, w) -> (b*m, c, h, w)
+        b, m, *x_dims = x_c.size()
+        _, _, *v_dims = v_c.size()
+
+        x_c = x_c.view(-1, *x_dims)
+        v_c = v_c.view(-1, *v_dims)
+
+        n = v_q.size(1)
+        v_q = v_q.view(-1, *v_dims)
+
+        # Attention (key, value) pairs from context
+        key, value = self.representation(x_c, v_c)
+
+        # Sample
+        canvas = self.generator.sample(v_q, key, value)
+
+        # Restore origina shape
+        canvas = canvas.view(b, n, *x_dims)
+
+        # Squash images to [0, 1]
+        canvas = canvas.clamp(0.0, 1.0)
+
+        return canvas
+
+    def query(self, v_q: Tensor, key: Tensor, value: Tensor) -> Tensor:
+        """Query images with context representation.
+
+        Args:
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
+            key (torch.Tensor): Attention key, size `(b, d*l, 64, 8, 8)`.
+            value (torch.Tensor): Attention value, size
+                `(b, d*l, c+v+2+64, 8, 8)`.
+
+        Returns:
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
+        """
+
+        # Squeeze data: (b, n, k) -> (b*n, k)
+        b, n, v_dim = v_q.size()
+        v_q = v_q.view(-1, v_dim)
+
+        _, _, *k_dims = key.size()
+        key = key.view(-1, *k_dims)
+
+        _, _, *v_dims = value.size()
+        value = value.view(-1, *v_dims)
+
+        # Sample
+        canvas = self.generator.sample(v_q, key, value)
+
+        # Restore the original shape: (b*n, c, h, w) -> (b, n, c, h, w)
+        _, *x_dims = canvas.size()
+        canvas = canvas.view(b, n, *x_dims)
+
+        # Squash images to [0, 1]
+        canvas = canvas.clamp(0.0, 1.0)
+
+        return canvas
