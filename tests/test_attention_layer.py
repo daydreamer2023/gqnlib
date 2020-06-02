@@ -36,6 +36,16 @@ class TestAttentionGenerator(unittest.TestCase):
         self.assertTupleEqual(kl_loss.size(), (9,))
         self.assertTrue((kl_loss > 0).all())
 
+    def test_sample(self):
+        model = gqnlib.AttentionGenerator()
+
+        v = torch.randn(9, 7)
+        key = torch.randn(490, 64, 8, 8)
+        value = torch.randn(490, 76, 8, 8)
+
+        canvas = model.sample(v, key, value)
+        self.assertTupleEqual(canvas.size(), (9, 3, 64, 64))
+
 
 if __name__ == "__main__":
     unittest.main()

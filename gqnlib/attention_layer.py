@@ -247,3 +247,54 @@ class AttentionGenerator(nn.Module):
         canvas = self.observation(u)
 
         return canvas, kl_loss
+
+    def sample(self, v: Tensor, key: Tensor, value: Tensor,
+               x_shape: Tuple[int, int] = (64, 64)) -> Tensor:
+        """Samples images from the prior given viewpoint and representation.
+
+        Args:
+            v (torch.Tensor): Query of viewpoints `v_q`, size `(b, v)`.
+            key (torch.Tensor): Attention key, size `(d*l, 64, 8, 8)`.
+            value (torch.Tensor): Attention value, size
+                `(d*l, c+v+2+64, 8, 8)`.
+            x_shape (tuple of int, optional): Sampled x shape.
+
+        Returns:
+            canvas (torch.Tensor): Sampled data, size `(b, c, h, w)`.
+        """
+
+        batch_size = v.size(0)
+        h, w = x_shape
+        h_scale = h // (self.scale * self.stride)
+        w_scale = w // (self.scale * self.stride)
+
+        # Hidden states
+        h_dec = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        c_dec = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+
+        # Canvas that data is drawn on
+        u = v.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
+                         w_scale * self.stride))
+
+        # Upsample v and r
+        v = v.view(batch_size, -1, 1, 1).repeat(1, 1, h_scale, w_scale)
+
+        for _ in range(self.n_layer):
+            # Sample prior
+            p_mu, p_logvar = torch.chunk(self.prior(h_dec), 2, dim=1)
+            z = p_mu + (0.5 * p_logvar).exp() * torch.randn_like(p_logvar)
+
+            # Query representation by attention
+            query = self.query_gen(h_dec)
+            r = self.attention(query, key, value)
+
+            # Decode
+            h_dec, c_dec = self.decoder(torch.cat([z, v, r], dim=1),
+                                        (h_dec, c_dec))
+
+            # Draw canvas
+            u = u + self.write_head(h_dec)
+
+        canvas = self.observation(u)
+
+        return canvas
