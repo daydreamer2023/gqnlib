@@ -40,16 +40,18 @@ class AttentionGQN(BaseGQN):
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
             v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
-            x_q (torch.Tensor): Query images, size `(d, n, c, h, w)`.
-            v_q (torch.Tensor): Query viewpoints, size `(d, n, k)`.
+            x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
             var (float, optional): Variance of observations normal dist.
 
         Returns:
             canvas (torch.Tensor): Reconstructed images, size
-                `(d, n, c, h, w)`.
-            key (torch.Tensor): Attention key, size `(b*l, 64, 8, 8)`.
+                `(b, n, c, h, w)`.
+            key (torch.Tensor): Attention key, size `(b, d*l, 64, 8, 8)`.
             value (torch.Tensor): Attention value, size
-                `(b*l, c+v+2+64, 8, 8)`.
+                `(b, d*l, c+v+2+64, 8, 8)`.
+            r_stack (torch.Tensor): Stacked representations, size
+                `(b, n, c+v+2+64, 8, 8)`.
             loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
                 with size `(b, n)`.
         """
@@ -69,7 +71,7 @@ class AttentionGQN(BaseGQN):
         key, value = self.representation(x_c, v_c)
 
         # Inference
-        canvas, kl_loss = self.generator(x_q, v_q, key, value)
+        canvas, r_stack, kl_loss = self.generator(x_q, v_q, key, value)
 
         # Reconstruction loss
         nll_loss = nll_normal(x_q, canvas, x_q.new_ones((1)) * var,
@@ -82,7 +84,7 @@ class AttentionGQN(BaseGQN):
         loss_dict = {"loss": nll_loss + kl_loss, "nll_loss": nll_loss,
                      "kl_loss": kl_loss}
 
-        # Restore origina shape
+        # Restore original shape
         canvas = canvas.view(b, n, *x_dims)
 
         _, *k_dims = key.size()
@@ -91,10 +93,13 @@ class AttentionGQN(BaseGQN):
         _, *v_dims = value.size()
         value = value.view(b, -1, *v_dims)
 
+        _, *r_dims = r_stack.size()
+        r_stack = r_stack.view(b, -1, *r_dims)
+
         # Squash images to [0, 1]
         canvas = canvas.clamp(0.0, 1.0)
 
-        return (canvas, key, value), loss_dict
+        return (canvas, key, value, r_stack), loss_dict
 
     def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
         """Samples images `x_q` by context pair `(x, v)` and query viewpoint
@@ -124,7 +129,7 @@ class AttentionGQN(BaseGQN):
         key, value = self.representation(x_c, v_c)
 
         # Sample
-        canvas = self.generator.sample(v_q, key, value)
+        canvas, _ = self.generator.sample(v_q, key, value)
 
         # Restore origina shape
         canvas = canvas.view(b, n, *x_dims)
@@ -159,7 +164,7 @@ class AttentionGQN(BaseGQN):
         value = value.view(-1, *v_dims)
 
         # Sample
-        canvas = self.generator.sample(v_q, key, value)
+        canvas, _ = self.generator.sample(v_q, key, value)
 
         # Restore the original shape: (b*n, c, h, w) -> (b, n, c, h, w)
         _, *x_dims = canvas.size()
