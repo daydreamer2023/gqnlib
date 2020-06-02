@@ -12,6 +12,10 @@
         "representation_params": {},
         "generator_params": {}
     },
+    "agqn_params": {
+        "representation_params": {},
+        "generator_params": {}
+    },
     "optimizer_params": {
         "lr": 5e-4
     },

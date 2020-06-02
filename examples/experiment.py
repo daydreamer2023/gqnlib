@@ -121,12 +121,10 @@ class Trainer:
         self.logger.info("Load dataset")
 
         # Dataset specification
-        dataset_dict = {
-            "gqn": gqnlib.SceneDataset,
-            "cgqn": gqnlib.SceneDataset,
-            "sgqn": gqnlib.SlimDataset,
-        }
-        dataset = dataset_dict[self.model_name]
+        if self.model_name == "sgqn":
+            dataset = gqnlib.SlimDataset
+        else:
+            dataset = gqnlib.SceneDataset
 
         # Kwargs for dataset
         train_kwrags = {"root_dir": train_dir, "batch_size": batch_size}

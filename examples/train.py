@@ -54,6 +54,7 @@ def main():
         "gqn": gqnlib.GenerativeQueryNetwork,
         "cgqn": gqnlib.ConsistentGQN,
         "sgqn": gqnlib.SlimGQN,
+        "agqn": gqnlib.AttentionGQN,
     }
     model = model_dict[args.model](**config[f"{args.model}_params"])
 
