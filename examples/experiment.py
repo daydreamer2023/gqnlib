@@ -30,7 +30,8 @@ class Trainer:
     * test_dir (str): Path to test data.
     * batch_size (int): Batch size.
     * max_steps (int): Number of max iteration steps.
-    * test_interval (int): Number of interval epochs to save checkpoints.
+    * test_interval (int): Number of interval epochs to test.
+    * save_interval (int): Number of interval epochs to save checkpoints.
     * gpus (str): Comma separated list of GPU IDs (ex. '0,1').
 
     Args:
@@ -194,9 +195,12 @@ class Trainer:
                     self.writer.add_scalar(
                         f"train/{key}", value.mean(), self.global_steps)
 
-                # Tests
+                # Test
                 if self.global_steps % self.test_interval == 0:
                     self.test()
+
+                # Save checkpoint
+                if self.global_steps % self.save_interval == 0:
                     self.save_checkpoint()
 
                 # Check step limit
@@ -304,6 +308,7 @@ class Trainer:
         batch_size = hparams.pop("batch_size", 1)
         max_steps = hparams.pop("steps", 10)
         test_interval = hparams.pop("test_interval", 5)
+        save_interval = hparams.pop("save_interval", 5)
         gpus = hparams.pop("gpus", None)
 
         optimizer_params = hparams.pop("optimizer_params", {})
@@ -340,14 +345,15 @@ class Trainer:
             self.optimizer, **lr_scheduler_params)
         self.sigma_scheduler = gqnlib.Annealer(**sigma_scheduler_params)
 
-        self.logger.info("Start training")
-
-        # Training iteration
+        # Progress bar
         self.pbar = tqdm.tqdm(total=max_steps)
         self.global_steps = 0
         self.max_steps = max_steps
         self.postfix = {"train/loss": 0, "test/loss": 0}
+
+        # Intervals
         self.test_interval = test_interval
+        self.save_interval = save_interval
 
         # Run training
         while self.global_steps < self.max_steps:

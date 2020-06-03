@@ -4,9 +4,9 @@
 # Settings
 MODEL=gqn
 CUDA=0,1
-SEED=0
 STEPS=2000000
-TEST_INTERVAL=200000
+TEST_INTERVAL=100000
+SAVE_INTERVAL=200000
 DATASET=shepard_metzler_5_parts
 
 # Log path
@@ -20,5 +20,5 @@ export DATASET_NAME=${DATASET}_torch
 # Config for training
 export CONFIG_PATH=./examples/config.json
 
-python3 ./examples/train.py --cuda ${CUDA} --model ${MODEL} --seed ${SEED} \
-    --steps ${STEPS} --test-interval ${TEST_INTERVAL}
+python3 ./examples/train.py --cuda ${CUDA} --model ${MODEL} --steps ${STEPS} \
+    --test-interval ${TEST_INTERVAL} --save-interval ${SAVE_INTERVAL}
