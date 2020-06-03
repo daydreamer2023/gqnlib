@@ -273,6 +273,7 @@ def partition_slim(images: Tensor, viewpoints: Tensor, captions: Tensor,
         v_q (torch.Tensor): Query viewpoints, size `(n*b, num_query, t)`.
 
     Raises:
+        ValueError: If given image dimension is not 5 or 6.
         ValueError: If `num_query` is equal or greater than `num_points`.
     """
 
