@@ -37,6 +37,32 @@ class TestSceneDataset(unittest.TestCase):
         self.assertTupleEqual(frames.size(), (5, 4, 3, 64, 64))
         self.assertTupleEqual(viewpoints.size(), (5, 4, 7))
 
+    def test_multiitem(self):
+        # Dummy data
+        imgs = torch.empty(4, 64, 64, 3)
+        tgts = torch.empty(4, 5)
+        data = [(imgs.numpy(), tgts.numpy())] * 10
+
+        with tempfile.TemporaryDirectory() as root:
+            path = str(pathlib.Path(root, "1.pt.gz"))
+            with gzip.open(path, "wb") as f:
+                torch.save(data, f)
+
+            path = str(pathlib.Path(root, "2.pt.gz"))
+            with gzip.open(path, "wb") as f:
+                torch.save(data, f)
+
+            # Access data
+            dataset = gqnlib.SceneDataset(root, 5)
+            loader = torch.utils.data.DataLoader(dataset, batch_size=2)
+            batch = next(iter(loader))
+
+        self.assertIsInstance(batch, list)
+        self.assertEqual(len(batch), 2)
+        self.assertIsInstance(batch[0], list)
+        self.assertIsInstance(batch[0][0], torch.Tensor)
+        self.assertTupleEqual(batch[0][0].size(), (2, 5, 4, 3, 64, 64))
+
     def test_partition_scene(self):
         # Data
         images = torch.empty(1, 5, 15, 3, 64, 64)

@@ -16,9 +16,18 @@ class SceneDataset(torch.utils.data.Dataset):
 
     SceneDataset class loads data files at each time accessed by index.
 
+    * This class reads `<index>.pt.gz` file, which includes a list of tuples
+      `(images, viewpoints)`; images size = `(m, h, w, c)`, viewpoints size
+      `(m, v)`, where `m` means sequence length of data.
+
+    * Original data include too many image-viewpoints pairs, so this class
+      splits the list of tuples to minibatches. Therefore, returned value
+      is list of tuples `(images, viewpoints)`; images size =
+      `(batch_size, m, c, h, w)`, viewpoints size = `(batch_size, m, v)`.
+
     Args:
         root_dir (str): Path to root directory.
-        batch_size (int): Batch size.
+        batch_size (int): Mini-batch size.
 
     Attributes:
         record_list (list of pathlib.Path): List of path to data files.
@@ -43,9 +52,8 @@ class SceneDataset(torch.utils.data.Dataset):
     def __getitem__(self, index: int) -> List[Tuple[Tensor]]:
         """Loads data file and returns data with specified index.
 
-        This method reads `<index>.pt.gz` file, which includes a list of
-        tuples `(images, viewpoints)`; images of size = `(n, m, h, w, c)`,
-        viewpoints of size `(n, m, v)`.
+        * Images: `(batch_size, m, c, h, w)`
+        * Viewpoints: `(batch_size, m, v)`
 
         Args:
             index (int): Index number.
