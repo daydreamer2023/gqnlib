@@ -53,7 +53,7 @@ class BaseGQN(nn.Module):
         return loss_dict
 
     def reconstruct(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor
-                    ) -> Tuple[Tensor, ...]:
+                    ) -> Tensor:
         """Reconstructs given query images with contexts.
 
         Args:
@@ -63,11 +63,11 @@ class BaseGQN(nn.Module):
             v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
 
         Returns:
-            data (tuple of torch.Tensor): Tuple of images and representations.
+            canvas (torch.Tensor): Reconstructed images..
         """
 
-        data, _ = self.inference(x_c, v_c, x_q, v_q)
-        return data
+        (canvas, *_), _ = self.inference(x_c, v_c, x_q, v_q)
+        return canvas
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0

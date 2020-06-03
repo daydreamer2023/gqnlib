@@ -63,10 +63,8 @@ class TestConsistentGQN(unittest.TestCase):
         x_q = torch.randn(4, 1, 3, 64, 64)
         v_q = torch.randn(4, 1, 7)
 
-        canvas, r_c, r_q = self.model.reconstruct(x_c, v_c, x_q, v_q)
+        canvas = self.model.reconstruct(x_c, v_c, x_q, v_q)
         self.assertTupleEqual(canvas.size(), (4, 1, 3, 64, 64))
-        self.assertTupleEqual(r_c.size(), (4, 1, 32, 16, 16))
-        self.assertTupleEqual(r_q.size(), (4, 1, 32, 16, 16))
 
     def test_sample(self):
         x_c = torch.randn(4, 15, 3, 64, 64)

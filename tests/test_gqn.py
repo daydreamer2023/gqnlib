@@ -61,9 +61,8 @@ class TestGenerativeQueryNetwork(unittest.TestCase):
         x_q = torch.randn(4, 2, 3, 64, 64)
         v_q = torch.randn(4, 2, 7)
 
-        canvas, r = self.model.reconstruct(x_c, v_c, x_q, v_q)
+        canvas = self.model.reconstruct(x_c, v_c, x_q, v_q)
         self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
-        self.assertTupleEqual(r.size(), (4, 2, 256, 1, 1))
 
     def test_sample(self):
         x_c = torch.randn(4, 15, 3, 64, 64)
