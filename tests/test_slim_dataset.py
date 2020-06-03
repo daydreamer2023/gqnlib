@@ -258,7 +258,8 @@ class TestSlimDataset(unittest.TestCase):
             gqnlib.partition_slim(
                 images, viewpoints, captions, num_query=15)
 
-    def test_partition_slim_multi(self):
+    def test_partition_slim_alt(self):
+        # Multiple data
         images = torch.empty(2, 5, 15, 3, 64, 64)
         viewpoints = torch.empty(2, 5, 15, 4)
         captions = torch.empty(2, 5, 15, 20)
@@ -267,11 +268,34 @@ class TestSlimDataset(unittest.TestCase):
         d_c, v_c, x_q, v_q = gqnlib.partition_slim(
             images, viewpoints, captions)
 
-        # d_c
+        # Size check
         self.assertTupleEqual(d_c.size(), (10, 14, 20))
         self.assertTupleEqual(v_c.size(), (10, 14, 4))
         self.assertTupleEqual(x_q.size(), (10, 1, 3, 64, 64))
         self.assertTupleEqual(v_q.size(), (10, 1, 4))
+
+        # n = 1
+        images = torch.empty(5, 15, 3, 64, 64)
+        viewpoints = torch.empty(5, 15, 4)
+        captions = torch.empty(5, 15, 20)
+
+        # Single query
+        d_c, v_c, x_q, v_q = gqnlib.partition_slim(
+            images, viewpoints, captions)
+
+        # Size check
+        self.assertTupleEqual(d_c.size(), (5, 14, 20))
+        self.assertTupleEqual(v_c.size(), (5, 14, 4))
+        self.assertTupleEqual(x_q.size(), (5, 1, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (5, 1, 4))
+
+        # Raise
+        with self.assertRaises(ValueError):
+            images = torch.empty(15, 3, 64, 64)
+            viewpoints = torch.empty(15, 4)
+            captions = torch.empty(15, 20)
+
+            _ = gqnlib.partition_slim(images, viewpoints, captions)
 
 
 if __name__ == "__main__":
