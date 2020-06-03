@@ -256,11 +256,20 @@ class Trainer:
         # Log
         self.logger.debug("Save trained model")
 
+        # Remove unnecessary prefix from state dict keys
+        model_state_dict = {}
+        for k, v in self.model.state_dict().items():
+            model_state_dict[k.replace("module.", "")] = v
+
+        optimizer_state_dict = {}
+        for k, v in self.optimizer.state_dict().items():
+            optimizer_state_dict[k.replace("module.", "")] = v
+
         # Save model
         state_dict = {
             "steps": self.global_steps,
-            "model_state_dict": self.model.state_dict(),
-            "optimizer_state_dict": self.optimizer.state_dict(),
+            "model_state_dict": model_state_dict,
+            "optimizer_state_dict": optimizer_state_dict,
         }
         path = self.logdir / f"checkpoint_{self.global_steps}.pt"
         torch.save(state_dict, path)
