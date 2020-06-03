@@ -27,6 +27,7 @@ from typing import Tuple
 
 import torch
 from torch import nn, Tensor
+from torch.nn import functional as F
 
 from .utils import kl_divergence_normal
 
@@ -93,19 +94,25 @@ class ConvolutionalDRAW(nn.Module):
         r_dim (int, optional): Dimensions of representations.
         z_channel (int, optional): Number of channel in latent variable.
         h_channel (int, optional): Number of channel in hidden states.
+        u_channel (int, optional): Number of channel in hidden layer for
+            canvas.
         n_layer (int, optional): Number of recurrent layers.
         scale (int, optional): Scale of image generation process.
+        stride (int, optional): Kernel size of transposed conv. layer.
     """
 
     def __init__(self, x_channel: int = 3, v_dim: int = 7, r_dim: int = 256,
-                 z_channel: int = 64, h_channel: int = 128, n_layer: int = 8,
-                 scale: int = 4):
+                 z_channel: int = 64, h_channel: int = 128,
+                 u_channel: int = 128, n_layer: int = 8, scale: int = 4,
+                 stride: int = 2):
         super().__init__()
 
         self.h_channel = h_channel
         self.z_channel = z_channel
+        self.u_channel = u_channel
         self.n_layer = n_layer
         self.scale = scale
+        self.stride = stride
 
         # Distributions (variational posterior / prior)
         kwargs = dict(kernel_size=5, stride=1, padding=2)
@@ -113,9 +120,12 @@ class ConvolutionalDRAW(nn.Module):
         self.prior = nn.Conv2d(h_channel, z_channel * 2, **kwargs)
 
         # Top layer
-        kwargs = dict(kernel_size=scale, stride=scale, padding=0, bias=False)
-        self.read_head = nn.Conv2d(x_channel, x_channel, **kwargs)
-        self.write_head = nn.ConvTranspose2d(h_channel, h_channel, **kwargs)
+        self.read_head = nn.Conv2d(
+            x_channel, x_channel, kernel_size=scale, stride=scale * stride,
+            padding=0, bias=False)
+        self.write_head = nn.ConvTranspose2d(
+            h_channel, u_channel, kernel_size=stride, stride=stride,
+            padding=0, bias=False)
 
         # Recurrent encoder/decoder models
         kwargs = dict(kernel_size=5, stride=1, padding=2)
@@ -125,8 +135,8 @@ class ConvolutionalDRAW(nn.Module):
                                       **kwargs)
 
         # Final layer to convert u -> canvas
-        kwargs = dict(kernel_size=1, stride=1, padding=0)
-        self.observation = nn.Conv2d(h_channel, x_channel, **kwargs)
+        kwargs = dict(kernel_size=scale, stride=scale, padding=0)
+        self.observation = nn.ConvTranspose2d(u_channel, x_channel, **kwargs)
 
     def forward(self, x: Tensor, v: Tensor, r: Tensor
                 ) -> Tuple[Tensor, Tensor]:
@@ -144,8 +154,8 @@ class ConvolutionalDRAW(nn.Module):
 
         # Data size
         batch_size, _, h, w = x.size()
-        h_scale = h // self.scale
-        w_scale = w // self.scale
+        h_scale = h // (self.scale * self.stride)
+        w_scale = w // (self.scale * self.stride)
 
         # Generator initial state
         h_dec = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
@@ -156,7 +166,8 @@ class ConvolutionalDRAW(nn.Module):
         c_enc = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
 
         # Canvas that data is drawn on
-        u = x.new_zeros((batch_size, self.h_channel, h, w))
+        u = x.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
+                         w_scale * self.stride))
 
         # KL loss value
         kl_loss = 0
@@ -165,7 +176,7 @@ class ConvolutionalDRAW(nn.Module):
         x = self.read_head(x)
         v = v.view(batch_size, -1, 1, 1).repeat(1, 1, h_scale, w_scale)
         if r.size(2) != h_scale:
-            r = r.repeat(1, 1, h_scale, w_scale)
+            r = F.interpolate(r, (h_scale, w_scale))
 
         for _ in range(self.n_layer):
             # Prior factor (eta_pi)
@@ -213,15 +224,16 @@ class ConvolutionalDRAW(nn.Module):
 
         batch_size = v.size(0)
         h, w = x_shape
-        h_scale = h // self.scale
-        w_scale = w // self.scale
+        h_scale = h // (self.scale * self.stride)
+        w_scale = w // (self.scale * self.stride)
 
         # Hidden states
         h_dec = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
         c_dec = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
 
         # Canvas that data is drawn on
-        u = v.new_zeros((batch_size, self.h_channel, h, w))
+        u = v.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
+                         w_scale * self.stride))
 
         # Upsample v and r
         v = v.view(batch_size, -1, 1, 1).repeat(1, 1, h_scale, w_scale)
