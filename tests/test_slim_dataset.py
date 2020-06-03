@@ -209,15 +209,9 @@ class TestSlimDataset(unittest.TestCase):
         d_c, v_c, x_q, v_q = gqnlib.partition_slim(
             images, viewpoints, captions)
 
-        # d_c
-        self.assertEqual(d_c.size(0), 5)
-        self.assertEqual(d_c.size(1), 14)
-        self.assertEqual(d_c.size(2), 20)
-
-        # v_c
-        self.assertEqual(v_c.size(0), 5)
-        self.assertEqual(d_c.size(1), 14)
-        self.assertEqual(v_c.size(2), 4)
+        # Context
+        self.assertTupleEqual(d_c.size(), (5, 14, 20))
+        self.assertTupleEqual(v_c.size(), (5, 14, 4))
 
         # Query
         self.assertTupleEqual(x_q.size(), (5, 1, 3, 64, 64))
