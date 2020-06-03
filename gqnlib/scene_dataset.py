@@ -162,7 +162,7 @@ def partition_scene(images: Tensor, viewpoints: Tensor, num_query: int = 1
 
     if num_query >= num_points:
         raise ValueError(f"Number of queries (n={num_query}) must be less "
-                         f"than -total data (n={num_points}).")
+                         f"than total data (n={num_points}).")
 
     # Squeeze dataset
     images = images.view(n * b, num_points, *x_dims)
