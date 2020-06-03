@@ -71,6 +71,68 @@ Run training. `bin/train.sh` contains the necessary settings. This takes a very 
 bash bin/train.sh
 ```
 
+# Example
+
+## Training
+
+```python
+import pathlib
+import torch
+import gqnlib
+
+root = "./data/shepard_metzler_5_parts_torch/train/"
+dataset = gqnlib.SceneDataset(root, 20)
+model = gqnlib.GenerativeQueryNetwork()
+optimizer = torch.optim.Adam(model.parameters())
+
+model.train()
+for batch in dataset:
+     for data in batch:
+         # Partition data into context and query
+         data = gqnlib.partition_scene(*data)
+
+         # Inference
+         loss_dict = model(*data)
+
+         # Backward
+         loss = loss_dict["loss"].mean()
+         loss.backward()
+         optimizer.step()
+
+p = pathlib.Path("./logs/tmp")
+p.mkdir(exist_ok=True)
+
+cp = {"model_state_dict": model.state_dict(),
+      "optimizer_state_dict": optimizer.state_dict()}
+torch.save(cp, p / "example.pt")
+```
+
+## Use pre-trained model
+
+```python
+import torch
+import gqnlib
+
+# Load pre-trained model
+model = gqnlib.GenerativeQueryNetwork()
+cp = torch.load("./logs/tmp/example.pt")
+model.load_state_dict(cp["model_state_dict"])
+
+# Data
+root = "./data/shepard_metzler_5_parts_torch/train/"
+dataset = gqnlib.SceneDataset(root, 20)
+images, viewpoints = dataset[0][0]
+x_c, v_c, x_q, v_q = gqnlib.partition_scene(images, viewpoints)
+
+# Reconstruct and sample
+with torch.no_grad():
+    recon = model.reconstruct(x_c, v_c, x_q, v_q)
+    sample = model.sample(x_c, v_c, v_q)
+
+print(recon.size())  # -> torch.Size([20, 1, 3, 64, 64])
+print(sample.size())  # -> torch.Size([20, 1, 3, 64, 64])
+```
+
 # Reference
 
 * S. M. Ali Eslami et al., "Neural scene representation and rendering," [Science Vol. 360, Issue 6394, pp.1204-1210 (15 Jun 2018)](https://science.sciencemag.org/content/360/6394/1204.full?ijkey=kGcNflzOLiIKQ&keytype=ref&siteid=sci)
