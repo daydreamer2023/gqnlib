@@ -111,6 +111,40 @@ class TestSceneDataset(unittest.TestCase):
         with self.assertRaises(ValueError):
             gqnlib.partition_scene(images, viewpoints, num_query=15)
 
+    def test_partition_scene_multi(self):
+        # Data
+        images = torch.empty(2, 5, 15, 3, 64, 64)
+        viewpoints = torch.empty(2, 5, 15, 7)
+
+        # Query single data
+        x_c, v_c, x_q, v_q = gqnlib.partition_scene(images, viewpoints)
+
+        # Context
+        self.assertEqual(x_c.size(0), 10)
+        self.assertTrue(0 < x_c.size(1) < 15)
+        self.assertEqual(v_c.size(0), 10)
+
+        # Query
+        self.assertTupleEqual(x_q.size(), (10, 1, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (10, 1, 7))
+
+    def test_partition_scene_single(self):
+        # Data
+        images = torch.empty(5, 15, 3, 64, 64)
+        viewpoints = torch.empty(5, 15, 7)
+
+        # Query single data
+        x_c, v_c, x_q, v_q = gqnlib.partition_scene(images, viewpoints)
+
+        # Context
+        self.assertEqual(x_c.size(0), 5)
+        self.assertTrue(0 < x_c.size(1) < 15)
+        self.assertEqual(v_c.size(0), 5)
+
+        # Query
+        self.assertTupleEqual(x_q.size(), (5, 1, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (5, 1, 7))
+
 
 if __name__ == "__main__":
     unittest.main()
