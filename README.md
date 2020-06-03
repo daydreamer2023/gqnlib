@@ -82,6 +82,7 @@ import pathlib
 import torch
 import gqnlib
 
+# Prepare dataset and model
 root = "./data/shepard_metzler_5_parts_torch/train/"
 dataset = gqnlib.SceneDataset(root, 20)
 model = gqnlib.GenerativeQueryNetwork()
@@ -101,6 +102,7 @@ for batch in dataset:
          loss.backward()
          optimizer.step()
 
+# Save checkpoints
 p = pathlib.Path("./logs/tmp")
 p.mkdir(exist_ok=True)
 
