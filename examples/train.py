@@ -81,7 +81,7 @@ def init_args():
                         help="Model name.")
     parser.add_argument("--seed", type=int, default=0,
                         help="Random seed.")
-    parser.add_argument("--batch-size", type=int, default=20,
+    parser.add_argument("--batch-size", type=int, default=36,
                         help="Batch size.")
     parser.add_argument("--steps", type=int, default=2,
                         help="Number of gradient steps.")

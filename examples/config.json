@@ -27,6 +27,6 @@
     "sigma_scheduler_params": {
         "init": 2.0,
         "final": 0.7,
-        "steps": 80000
+        "steps": 200000
     }
 }
