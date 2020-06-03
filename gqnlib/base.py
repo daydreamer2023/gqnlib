@@ -74,7 +74,10 @@ class BaseGQN(nn.Module):
                   ) -> Tuple[Tuple[Tensor, ...], Dict[str, Tensor]]:
         """Inferences with context and target data to calculate ELBO loss.
 
-        **Caution**: Returned `loss_dict` must include `loss` key.
+        **Caution**:
+
+        * Returned first element of `data` tuple should be `canvas`.
+        * Returned `loss_dict` must include `loss` key.
 
         Args:
             x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
@@ -88,6 +91,37 @@ class BaseGQN(nn.Module):
                 each tensor is `(b, n, c, h, w)`.
             loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
                 with size `(b, n)`.
+        """
+
+        raise NotImplementedError
+
+    def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
+        """Samples images `x_q` by context pair `(x, v)` and query viewpoint
+        `v_q`.
+
+        Args:
+            x_c (torch.Tensor): Context images, size `(b, m, c, h, w)`.
+            v_c (torch.Tensor): Context viewpoints, size `(b, m, k)`.
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
+
+        Returns:
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
+        """
+
+        raise NotImplementedError
+
+    def query(self, v_q: Tensor, r: Tensor) -> Tensor:
+        """Query images with context representation.
+
+        Args:
+            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
+            r (torch.Tensor): Representations of context, size
+                `(b, n, r, x, y)`.
+
+        Returns:
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
         """
 
         raise NotImplementedError
