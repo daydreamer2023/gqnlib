@@ -257,47 +257,56 @@ def partition_slim(images: Tensor, viewpoints: Tensor, captions: Tensor,
 
     Args:
         images (torch.Tensor): Image tensor, size
-            `(batch, b, num_points, c, h, w)`.
+            `(n, b, num_points, c, h, w)`.
         viewpoints (torch.Tensor): Viewpoints tensor, size
-            `(batch, b, num_points, target)`.
+            `(n, b, num_points, target)`.
         captions (torch.Tensor): Captions tensor, size
-            `(batch, b, num_points, length)`.
+            `(n, b, num_points, length)`.
         num_query (int, optional): Number of queries.
         randomized (bool, optional): If `True`, the number of context data is
             randomly selected.
 
     Returns:
-        d_c (torch.Tensor): Context captions, size `(b, num_context, l)`.
-        v_c (torch.Tensor): Context viewpoints, size `(b, num_context, t)`.
-        x_q (torch.Tensor): Query images, size `(b, num_query, c, h, w)`.
-        v_q (torch.Tensor): Query viewpoints, size `(b, num_query, t)`.
+        d_c (torch.Tensor): Context captions, size `(n*b, num_context, l)`.
+        v_c (torch.Tensor): Context viewpoints, size `(n*b, num_context, t)`.
+        x_q (torch.Tensor): Query images, size `(n*b, num_query, c, h, w)`.
+        v_q (torch.Tensor): Query viewpoints, size `(n*b, num_query, t)`.
 
     Raises:
         ValueError: If `num_query` is equal or greater than `num_points`.
     """
 
-    # Maximum number of context
-    _, batch, num, *x_dims = images.size()
-    _, _, _, *v_dims = viewpoints.size()
-    _, _, _, *d_dims = captions.size()
+    # Data size
+    if images.dim() == 6:
+        n, b, num_points, *x_dims = images.size()
+        _, _, _, *v_dims = viewpoints.size()
+        _, _, _, *d_dims = captions.size()
+    elif images.dim() == 5:
+        n = 1
+        b, num_points, *x_dims = images.size()
+        _, _, *v_dims = viewpoints.size()
+        _, _, *d_dims = captions.size()
+    else:
+        raise ValueError("Given image size is expected to be (n, b, m, c, h, "
+                         f"w) or (b, m, c, h, w), but given {images.size()}")
 
-    if num_query >= num:
+    if num_query >= num_points:
         raise ValueError(f"Number of queries (n={num_query}) must be less "
-                         f"than -total data (n={num}).")
+                         f"than total data (n={num_points}).")
 
     # Squeeze dataset
-    images = images.view(batch, num, *x_dims)
-    viewpoints = viewpoints.view(batch, num, *v_dims)
-    captions = captions.view(batch, num, *d_dims)
+    images = images.view(n*b, num_points, *x_dims)
+    viewpoints = viewpoints.view(n*b, num_points, *v_dims)
+    captions = captions.view(n*b, num_points, *d_dims)
 
     # Sample randum number for total data size
     if randomized:
-        n_data = random.randint(num_query + 1, num)
+        n_data = random.randint(num_query + 1, num_points)
     else:
-        n_data = num
+        n_data = num_points
 
     # Shuffle indices
-    indices = random.sample(range(num), n_data)
+    indices = random.sample(range(num_points), n_data)
 
     # Partition into context and query
     context_idx = indices[:-num_query]

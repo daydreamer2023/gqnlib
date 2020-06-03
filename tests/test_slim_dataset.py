@@ -264,6 +264,21 @@ class TestSlimDataset(unittest.TestCase):
             gqnlib.partition_slim(
                 images, viewpoints, captions, num_query=15)
 
+    def test_partition_slim_multi(self):
+        images = torch.empty(2, 5, 15, 3, 64, 64)
+        viewpoints = torch.empty(2, 5, 15, 4)
+        captions = torch.empty(2, 5, 15, 20)
+
+        # Single query
+        d_c, v_c, x_q, v_q = gqnlib.partition_slim(
+            images, viewpoints, captions)
+
+        # d_c
+        self.assertTupleEqual(d_c.size(), (10, 14, 20))
+        self.assertTupleEqual(v_c.size(), (10, 14, 4))
+        self.assertTupleEqual(x_q.size(), (10, 1, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (10, 1, 4))
+
 
 if __name__ == "__main__":
     unittest.main()
