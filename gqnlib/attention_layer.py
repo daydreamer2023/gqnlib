@@ -73,8 +73,8 @@ class DictionaryEncoder(nn.Module):
         key = self.conv(x)
 
         # Positions of each patch
-        pos_x = torch.arange(7).repeat(7).float()
-        pos_y = torch.arange(7).repeat_interleave(7).float()
+        pos_x = torch.arange(7, device=x.device).repeat(7).float()
+        pos_y = torch.arange(7, device=x.device).repeat_interleave(7).float()
 
         pos_x = pos_x.view(-1, 1, 1, 1).repeat(b, 1, 8, 8)
         pos_y = pos_y.view(-1, 1, 1, 1).repeat(b, 1, 8, 8)
