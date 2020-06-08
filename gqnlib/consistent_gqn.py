@@ -46,12 +46,13 @@ class ConsistentGQN(BaseGQN):
             var (float, optional): Variance of observations normal dist.
 
         Returns:
-            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
             r_c (torch.Tensor): Representations of context, size
                 `(b, r, x, y)`.
             r_q (torch.Tensor): Representations of query, size `(b, r, x, y)`.
             loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
-                with size `(b, n)`.
+                with size `(b,)`.
         """
 
         # Reshape: (b, m, c, h, w) -> (b*m, c, h, w)
@@ -59,26 +60,16 @@ class ConsistentGQN(BaseGQN):
         _, _, *v_dims = v_c.size()
         n = x_q.size(1)
 
-        x_c = x_c.view(-1, *x_dims)
-        v_c = v_c.view(-1, *v_dims)
-
-        x_q = x_q.view(-1, *x_dims)
-        v_q = v_q.view(-1, *v_dims)
-
         # Representation generated from context
-        r_c = self.representation(x_c, v_c)
+        r_c = self.representation(x_c.view(-1, *x_dims), v_c.view(-1, *v_dims))
         _, *r_dims = r_c.size()
         r_c = r_c.view(b, m, *r_dims)
         r_c = r_c.sum(1)
 
         # Representation generated from query
-        r_q = self.representation(x_q, v_q)
+        r_q = self.representation(x_q.view(-1, *x_dims), v_q.view(-1, *v_dims))
         r_q = r_q.view(b, n, *r_dims)
         r_q = r_q.sum(1)
-
-        # Copy representations for query
-        r_c = r_c.repeat_interleave(n, dim=0)
-        r_q = r_q.repeat_interleave(n, dim=0)
 
         # Query images by v_q, i.e. reconstruct
         canvas, kl_loss = self.generator(x_q, v_q, r_c, r_q)
@@ -86,18 +77,11 @@ class ConsistentGQN(BaseGQN):
         # Reconstruction loss
         nll_loss = nll_normal(x_q, canvas, x_q.new_ones((1)) * var,
                               reduce=False)
-        nll_loss = nll_loss.sum([1, 2, 3])
+        nll_loss = nll_loss.sum([1, 2, 3, 4])
 
         # Returned loss
-        nll_loss = nll_loss.view(b, n)
-        kl_loss = kl_loss.view(b, n)
         loss_dict = {"loss": nll_loss + kl_loss, "nll_loss": nll_loss,
                      "kl_loss": kl_loss}
-
-        # Restore original shape
-        canvas = canvas.view(b, n, *x_dims)
-        r_c = r_c.view(b, n, *r_dims)
-        r_q = r_q.view(b, n, *r_dims)
 
         # Squash images to [0, 1]
         canvas = canvas.clamp(0.0, 1.0)
@@ -122,26 +106,16 @@ class ConsistentGQN(BaseGQN):
         b, m, *x_dims = x_c.size()
         _, _, *v_dims = v_c.size()
 
-        x_c = x_c.view(-1, *x_dims)
-        v_c = v_c.view(-1, *v_dims)
-
-        n = v_q.size(1)
-        v_q = v_q.view(-1, *v_dims)
-
         # Representation generated from context.
-        r = self.representation(x_c, v_c)
+        r = self.representation(x_c.view(-1, *x_dims), v_c.view(-1, *v_dims))
         _, *r_dims = r.size()
         r = r.view(b, m, *r_dims)
 
         # Sum over representations: (b, c, x, y)
         r = r.sum(1)
-        r = r.repeat_interleave(n, dim=0)
 
         # Sample query images
         canvas = self.generator.sample(v_q, r)
-
-        # Restore origina shape
-        canvas = canvas.view(b, n, *x_dims)
 
         # Squash images to [0, 1]
         canvas = canvas.clamp(0.0, 1.0)
@@ -161,19 +135,8 @@ class ConsistentGQN(BaseGQN):
                 `(b, n, c, h, w)`.
         """
 
-        # Squeeze data: (b, n, k) -> (b*n, k)
-        b, n, v_dim = v_q.size()
-        v_q = v_q.view(-1, v_dim)
-
-        _, _, *r_dims = r_c.size()
-        r_c = r_c.view(-1, *r_dims)
-
         # Sample data
         canvas = self.generator.sample(v_q, r_c)
-
-        # Restore the original shape: (b*n, c, h, w) -> (b, n, c, h, w)
-        _, *x_dims = canvas.size()
-        canvas = canvas.view(b, n, *x_dims)
 
         # Squash images to [0, 1]
         canvas = canvas.clamp(0.0, 1.0)

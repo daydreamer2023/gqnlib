@@ -21,12 +21,12 @@ class TestConsistentGQN(unittest.TestCase):
             x_c, v_c, x_q, v_q)
 
         self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
-        self.assertTupleEqual(r_c.size(), (4, 2, 32, 16, 16))
-        self.assertTupleEqual(r_q.size(), (4, 2, 32, 16, 16))
+        self.assertTupleEqual(r_c.size(), (4, 32, 16, 16))
+        self.assertTupleEqual(r_q.size(), (4, 32, 16, 16))
 
-        self.assertTupleEqual(loss_dict["loss"].size(), (4, 2))
-        self.assertTupleEqual(loss_dict["nll_loss"].size(), (4, 2))
-        self.assertTupleEqual(loss_dict["kl_loss"].size(), (4, 2))
+        self.assertTupleEqual(loss_dict["loss"].size(), (4,))
+        self.assertTupleEqual(loss_dict["nll_loss"].size(), (4,))
+        self.assertTupleEqual(loss_dict["kl_loss"].size(), (4,))
         self.assertGreater(loss_dict["loss"].mean(), 0)
         self.assertGreater(loss_dict["nll_loss"].mean(), 0)
         self.assertGreater(loss_dict["kl_loss"].mean(), 0)
@@ -39,9 +39,9 @@ class TestConsistentGQN(unittest.TestCase):
 
         loss_dict = self.model(x_c, v_c, x_q, v_q)
 
-        self.assertTupleEqual(loss_dict["loss"].size(), (4, 2))
-        self.assertTupleEqual(loss_dict["nll_loss"].size(), (4, 2))
-        self.assertTupleEqual(loss_dict["kl_loss"].size(), (4, 2))
+        self.assertTupleEqual(loss_dict["loss"].size(), (4,))
+        self.assertTupleEqual(loss_dict["nll_loss"].size(), (4,))
+        self.assertTupleEqual(loss_dict["kl_loss"].size(), (4,))
         self.assertGreater(loss_dict["loss"].mean(), 0)
         self.assertGreater(loss_dict["nll_loss"].mean(), 0)
         self.assertGreater(loss_dict["kl_loss"].mean(), 0)
@@ -76,7 +76,7 @@ class TestConsistentGQN(unittest.TestCase):
 
     def test_query(self):
         v_q = torch.randn(4, 2, 7)
-        r_c = torch.randn(4, 2, 32, 16, 16)
+        r_c = torch.randn(4, 32, 16, 16)
 
         canvas = self.model.query(v_q, r_c)
         self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))

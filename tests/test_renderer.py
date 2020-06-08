@@ -64,10 +64,10 @@ class TestRenderer(unittest.TestCase):
             h_channel, d_channel, z_channel, u_channel, v_dim, stride)
 
         z = torch.randn(4, z_channel, 8, 8)
-        v = torch.randn(4, 7)
-        u = torch.randn(4, u_channel, 16, 16)
-        h = torch.randn(4, h_channel, 8, 8)
-        c = torch.randn(4, h_channel, 8, 8)
+        v = torch.randn(4, 2, 7)
+        u = torch.randn(4 * 2, u_channel, 16, 16)
+        h = torch.randn(4 * 2, h_channel, 8, 8)
+        c = torch.randn(4 * 2, h_channel, 8, 8)
 
         u_n, h_n, c_n = model(z, v, u, h, c)
 
@@ -81,8 +81,8 @@ class TestDRAWRenderer(unittest.TestCase):
     def test_forward(self):
         model = gqnlib.DRAWRenderer()
 
-        x = torch.randn(4, 3, 64, 64)
-        v = torch.randn(4, 7)
+        x = torch.randn(4, 2, 3, 64, 64)
+        v = torch.randn(4, 2, 7)
         r_c = torch.randn(4, 32, 16, 16)
         r_q = torch.randn(4, 32, 16, 16)
 
@@ -95,11 +95,11 @@ class TestDRAWRenderer(unittest.TestCase):
     def test_sample(self):
         model = gqnlib.DRAWRenderer()
 
-        v = torch.randn(4, 7)
+        v = torch.randn(4, 2, 7)
         r = torch.randn(4, 32, 16, 16)
         canvas = model.sample(v, r)
 
-        self.assertTupleEqual(canvas.size(), (4, 3, 64, 64))
+        self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
 
 
 if __name__ == "__main__":
