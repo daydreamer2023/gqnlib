@@ -138,35 +138,3 @@ class SlimGQN(BaseGQN):
         canvas = canvas.clamp(0.0, 1.0)
 
         return canvas
-
-    def query(self, v_q: Tensor, r_c: Tensor) -> Tensor:
-        """Query images with context representation.
-
-        Args:
-            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
-            r_c (torch.Tensor): Representations of context, size
-                `(b, n, r, x, y)`.
-
-        Returns:
-            canvas (torch.Tensor): Reconstructed images, size
-                `(b, n, c, h, w)`.
-        """
-
-        # Squeeze data: (b, n, k) -> (b*n, k)
-        b, n, v_dim = v_q.size()
-        v_q = v_q.view(-1, v_dim)
-
-        _, _, *r_dims = r_c.size()
-        r_c = r_c.view(-1, *r_dims)
-
-        # Sample data
-        canvas = self.generator.sample(v_q, r_c)
-
-        # Restore the original shape: (b*n, c, h, w) -> (b, n, c, h, w)
-        _, *x_dims = canvas.size()
-        canvas = canvas.view(b, n, *x_dims)
-
-        # Squash images to [0, 1]
-        canvas = canvas.clamp(0.0, 1.0)
-
-        return canvas

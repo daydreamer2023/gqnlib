@@ -121,24 +121,3 @@ class ConsistentGQN(BaseGQN):
         canvas = canvas.clamp(0.0, 1.0)
 
         return canvas
-
-    def query(self, v_q: Tensor, r_c: Tensor) -> Tensor:
-        """Query images with context representation.
-
-        Args:
-            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
-            r_c (torch.Tensor): Representations of context, size
-                `(b, n, r, x, y)`.
-
-        Returns:
-            canvas (torch.Tensor): Reconstructed images, size
-                `(b, n, c, h, w)`.
-        """
-
-        # Sample data
-        canvas = self.generator.sample(v_q, r_c)
-
-        # Squash images to [0, 1]
-        canvas = canvas.clamp(0.0, 1.0)
-
-        return canvas

@@ -75,14 +75,6 @@ class TestAttentionGQN(unittest.TestCase):
         canvas = self.model.sample(x_c, v_c, v_q)
         self.assertTupleEqual(canvas.size(), (4, 5, 3, 64, 64))
 
-    def test_query(self):
-        v_q = torch.randn(4, 2, 7)
-        key = torch.randn(4, 15 * 49, 64, 8, 8)
-        value = torch.randn(4, 15 * 49, 76, 8, 8)
-
-        canvas = self.model.query(v_q, key, value)
-        self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
-
 
 if __name__ == "__main__":
     unittest.main()

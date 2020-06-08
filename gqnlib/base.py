@@ -110,18 +110,3 @@ class BaseGQN(nn.Module):
         """
 
         raise NotImplementedError
-
-    def query(self, v_q: Tensor, r: Tensor) -> Tensor:
-        """Query images with context representation.
-
-        Args:
-            v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
-            r (torch.Tensor): Representations of context, size
-                `(b, n, r, x, y)`.
-
-        Returns:
-            canvas (torch.Tensor): Reconstructed images, size
-                `(b, n, c, h, w)`.
-        """
-
-        raise NotImplementedError
