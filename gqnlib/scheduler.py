@@ -63,3 +63,29 @@ class Annealer:
         self.current = value
 
         return value
+
+
+class VarianceAnnealer:
+    """Annealer for variance used in Consistent GQN training."""
+
+    def __init__(self):
+        # Current value
+        self.t = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> float:
+        self.t += 1
+
+        if self.t <= 100000:
+            value = 2.0
+        elif 100000 < self.t <= 150000:
+            value = 0.2
+        elif 150000 < self.t <= 200000:
+            value = 0.4
+        else:
+            value = 0.9
+
+        # Return sigma
+        return value ** 0.5
