@@ -110,8 +110,7 @@ class Renderer(nn.Module):
         b, n, v_dim = v.size()
 
         # z: (b, z, h, w) -> (b * n, z, h, w)
-        z = z.contiguous().view(b, 1, z_dim, h_dim, w_dim)
-        z = z.repeat(1, n, 1, 1, 1).view(b * n, z_dim, h_dim, w_dim)
+        z = z.repeat_interleave(n, dim=0)
 
         # v: (b, n, v) -> (b * n, v, h, w)
         v = v.contiguous().view(b * n, v_dim, 1, 1).repeat(1, 1, h_dim, w_dim)
