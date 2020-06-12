@@ -4,6 +4,7 @@
 from typing import Tuple, List
 
 import gzip
+import logging
 import pathlib
 import random
 
@@ -40,6 +41,8 @@ class SceneDataset(torch.utils.data.Dataset):
         self.record_list = sorted(root_dir.glob("*.pt.gz"))
         self.batch_size = batch_size
 
+        self.logger = logging.getLogger()
+
     def __len__(self) -> int:
         """Returns number of files and directories in root dir.
 
@@ -64,8 +67,12 @@ class SceneDataset(torch.utils.data.Dataset):
                 `data_num // batch_size`.
         """
 
-        with gzip.open(self.record_list[index], "rb") as f:
-            dataset = torch.load(f)
+        try:
+            with gzip.open(self.record_list[index], "rb") as f:
+                dataset = torch.load(f)
+        except (UnicodeDecodeError, ValueError) as e:
+            self.logger.warning(f"Invalid file {self.record_list[index]}: {e}")
+            return []
 
         # Read list of tuples
         images = []

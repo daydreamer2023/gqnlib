@@ -199,8 +199,12 @@ class SlimDataset(torch.utils.data.Dataset):
                 `data_num // batch_size`.
         """
 
-        with gzip.open(self.record_list[index], "rb") as f:
-            dataset = torch.load(f)
+        try:
+            with gzip.open(self.record_list[index], "rb") as f:
+                dataset = torch.load(f)
+        except (UnicodeDecodeError, ValueError) as e:
+            self.logger.warning(f"Invalid file {self.record_list[index]}: {e}")
+            return []
 
         # Read list of tuples
         images = []
