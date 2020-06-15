@@ -58,6 +58,7 @@ class Trainer:
         self.pbar = None
         self.postfix = {}
         self.test_interval = 10000
+        self.var = 1.0
 
     def check_logdir(self) -> None:
         """Checks log directory.
@@ -170,11 +171,11 @@ class Trainer:
                 data = (x.to(self.device) for x in data)
 
                 # Pixel variance annealing
-                var = next(self.sigma_scheduler) ** 2
+                self.var = next(self.sigma_scheduler) ** 2
 
                 # Forward
                 self.optimizer.zero_grad()
-                loss_dict = self.model(*data, var)
+                loss_dict = self.model(*data, self.var)
                 loss = loss_dict["loss"].mean()
 
                 # Backward and update
@@ -229,7 +230,7 @@ class Trainer:
 
                     # Data to device
                     data = (v.to(self.device) for v in data)
-                    loss_dict = self.model(*data)
+                    loss_dict = self.model(*data, self.var)
                     loss = loss_dict["loss"]
 
                 # Update progress bar
