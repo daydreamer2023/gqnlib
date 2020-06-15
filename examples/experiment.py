@@ -299,7 +299,7 @@ class Trainer:
 
         self.logger.info("Start experiment")
 
-        # Pop hyper parameters
+        # Get hyper parameters
         model_name = self.hparams.get("model", "gqn")
         train_dir = self.hparams.get("train_dir", "./data/tmp/train")
         test_dir = self.hparams.get("test_dir", "./data/tmp/test")
