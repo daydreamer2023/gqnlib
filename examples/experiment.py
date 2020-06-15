@@ -42,7 +42,7 @@ class Trainer:
     def __init__(self, model: gqnlib.GenerativeQueryNetwork, hparams: dict):
         # Params
         self.model = model
-        self.hparams = hparams
+        self.hparams = copy.deepcopy(hparams)
 
         # Attributes
         self.model_name = ""
@@ -66,8 +66,7 @@ class Trainer:
         exist.
         """
 
-        logdir = (self.hparams["logdir"] if "logdir" in self.hparams
-                  else "./logs/tmp/")
+        logdir = self.hparams.get("logdir", "./logs/tmp/")
         self.logdir = pathlib.Path(logdir, time.strftime("%Y%m%d%H%M"))
         self.logdir.mkdir(parents=True, exist_ok=True)
 
@@ -301,19 +300,18 @@ class Trainer:
         self.logger.info("Start experiment")
 
         # Pop hyper parameters
-        hparams = copy.deepcopy(self.hparams)
-        model_name = hparams.pop("model", "gqn")
-        train_dir = hparams.pop("train_dir", "./data/tmp/train")
-        test_dir = hparams.pop("test_dir", "./data/tmp/test")
-        batch_size = hparams.pop("batch_size", 1)
-        max_steps = hparams.pop("steps", 10)
-        test_interval = hparams.pop("test_interval", 5)
-        save_interval = hparams.pop("save_interval", 5)
-        gpus = hparams.pop("gpus", None)
+        model_name = self.hparams.get("model", "gqn")
+        train_dir = self.hparams.get("train_dir", "./data/tmp/train")
+        test_dir = self.hparams.get("test_dir", "./data/tmp/test")
+        batch_size = self.hparams.get("batch_size", 1)
+        max_steps = self.hparams.get("steps", 10)
+        test_interval = self.hparams.get("test_interval", 5)
+        save_interval = self.hparams.get("save_interval", 5)
+        gpus = self.hparams.get("gpus", None)
 
-        optimizer_params = hparams.pop("optimizer_params", {})
-        lr_scheduler_params = hparams.pop("lr_scheduler_params", {})
-        sigma_scheduler_params = hparams.pop(
+        optimizer_params = self.hparams.get("optimizer_params", {})
+        lr_scheduler_params = self.hparams.get("lr_scheduler_params", {})
+        sigma_scheduler_params = self.hparams.get(
             "sigma_scheduler_params",
             {"init": 2.0, "final": 0.7, "steps": 80000})
 
