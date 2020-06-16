@@ -36,7 +36,7 @@ class WordVectorizer:
         n_words (int): Number of words.
     """
 
-    def __init__(self, vocab_dim: int = 5000):
+    def __init__(self, vocab_dim: int = 5000) -> None:
 
         self.vocab_dim = vocab_dim
 
@@ -163,7 +163,7 @@ class SlimDataset(Dataset):
     """
 
     def __init__(self, root_dir: str, batch_size: int,
-                 vectorizer: WordVectorizer, train: bool = True):
+                 vectorizer: WordVectorizer, train: bool = True) -> None:
         super().__init__()
 
         self.record_list = sorted(pathlib.Path(root_dir).glob("*.pt.gz"))
