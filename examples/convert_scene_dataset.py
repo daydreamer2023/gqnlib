@@ -147,12 +147,11 @@ def convert_record(path: pathlib.Path, dataset_name: str,
                 torch.save(scene_list, f)
 
 
-def _preprocess_data(dataset_info: collections.namedtuple,
-                     raw_data: tf.Tensor):
+def _preprocess_data(dataset_info: DatasetInfo, raw_data: tf.Tensor):
     """Converts raw data to tensor and saves into torch gziped file.
 
     Args:
-        dataset_info (collections.namedtuple): Information tuple.
+        dataset_info (DatasetInfo): Information tuple.
         raw_data (tf.Tensor): Tensor of original data.
     """
 
