@@ -27,7 +27,7 @@ class DictionaryEncoder(nn.Module):
         v_dim (int, optional): Dimension size of viewpoints.
     """
 
-    def __init__(self, x_channel: int = 3, v_dim: int = 7):
+    def __init__(self, x_channel: int = 3, v_dim: int = 7) -> None:
         super().__init__()
 
         self.conv = nn.Sequential(
@@ -139,7 +139,7 @@ class AttentionGenerator(nn.Module):
 
     def __init__(self, x_channel: int = 3, v_dim: int = 7, z_channel: int = 64,
                  h_channel: int = 128, u_channel: int = 128, n_layer: int = 8,
-                 scale: int = 4, stride: int = 2):
+                 scale: int = 4, stride: int = 2) -> None:
         super().__init__()
 
         self.x_channel = x_channel

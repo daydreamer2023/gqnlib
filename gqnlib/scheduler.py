@@ -18,7 +18,7 @@ class AnnealingStepLR(_LRScheduler):
     """
 
     def __init__(self, optimizer: torch.optim.Optimizer, mu_i: float = 5e-4,
-                 mu_f: float = 5e-5, n: float = 1.6e6):
+                 mu_f: float = 5e-5, n: float = 1.6e6) -> None:
         self.mu_i = mu_i
         self.mu_f = mu_f
         self.n = n
@@ -41,7 +41,7 @@ class Annealer:
         steps (int): Number of annealing steps.
     """
 
-    def __init__(self, init: float, final: float, steps: int):
+    def __init__(self, init: float, final: float, steps: int) -> None:
 
         self.init = init
         self.final = final
@@ -68,7 +68,7 @@ class Annealer:
 class VarianceAnnealer:
     """Annealer for variance used in Consistent GQN training."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Current value
         self.t = 0
 

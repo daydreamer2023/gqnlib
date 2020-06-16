@@ -24,7 +24,7 @@ class SlimGQN(BaseGQN):
     """
 
     def __init__(self, vocab_dim: int = 5000, representation_params: dict = {},
-                 generator_params: dict = {}):
+                 generator_params: dict = {}) -> None:
         super().__init__()
 
         self.representation = RepresentationNetwork(

@@ -23,7 +23,7 @@ class LatentEncoder(nn.Module):
     """
 
     def __init__(self, x_channel: int, e_channel: int, h_channel: int,
-                 z_channel: int, stride: int):
+                 z_channel: int, stride: int) -> None:
         super().__init__()
 
         self.conv = nn.Sequential(
@@ -82,7 +82,7 @@ class VisualDecoder(nn.Module):
     """
 
     def __init__(self, h_channel: int, d_channel: int, z_channel: int,
-                 r_dim: int, u_channel: int, v_dim: int, stride: int):
+                 r_dim: int, u_channel: int, v_dim: int, stride: int) -> None:
         super().__init__()
 
         self.conv = nn.Conv2d(
@@ -147,7 +147,7 @@ class SlimGenerator(nn.Module):
     def __init__(self, x_channel: int = 3, u_channel: int = 128,
                  r_dim: int = 256, e_channel: int = 128, d_channel: int = 128,
                  h_channel: int = 128, z_channel: int = 3, stride: int = 2,
-                 v_dim: int = 4, n_layer: int = 8, scale: int = 4):
+                 v_dim: int = 4, n_layer: int = 8, scale: int = 4) -> None:
         super().__init__()
 
         self.u_channel = u_channel

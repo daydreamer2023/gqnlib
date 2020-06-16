@@ -14,7 +14,7 @@ class Pyramid(nn.Module):
         n_target (int, optional): Dimension of viewpoints.
     """
 
-    def __init__(self, n_channel: int = 3, n_target: int = 7):
+    def __init__(self, n_channel: int = 3, n_target: int = 7) -> None:
         super().__init__()
 
         self.conv = nn.Sequential(
@@ -55,7 +55,7 @@ class Tower(nn.Module):
     """
 
     def __init__(self, n_channel: int = 3, n_target: int = 7,
-                 do_pool: bool = True):
+                 do_pool: bool = True) -> None:
         super().__init__()
 
         self.conv1 = nn.Conv2d(n_channel, 256, kernel_size=2, stride=2)
@@ -115,7 +115,7 @@ class Simple(nn.Module):
         n_target (int, optional): Dimension of viewpoints.
     """
 
-    def __init__(self, n_channel: int = 3, n_target: int = 7):
+    def __init__(self, n_channel: int = 3, n_target: int = 7) -> None:
         super().__init__()
 
         self.conv = nn.Sequential(

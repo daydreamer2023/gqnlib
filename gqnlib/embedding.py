@@ -29,7 +29,7 @@ class EmbeddingEncoder(nn.Module):
 
     def __init__(self, vocab_dim: int, embed_dim: int, n_head: int = 2,
                  h_dim: int = 200, n_layer: int = 2, dropout: float = 0.1,
-                 max_len: int = 1000):
+                 max_len: int = 1000) -> None:
         super().__init__()
 
         # Size
@@ -104,7 +104,7 @@ class PositionalEncoder(nn.Module):
     """
 
     def __init__(self, d_model: int, dropout: float = 0.1,
-                 max_len: int = 1000):
+                 max_len: int = 1000) -> None:
         super().__init__()
 
         self.dropout = nn.Dropout(dropout)
@@ -146,7 +146,8 @@ class RepresentationNetwork(nn.Module):
     """
 
     def __init__(self, vocab_dim: int, embed_dim: int = 64, v_dim: int = 4,
-                 h_dim: int = 32, r_dim: int = 256, embed_params: dict = {}):
+                 h_dim: int = 32, r_dim: int = 256, embed_params: dict = {}
+                 ) -> None:
         super().__init__()
 
         self.embedding_encoder = EmbeddingEncoder(

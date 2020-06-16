@@ -44,7 +44,7 @@ class Conv2dLSTMCell(nn.Module):
     """
 
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
-                 stride: int, padding: int):
+                 stride: int, padding: int) -> None:
         super().__init__()
 
         kwargs = dict(kernel_size=kernel_size, stride=stride, padding=padding)
@@ -104,7 +104,7 @@ class ConvolutionalDRAW(nn.Module):
     def __init__(self, x_channel: int = 3, v_dim: int = 7, r_dim: int = 256,
                  z_channel: int = 64, h_channel: int = 128,
                  u_channel: int = 128, n_layer: int = 8, scale: int = 4,
-                 stride: int = 2):
+                 stride: int = 2) -> None:
         super().__init__()
 
         self.h_channel = h_channel

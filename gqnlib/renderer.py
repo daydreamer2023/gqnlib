@@ -26,7 +26,7 @@ class LatentDistribution(nn.Module):
     """
 
     def __init__(self, r_channel: int, e_channel: int, h_channel: int,
-                 z_channel: int, stride: int):
+                 z_channel: int, stride: int) -> None:
         super().__init__()
 
         self.conv1 = nn.Conv2d(r_channel, e_channel, kernel_size=stride,
@@ -77,7 +77,7 @@ class Renderer(nn.Module):
     """
 
     def __init__(self, h_channel: int, d_channel: int, z_channel: int,
-                 u_channel: int, v_dim: int, stride: int):
+                 u_channel: int, v_dim: int, stride: int) -> None:
         super().__init__()
 
         self.conv = nn.Conv2d(u_channel, d_channel, kernel_size=stride,
@@ -149,7 +149,7 @@ class DRAWRenderer(nn.Module):
                  r_channel: int = 32, e_channel: int = 128,
                  d_channel: int = 128, h_channel: int = 64, z_channel: int = 3,
                  stride: int = 2, v_dim: int = 7, n_layer: int = 8,
-                 scale: int = 4):
+                 scale: int = 4) -> None:
         super().__init__()
 
         self.u_channel = u_channel

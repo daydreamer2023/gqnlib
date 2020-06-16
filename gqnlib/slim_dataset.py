@@ -10,11 +10,13 @@ from typing import Tuple, List
 import collections
 import gzip
 import json
+import logging
 import pathlib
 import random
 
 import torch
 from torch import Tensor
+from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
 
 
@@ -142,7 +144,7 @@ class WordVectorizer:
                 self.sentence2index(snt.decode())
 
 
-class SlimDataset(torch.utils.data.Dataset):
+class SlimDataset(Dataset):
     """SlimDataset class for SLIM.
 
     SlimDataset class loads data files at each time accessed by index. Each
@@ -164,11 +166,12 @@ class SlimDataset(torch.utils.data.Dataset):
                  vectorizer: WordVectorizer, train: bool = True):
         super().__init__()
 
-        root_dir = pathlib.Path(root_dir)
-        self.record_list = sorted(root_dir.glob("*.pt.gz"))
+        self.record_list = sorted(pathlib.Path(root_dir).glob("*.pt.gz"))
         self.batch_size = batch_size
         self.vectorizer = vectorizer
         self.train = train
+
+        self.logger = logging.getLogger()
 
     def __len__(self) -> int:
         """Returns number of files and directories in root dir.
@@ -179,7 +182,7 @@ class SlimDataset(torch.utils.data.Dataset):
 
         return len(self.record_list)
 
-    def __getitem__(self, index: int) -> List[Tuple[Tensor]]:
+    def __getitem__(self, index: int) -> List[Tuple[Tensor, Tensor, Tensor]]:
         """Loads data file and returns data with specified index.
 
         This method reads `<index>.pt.gz` file which includes a list of tuples
@@ -207,24 +210,24 @@ class SlimDataset(torch.utils.data.Dataset):
             return []
 
         # Read list of tuples
-        images = []
-        viewpoints = []
-        captions = []
+        images_list = []
+        viewpoints_list = []
+        captions_list = []
         for img, vwp, _, cpt, *_ in dataset:
-            images.append(torch.from_numpy(img).permute(0, 3, 1, 2))
-            viewpoints.append(torch.from_numpy(vwp))
+            images_list.append(torch.from_numpy(img).permute(0, 3, 1, 2))
+            viewpoints_list.append(torch.from_numpy(vwp))
 
             sentences = []
             for snt in cpt:
                 sentences.append(torch.tensor(
                     self.vectorizer.sentence2index(snt.decode(), self.train)))
 
-            captions.append(pad_sequence(sentences, batch_first=False))
+            captions_list.append(pad_sequence(sentences, batch_first=False))
 
         # Stack loaded tensors (n, m, *)
-        images = torch.stack(images)
-        viewpoints = torch.stack(viewpoints)
-        captions = pad_sequence(captions).permute(1, 2, 0)
+        images = torch.stack(images_list)
+        viewpoints = torch.stack(viewpoints_list)
+        captions = pad_sequence(captions_list).permute(1, 2, 0)
 
         # Trim off extra elements
         batch_num = images.size(0) // self.batch_size

@@ -27,7 +27,7 @@ class ConsistentGQN(BaseGQN):
     """
 
     def __init__(self, representation_params: dict = {},
-                 generator_params: dict = {}):
+                 generator_params: dict = {}) -> None:
         super().__init__()
 
         self.representation = Simple(**representation_params)

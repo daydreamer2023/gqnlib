@@ -10,9 +10,10 @@ import random
 
 import torch
 from torch import Tensor
+from torch.utils.data import Dataset
 
 
-class SceneDataset(torch.utils.data.Dataset):
+class SceneDataset(Dataset):
     """SceneDataset class for GQN.
 
     SceneDataset class loads data files at each time accessed by index.
@@ -34,11 +35,10 @@ class SceneDataset(torch.utils.data.Dataset):
         record_list (list of pathlib.Path): List of path to data files.
     """
 
-    def __init__(self, root_dir: str, batch_size: int):
+    def __init__(self, root_dir: str, batch_size: int) -> None:
         super().__init__()
 
-        root_dir = pathlib.Path(root_dir)
-        self.record_list = sorted(root_dir.glob("*.pt.gz"))
+        self.record_list = sorted(pathlib.Path(root_dir).glob("*.pt.gz"))
         self.batch_size = batch_size
 
         self.logger = logging.getLogger()
@@ -52,7 +52,7 @@ class SceneDataset(torch.utils.data.Dataset):
 
         return len(self.record_list)
 
-    def __getitem__(self, index: int) -> List[Tuple[Tensor]]:
+    def __getitem__(self, index: int) -> List[Tuple[Tensor, Tensor]]:
         """Loads data file and returns data with specified index.
 
         * Images: `(batch_size, m, c, h, w)`
@@ -75,14 +75,14 @@ class SceneDataset(torch.utils.data.Dataset):
             return []
 
         # Read list of tuples
-        images = []
-        viewpoints = []
+        images_list = []
+        viewpoints_list = []
         for img, view in dataset:
-            images.append(torch.from_numpy(img))
-            viewpoints.append(torch.from_numpy(view))
+            images_list.append(torch.from_numpy(img))
+            viewpoints_list.append(torch.from_numpy(view))
 
-        images = torch.stack(images)
-        viewpoints = torch.stack(viewpoints)
+        images = torch.stack(images_list)
+        viewpoints = torch.stack(viewpoints_list)
 
         # Convert data size: NMHWC -> NMCHW
         images = images.permute(0, 1, 4, 2, 3)
@@ -128,8 +128,8 @@ def transform_viewpoint(viewpoints: Tensor) -> Tensor:
     y, p = torch.split(tmp, 1, dim=-1)
 
     view = [pos, torch.cos(y), torch.sin(y), torch.cos(p), torch.sin(p)]
-    view = torch.cat(view, dim=-1)
-    return view
+    converted = torch.cat(view, dim=-1)
+    return converted
 
 
 def partition_scene(images: Tensor, viewpoints: Tensor, num_query: int = 1
