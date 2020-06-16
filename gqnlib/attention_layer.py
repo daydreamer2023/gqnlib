@@ -224,7 +224,7 @@ class AttentionGenerator(nn.Module):
         r_stack = x.new_zeros(batch_size, *val_dims)
 
         # KL loss value
-        kl_loss = 0
+        kl_loss = x.new_zeros((batch_size,))
 
         # Reshape: Downsample x, upsample v
         x = self.read_head(x)
