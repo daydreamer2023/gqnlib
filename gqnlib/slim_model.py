@@ -75,7 +75,7 @@ class SlimGQN(BaseGQN):
         canvas, kl_loss = self.generator(x_q, v_q, r_c)
 
         # Reconstruction loss
-        nll_loss = nll_normal(x_q, canvas, x_q.new_ones((1)) * var,
+        nll_loss = nll_normal(x_q, canvas, x_q.new_ones((1,)) * var,
                               reduce=False)
         nll_loss = nll_loss.sum([1, 2, 3])
 
