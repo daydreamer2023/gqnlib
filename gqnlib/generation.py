@@ -170,7 +170,7 @@ class ConvolutionalDRAW(nn.Module):
                          w_scale * self.stride))
 
         # KL loss value
-        kl_loss = 0
+        kl_loss = x.new_zeros((batch_size,))
 
         # Reshape: Downsample x, upsample v and r
         x = self.read_head(x)
