@@ -201,7 +201,7 @@ class SlimGenerator(nn.Module):
         z = x_q.new_zeros((batch_size, self.z_channel, h_scale, w_scale))
 
         # KL loss
-        kl_loss = 0
+        kl_loss = x_q.new_zeros((batch_size,))
 
         for _ in range(self.n_layer):
             # Posterior sample

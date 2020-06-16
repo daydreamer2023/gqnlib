@@ -210,7 +210,7 @@ class DRAWRenderer(nn.Module):
         z = x.new_zeros((batch_size, self.z_channel, h_scale, w_scale))
 
         # KL loss value
-        kl_loss = 0
+        kl_loss = x.new_zeros((batch_size,))
 
         for _ in range(self.n_layer):
             # Prior
