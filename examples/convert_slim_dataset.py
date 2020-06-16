@@ -101,8 +101,8 @@ def preprocess_data(raw_data: tf.Tensor) -> tuple:
         returned_values += meta_values
 
     # Convert tensor to numpy
-    returned_values = tuple(v.numpy() for v in returned_values)
-    return returned_values
+    returned_tuple = tuple(v.numpy() for v in returned_values)
+    return returned_tuple
 
 
 def _parse_proto(buf: tf.Tensor) -> dict:
