@@ -5,7 +5,7 @@ ref)
 https://github.com/deepmind/slim-dataset
 """
 
-from typing import Tuple, List
+from typing import Tuple, List, DefaultDict
 
 import collections
 import gzip
@@ -40,8 +40,8 @@ class WordVectorizer:
 
         self.vocab_dim = vocab_dim
 
-        self.word2index = collections.defaultdict(int)
-        self.word2count = collections.defaultdict(int)
+        self.word2index: DefaultDict[str, int] = collections.defaultdict(int)
+        self.word2count: DefaultDict[str, int] = collections.defaultdict(int)
         self.index2word = {0: "UNK", 1: "SOS", 2: "EOS"}
         self.n_words = 3
 
