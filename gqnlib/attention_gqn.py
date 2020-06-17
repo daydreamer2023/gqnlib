@@ -5,7 +5,7 @@ D. Rosenbaum et al., "Learning models for visual 3D localization with implicit
 mapping", http://arxiv.org/abs/1807.03149
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 from torch import Tensor
 
@@ -23,12 +23,15 @@ class AttentionGQN(BaseGQN):
         generator_params (dict, optional): Parameters of generator network.
     """
 
-    def __init__(self, representation_params: dict = {},
-                 generator_params: dict = {}) -> None:
+    def __init__(self, representation_params: Optional[dict] = None,
+                 generator_params: Optional[dict] = None) -> None:
         super().__init__()
 
-        self.representation = DictionaryEncoder(**representation_params)
-        self.generator = AttentionGenerator(**generator_params)
+        rep_kwargs = representation_params if representation_params else {}
+        gen_kwargs = generator_params if generator_params else {}
+
+        self.representation = DictionaryEncoder(**rep_kwargs)
+        self.generator = AttentionGenerator(**gen_kwargs)
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0

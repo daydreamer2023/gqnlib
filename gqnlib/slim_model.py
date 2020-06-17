@@ -1,7 +1,7 @@
 
 """SLIM (Spatial Language Integrating Model)."""
 
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Optional
 
 from torch import Tensor
 
@@ -23,13 +23,17 @@ class SlimGQN(BaseGQN):
         generator_params (dict, optional): Parameters of generator network.
     """
 
-    def __init__(self, vocab_dim: int = 5000, representation_params: dict = {},
-                 generator_params: dict = {}) -> None:
+    def __init__(self, vocab_dim: int = 5000,
+                 representation_params: Optional[dict] = None,
+                 generator_params: Optional[dict] = None) -> None:
         super().__init__()
 
+        rep_kwargs = representation_params if representation_params else {}
+        gen_kwargs = generator_params if generator_params else {}
+
         self.representation = RepresentationNetwork(
-            vocab_dim=vocab_dim, **representation_params)
-        self.generator = SlimGenerator(**generator_params)
+            vocab_dim=vocab_dim, **rep_kwargs)
+        self.generator = SlimGenerator(**gen_kwargs)
 
     def inference(self, d_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0

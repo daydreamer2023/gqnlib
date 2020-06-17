@@ -7,7 +7,7 @@ A. Kumar et al., "Consistent Generative Query Network".
 http://arxiv.org/abs/1807.02033
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 from torch import Tensor
 
@@ -26,12 +26,15 @@ class ConsistentGQN(BaseGQN):
         generator_params (dict, optional): Parameters of generator network.
     """
 
-    def __init__(self, representation_params: dict = {},
-                 generator_params: dict = {}) -> None:
+    def __init__(self, representation_params: Optional[dict] = None,
+                 generator_params: Optional[dict] = None) -> None:
         super().__init__()
 
-        self.representation = Simple(**representation_params)
-        self.generator = DRAWRenderer(**generator_params)
+        rep_kwargs = representation_params if representation_params else {}
+        gen_kwargs = generator_params if generator_params else {}
+
+        self.representation = Simple(**rep_kwargs)
+        self.generator = DRAWRenderer(**gen_kwargs)
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0

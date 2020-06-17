@@ -1,7 +1,7 @@
 
 """Generative Query Network."""
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 from torch import Tensor
 
@@ -20,12 +20,15 @@ class GenerativeQueryNetwork(BaseGQN):
         generator_params (dict, optional): Parameters of generator network.
     """
 
-    def __init__(self, representation_params: dict = {},
-                 generator_params: dict = {}) -> None:
+    def __init__(self, representation_params: Optional[dict] = None,
+                 generator_params: Optional[dict] = None) -> None:
         super().__init__()
 
-        self.representation = Tower(**representation_params)
-        self.generator = ConvolutionalDRAW(**generator_params)
+        rep_kwargs = representation_params if representation_params else {}
+        gen_kwargs = generator_params if generator_params else {}
+
+        self.representation = Tower(**rep_kwargs)
+        self.generator = ConvolutionalDRAW(**gen_kwargs)
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0
