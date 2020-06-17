@@ -24,10 +24,9 @@ class DictionaryEncoder(nn.Module):
 
     Args:
         x_channel (int, optional): Number of channels for images.
-        v_dim (int, optional): Dimension size of viewpoints.
     """
 
-    def __init__(self, x_channel: int = 3, v_dim: int = 7) -> None:
+    def __init__(self, x_channel: int = 3) -> None:
         super().__init__()
 
         self.conv = nn.Sequential(
