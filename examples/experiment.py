@@ -1,6 +1,8 @@
 
 """Trainer class."""
 
+from typing import Dict
+
 import collections
 import copy
 import json
@@ -47,16 +49,16 @@ class Trainer:
         # Attributes
         self.model_name = ""
         self.logdir = pathlib.Path()
-        self.logger = None
-        self.writer = None
-        self.train_loader = None
-        self.test_loader = None
-        self.optimizer = None
-        self.device = None
+        self.logger: logging.Logger
+        self.writer: tb.SummaryWriter
+        self.train_loader: torch.utils.data.dataloader.DataLoader
+        self.test_loader: torch.utils.data.dataloader.DataLoader
+        self.optimizer: optim.optimizer.Optimizer
+        self.device: torch.device
         self.global_steps = 0
         self.max_steps = 0
-        self.pbar = None
-        self.postfix = {}
+        self.pbar: tqdm.tqdm
+        self.postfix: Dict[str, int] = {}
         self.test_interval = 10000
         self.var = 1.0
 
