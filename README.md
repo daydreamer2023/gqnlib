@@ -91,16 +91,17 @@ optimizer = torch.optim.Adam(model.parameters())
 model.train()
 for batch in dataset:
      for data in batch:
-         # Partition data into context and query
-         data = gqnlib.partition_scene(*data)
+        # Partition data into context and query
+        data = gqnlib.partition_scene(*data)
 
-         # Inference
-         loss_dict = model(*data)
+        # Inference
+        optimizer.zero_grad()
+        loss_dict = model(*data)
 
-         # Backward
-         loss = loss_dict["loss"].mean()
-         loss.backward()
-         optimizer.step()
+        # Backward
+        loss = loss_dict["loss"].mean()
+        loss.backward()
+        optimizer.step()
 
 # Save checkpoints
 p = pathlib.Path("./logs/tmp")
