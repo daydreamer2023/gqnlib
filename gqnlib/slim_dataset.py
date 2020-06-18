@@ -173,6 +173,9 @@ class SlimDataset(Dataset):
 
         self.logger = logging.getLogger()
 
+        if not self.record_list:
+            self.logger.warning("No record exists in root directory.")
+
     def __len__(self) -> int:
         """Returns number of files and directories in root dir.
 
