@@ -85,7 +85,7 @@ def init_args():
                         help="Batch size.")
     parser.add_argument("--steps", type=int, default=2,
                         help="Number of gradient steps.")
-    parser.add_argument("--test-interval", type=int, default=5,
+    parser.add_argument("--test-interval", type=int, default=2,
                         help="Interval steps for testing.")
     parser.add_argument("--save-interval", type=int, default=2,
                         help="Interval steps for saving checkpoints.")

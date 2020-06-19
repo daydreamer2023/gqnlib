@@ -205,6 +205,11 @@ class Trainer:
                 if self.global_steps % self.save_interval == 0:
                     self.save_checkpoint()
 
+                    loss_logger = {k: v.mean() for k, v in loss_dict.items()}
+                    self.logger.debug(
+                        f"Train loss (steps={self.global_steps}): "
+                        f"{loss_logger}")
+
                 # Check step limit
                 if self.global_steps >= self.max_steps:
                     break
@@ -250,7 +255,7 @@ class Trainer:
                 f"test/{key}", value / count, self.global_steps)
 
         self.logger.debug(
-            f"Eval loss (steps={self.global_steps}): {loss_logger}")
+            f"Test loss (steps={self.global_steps}): {loss_logger}")
 
     def save_checkpoint(self) -> None:
         """Saves trained model and optimizer to checkpoint file.
