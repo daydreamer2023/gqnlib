@@ -37,11 +37,11 @@ class Trainer:
     * gpus (str): Comma separated list of GPU IDs (ex. '0,1').
 
     Args:
-        model (gqnlib.GenerativeQueryNetwork): GQN model.
+        model (gqnlib.BaseGQN): GQN model.
         hparams (dict): Dictionary of hyper-parameters.
     """
 
-    def __init__(self, model: gqnlib.GenerativeQueryNetwork, hparams: dict):
+    def __init__(self, model: gqnlib.BaseGQN, hparams: dict):
         # Params
         self.model = model
         self.hparams = copy.deepcopy(hparams)
