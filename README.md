@@ -140,9 +140,23 @@ print(sample.size())  # -> torch.Size([20, 1, 3, 64, 64])
 
 # Reference
 
+## Original papers
+
 * S. M. Ali Eslami et al., "Neural scene representation and rendering," [Science Vol. 360, Issue 6394, pp.1204-1210 (15 Jun 2018)](https://science.sciencemag.org/content/360/6394/1204.full?ijkey=kGcNflzOLiIKQ&keytype=ref&siteid=sci)
 * A. Kumar et al., "Consistent Generative Query Network," [arXiv](http://arxiv.org/abs/1807.02033)
 * T. Ramalho et al., "Encoding Spatial Relations from Natural Language," [arXiv](http://arxiv.org/abs/1807.01670)
+* D. Rosenbaum et al., "Learning models for visual 3D localization with implicit
+mapping," [arXiv](http://arxiv.org/abs/1807.03149)
 * DeepMind. [Blog post](https://deepmind.com/blog/article/neural-scene-representation-and-rendering)
+
+## Datasets
+
 * Datasets by DeepMind for GQN. [GitHub](https://github.com/deepmind/gqn-datasets)
 * Datasetf by DeepMind for SLIM. [GitHub](https://github.com/deepmind/slim-dataset)
+
+## Codes
+
+* mushoku, chainer-gqn. [GitHub](https://github.com/musyoku/chainer-gqn)
+* iShohei220, torch-gqn. [GitHub](https://github.com/iShohei220/torch-gqn)
+* wohlert, generative-query-network-pytorch. [GitHub](https://github.com/wohlert/generative-query-network-pytorch)
+* l3robot, gqn_datasets_translator. [GitHub](https://github.com/l3robot/gqn_datasets_translator)
