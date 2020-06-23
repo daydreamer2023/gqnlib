@@ -16,7 +16,6 @@ import random
 
 import torch
 from torch import Tensor
-from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
 
 
@@ -144,7 +143,7 @@ class WordVectorizer:
                 self.sentence2index(snt.decode())
 
 
-class SlimDataset(Dataset):
+class SlimDataset(torch.utils.data.Dataset):
     """SlimDataset class for SLIM.
 
     SlimDataset class loads data files at each time accessed by index. Each

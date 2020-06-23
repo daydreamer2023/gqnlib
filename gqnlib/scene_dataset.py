@@ -10,10 +10,9 @@ import random
 
 import torch
 from torch import Tensor
-from torch.utils.data import Dataset
 
 
-class SceneDataset(Dataset):
+class SceneDataset(torch.utils.data.Dataset):
     """SceneDataset class for GQN.
 
     SceneDataset class loads data files at each time accessed by index.
