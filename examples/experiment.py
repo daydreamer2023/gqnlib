@@ -58,7 +58,7 @@ class Trainer:
         self.global_steps = 0
         self.max_steps = 0
         self.pbar: tqdm.tqdm
-        self.postfix: Dict[str, int] = {}
+        self.postfix: Dict[str, float] = {}
         self.test_interval = 10000
         self.var = 1.0
 
@@ -247,7 +247,7 @@ class Trainer:
                 # Save loss
                 count += loss.size(0)
                 for key, value in loss_dict.items():
-                    loss_logger[key] = value.sum().item()
+                    loss_logger[key] += value.sum().item()
 
         # Summary
         for key, value in loss_logger.items():
@@ -355,7 +355,7 @@ class Trainer:
         self.pbar = tqdm.tqdm(total=max_steps)
         self.global_steps = 0
         self.max_steps = max_steps
-        self.postfix = {"train/loss": 0, "test/loss": 0}
+        self.postfix = {"train/loss": 0.0, "test/loss": 0.0}
 
         # Intervals
         self.test_interval = test_interval
