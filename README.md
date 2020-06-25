@@ -90,7 +90,7 @@ optimizer = torch.optim.Adam(model.parameters())
 
 model.train()
 for batch in dataset:
-     for data in batch:
+    for data in batch:
         # Partition data into context and query
         data = gqnlib.partition_scene(*data)
 
