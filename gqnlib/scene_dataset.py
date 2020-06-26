@@ -73,7 +73,7 @@ class SceneDataset(torch.utils.data.Dataset):
             with gzip.open(self.record_list[index], "rb") as f:
                 dataset = torch.load(f)
         except (UnicodeDecodeError, ValueError) as e:
-            self.logger.warning(f"Invalid file {self.record_list[index]}: {e}")
+            self.logger.debug(f"Invalid file {self.record_list[index]}: {e}")
             return []
 
         # Read list of tuples
