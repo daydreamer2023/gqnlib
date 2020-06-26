@@ -1,7 +1,7 @@
 
-# gqnlib
+# gqnlib (**Work in progress**)
 
-Generative Query Network by PyTorch
+Generative Query Network by PyTorch.
 
 # Requirements
 
