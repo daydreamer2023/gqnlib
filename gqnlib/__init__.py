@@ -9,7 +9,7 @@ from .gqn import GenerativeQueryNetwork
 from .renderer import LatentDistribution, Renderer, DRAWRenderer
 from .representation import Pyramid, Tower, Simple
 from .scene_dataset import SceneDataset, partition_scene
-from .scheduler import AnnealingStepLR, Annealer, VarianceAnnealer
+from .scheduler import AnnealingStepLR, Annealer, SigmaAnnealer
 from .slim_dataset import SlimDataset, WordVectorizer, partition_slim
 from .slim_generator import SlimGenerator
 from .slim_model import SlimGQN
