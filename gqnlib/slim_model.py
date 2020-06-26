@@ -36,7 +36,7 @@ class SlimGQN(BaseGQN):
         self.generator = SlimGenerator(**gen_kwargs)
 
     def inference(self, d_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
-                  var: float = 1.0
+                  var: float = 1.0, beta: float = 1.0
                   ) -> Tuple[Tuple[Tensor, ...], Dict[str, Tensor]]:
         """Inference.
 
@@ -46,6 +46,7 @@ class SlimGQN(BaseGQN):
             x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
             v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
             var (float, optional): Variance of observations normal dist.
+            beta (float, optional): Coefficient of KL divergence.
 
         Returns:
             canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
@@ -77,6 +78,7 @@ class SlimGQN(BaseGQN):
 
         # Query images by v_q, i.e. reconstruct
         canvas, kl_loss = self.generator(x_q, v_q, r_c)
+        kl_loss = kl_loss * beta
 
         # Reconstruction loss
         nll_loss = nll_normal(x_q, canvas, x_q.new_ones((1,)) * var,

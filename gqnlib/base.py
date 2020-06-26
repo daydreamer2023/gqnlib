@@ -10,7 +10,7 @@ class BaseGQN(nn.Module):
     """Base class for GQN models."""
 
     def forward(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
-                var: float = 1.0) -> Dict[str, Tensor]:
+                var: float = 1.0, beta: float = 1.0) -> Dict[str, Tensor]:
         """Returns ELBO loss in dict.
 
         Args:
@@ -19,17 +19,18 @@ class BaseGQN(nn.Module):
             x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
             v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
             var (float, optional): Variance of observations normal dist.
+            beta (float, optional): Coefficient of KL divergence.
 
         Returns:
             loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
                 with size `(b, n)`.
         """
 
-        _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
+        _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var, beta)
         return loss_dict
 
     def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
-                  var: float = 1.0) -> Dict[str, Tensor]:
+                  var: float = 1.0, beta: float = 1.0) -> Dict[str, Tensor]:
         """Returns averaged ELBO loss with separated nll and kl losses in dict.
 
         Args:
@@ -38,13 +39,14 @@ class BaseGQN(nn.Module):
             x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
             v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
             var (float, optional): Variance of observations normal dist.
+            beta (float, optional): Coefficient of KL divergence.
 
         Returns:
             loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
                 with size `(1,)`.
         """
 
-        _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var)
+        _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var, beta)
 
         # Mean for batch
         for key, value in loss_dict.items():
@@ -70,7 +72,7 @@ class BaseGQN(nn.Module):
         return canvas
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
-                  var: float = 1.0
+                  var: float = 1.0, beta: float = 1.0
                   ) -> Tuple[Tuple[Tensor, ...], Dict[str, Tensor]]:
         """Inferences with context and target data to calculate ELBO loss.
 
@@ -85,6 +87,7 @@ class BaseGQN(nn.Module):
             x_q (torch.Tensor): Query images, size `(b, n, c, h, w)`.
             v_q (torch.Tensor): Query viewpoints, size `(b, n, k)`.
             var (float, optional): Variance of observations normal dist.
+            beta (float, optional): Coefficient of KL divergence.
 
         Returns:
             data (tuple of torch.Tensor): Tuple of inferenced data. Size of
