@@ -20,7 +20,7 @@ class TestGenerativeQueryNetwork(unittest.TestCase):
         (canvas, r), loss_dict = self.model.inference(x_c, v_c, x_q, v_q)
 
         self.assertTupleEqual(canvas.size(), (4, 2, 3, 64, 64))
-        self.assertTupleEqual(r.size(), (4, 2, 256, 1, 1))
+        self.assertTupleEqual(r.size()[:3], (4, 2, 256))
 
         self.assertTupleEqual(loss_dict["loss"].size(), (4, 2))
         self.assertTupleEqual(loss_dict["nll_loss"].size(), (4, 2))
