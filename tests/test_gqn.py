@@ -40,9 +40,11 @@ class TestGenerativeQueryNetwork(unittest.TestCase):
         self.assertTupleEqual(loss_dict["loss"].size(), (4, 2))
         self.assertTupleEqual(loss_dict["nll_loss"].size(), (4, 2))
         self.assertTupleEqual(loss_dict["kl_loss"].size(), (4, 2))
+        self.assertTupleEqual(loss_dict["bits_per_pixel"].size(), (4, 2))
         self.assertGreater(loss_dict["loss"].mean(), 0)
         self.assertGreater(loss_dict["nll_loss"].mean(), 0)
         self.assertGreater(loss_dict["kl_loss"].mean(), 0)
+        self.assertGreater(loss_dict["bits_per_pixel"].mean(), 0)
 
     def test_loss_func(self):
         x_c = torch.randn(4, 15, 3, 64, 64)
