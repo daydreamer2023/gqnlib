@@ -41,7 +41,8 @@ class Annealer:
         steps (int): Number of annealing steps.
     """
 
-    def __init__(self, init: float, final: float, steps: int) -> None:
+    def __init__(self, init: float, final: float, steps: int, **kwargs
+                 ) -> None:
 
         self.init = init
         self.final = final
@@ -65,11 +66,30 @@ class Annealer:
         return value
 
 
-class VarianceAnnealer:
-    """Annealer for variance used in Consistent GQN training."""
+class SigmaAnnealer:
+    """Annealer for sigma.
 
-    def __init__(self) -> None:
-        # Current value
+    Args:
+        init (float): Initial value.
+        final (float): Final value.
+        constant (float): Constant value for pre-train
+        steps (int): Number of annealing steps.
+        pretrain (int): Number of pre-training steps.
+    """
+
+    def __init__(self, init: float, final: float, constant: float, steps: int,
+                 pretrain: int, **kwargs) -> None:
+
+        self.init = init
+        self.final = final
+        self.constant = constant
+        self.steps = steps
+        self.pretrain = pretrain
+
+        if steps < pretrain:
+            self.steps += pretrain
+
+        # Current time step
         self.t = 0
 
     def __iter__(self):
@@ -78,14 +98,14 @@ class VarianceAnnealer:
     def __next__(self) -> float:
         self.t += 1
 
-        if self.t <= 100000:
-            value = 2.0
-        elif 100000 < self.t <= 150000:
-            value = 0.2
-        elif 150000 < self.t <= 200000:
-            value = 0.4
+        if self.t <= self.pretrain:
+            value = self.constant
         else:
-            value = 0.9
+            value = max(
+                (self.final + (self.init - self.final)
+                 * (1 - self.t / (self.steps - self.pretrain))),
+                self.final
+            )
 
         # Return sigma
-        return value ** 0.5
+        return value
