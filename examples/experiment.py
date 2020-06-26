@@ -61,6 +61,7 @@ class Trainer:
         self.postfix: Dict[str, float] = {}
         self.test_interval = 10000
         self.var = 1.0
+        self.beta = 1.0
 
     def check_logdir(self) -> None:
         """Checks log directory.
@@ -174,10 +175,11 @@ class Trainer:
 
                 # Pixel variance annealing
                 self.var = next(self.sigma_scheduler) ** 2
+                self.beta = next(self.beta_scheduler)
 
                 # Forward
                 self.optimizer.zero_grad()
-                loss_dict = self.model(*data, self.var)
+                loss_dict = self.model(*data, self.var, self.beta)
                 loss = loss_dict["loss"].mean()
 
                 # Backward and update
@@ -237,7 +239,7 @@ class Trainer:
 
                     # Data to device
                     data = (v.to(self.device) for v in data)
-                    loss_dict = self.model(*data, self.var)
+                    loss_dict = self.model(*data, self.var, self.beta)
                     loss = loss_dict["loss"]
 
                 # Update progress bar
@@ -321,7 +323,12 @@ class Trainer:
         lr_scheduler_params = self.hparams.get("lr_scheduler_params", {})
         sigma_scheduler_params = self.hparams.get(
             "sigma_scheduler_params",
-            {"init": 2.0, "final": 0.7, "steps": 80000})
+            {"init": 2.0, "final": 0.7, "constant": 1.0, "steps": 250000,
+             "pretrain": 50000})
+        beta_scheduler_params = self.hparams.get(
+            "beta_scheduler_params",
+            {"init": 1.0, "final": 1.0, "constant": 0.0, "steps": 250000,
+             "pretrain": 50000})
 
         # Device
         if gpus:
@@ -349,7 +356,8 @@ class Trainer:
         # Annealing scheduler
         self.lr_scheduler = gqnlib.AnnealingStepLR(
             self.optimizer, **lr_scheduler_params)
-        self.sigma_scheduler = gqnlib.Annealer(**sigma_scheduler_params)
+        self.sigma_scheduler = gqnlib.SigmaAnnealer(**sigma_scheduler_params)
+        self.beta_scheduler = gqnlib.SigmaAnnealer(**beta_scheduler_params)
 
         # Progress bar
         self.pbar = tqdm.tqdm(total=max_steps)
