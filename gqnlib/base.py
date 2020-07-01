@@ -3,6 +3,9 @@
 
 from typing import Tuple, Dict
 
+import math
+
+import torch
 from torch import nn, Tensor
 
 
@@ -27,6 +30,15 @@ class BaseGQN(nn.Module):
         """
 
         _, loss_dict = self.inference(x_c, v_c, x_q, v_q, var, beta)
+
+        # Bit loss per pixel
+        # https://github.com/musyoku/chainer-gqn/issues/17
+        _, _, *x_dims = x_c.size()
+        pixel_num = torch.tensor(x_dims).prod()
+        bits_per_pixel = (
+            loss_dict["loss"] / pixel_num + math.log(128)) / math.log(2)
+        loss_dict["bits_per_pixel"] = bits_per_pixel
+
         return loss_dict
 
     def loss_func(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,

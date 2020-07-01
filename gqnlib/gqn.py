@@ -89,15 +89,9 @@ class GenerativeQueryNetwork(BaseGQN):
         nll_loss = nll_loss.view(b, n)
         kl_loss = kl_loss.view(b, n)
 
-        # Bit loss per pixel
-        # https://github.com/musyoku/chainer-gqn/issues/17
-        pixel_num = torch.tensor(x_dims).prod()
-        bits_per_pixel = (
-            (nll_loss + kl_loss) / pixel_num + math.log(128)) / math.log(2)
-
         # Returned loss
         loss_dict = {"loss": nll_loss + kl_loss, "nll_loss": nll_loss,
-                     "kl_loss": kl_loss, "bits_per_pixel": bits_per_pixel}
+                     "kl_loss": kl_loss}
 
         # Restore origina shape
         canvas = canvas.view(b, n, *x_dims)
