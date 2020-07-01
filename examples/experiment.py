@@ -308,6 +308,7 @@ class Trainer:
         """Post process."""
 
         self.logger.info("Quit base run method")
+        self.save_configs()
         self.writer.close()
 
     def _base_run(self) -> None:
@@ -358,8 +359,6 @@ class Trainer:
         self.logger.info("Finish training")
 
         # Post process
-        self.save_checkpoint()
-        self.save_configs()
         self.quit()
 
     def run(self) -> None:
