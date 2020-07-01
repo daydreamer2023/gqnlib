@@ -27,7 +27,6 @@ from typing import Tuple
 
 import torch
 from torch import nn, Tensor
-from torch.nn import functional as F
 
 from .utils import kl_divergence_normal
 
