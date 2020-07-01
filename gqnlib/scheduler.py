@@ -1,8 +1,6 @@
 
 """Scheduler for training."""
 
-from typing import List
-
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
 
@@ -25,8 +23,7 @@ class AnnealingStepLR(_LRScheduler):
 
         super().__init__(optimizer)
 
-    def get_lr(self) -> List[float]:
-
+    def get_lr(self):
         return [max(self.mu_f + (self.mu_i - self.mu_f) *
                     (1.0 - self.last_epoch / self.n), self.mu_f)
                 for base_lr in self.base_lrs]
