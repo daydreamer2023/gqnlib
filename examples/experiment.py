@@ -1,10 +1,10 @@
 
 """Trainer class."""
 
-from typing import Dict
+from typing import Dict, Optional
 
 import collections
-import copy
+import dataclasses
 import json
 import logging
 import pathlib
@@ -19,47 +19,58 @@ import tensorboardX as tb
 import gqnlib
 
 
+@dataclasses.dataclass
+class Config:
+    # From kwargs
+    cuda: str
+    model: str
+    seed: int
+    batch_size: int
+    max_steps: int
+    test_interval: int
+    save_interval: int
+
+    # From config file
+    gqn_params: dict
+    cgqn_params: dict
+    sgqn_params: dict
+    agqn_params: dict
+    optimizer_params: dict
+    lr_scheduler_params: dict
+    sigma_scheduler_params: dict
+    beta_scheduler_params: dict
+
+    # From params
+    logdir: str
+    gpus: Optional[str]
+    train_dir: str
+    test_dir: str
+
+
 class Trainer:
     """Trainer class for Generative Query Netowork.
 
-    **Notes**
-
-    `hparams` should include the following keys.
-
-    * model (str): Model name.
-    * logdir (str): Path to log direcotry. This is updated to `logdir/<date>`.
-    * train_dir (str): Path to training data.
-    * test_dir (str): Path to test data.
-    * batch_size (int): Batch size.
-    * max_steps (int): Number of max iteration steps.
-    * test_interval (int): Number of interval epochs to test.
-    * save_interval (int): Number of interval epochs to save checkpoints.
-    * gpus (str): Comma separated list of GPU IDs (ex. '0,1').
-
     Args:
         model (gqnlib.BaseGQN): GQN model.
-        hparams (dict): Dictionary of hyper-parameters.
+        config (dict): Dictionary of hyper-parameters.
     """
 
-    def __init__(self, model: gqnlib.BaseGQN, hparams: dict):
+    def __init__(self, model: gqnlib.BaseGQN, config: dict):
         # Params
         self.model = model
-        self.hparams = copy.deepcopy(hparams)
+        self.config = Config(**config)
 
         # Attributes
-        self.model_name = ""
         self.logdir = pathlib.Path()
         self.logger: logging.Logger
         self.writer: tb.SummaryWriter
-        self.train_loader: torch.utils.data.dataloader.DataLoader
-        self.test_loader: torch.utils.data.dataloader.DataLoader
+        self.train_loader: torch.utils.data.DataLoader
+        self.test_loader: torch.utils.data.DataLoader
         self.optimizer: optim.optimizer.Optimizer
         self.device: torch.device
         self.global_steps = 0
-        self.max_steps = 0
         self.pbar: tqdm.tqdm
         self.postfix: Dict[str, float] = {}
-        self.test_interval = 10000
         self.var = 1.0
         self.beta = 1.0
 
@@ -70,8 +81,8 @@ class Trainer:
         exist.
         """
 
-        logdir = self.hparams.get("logdir", "./logs/tmp/")
-        self.logdir = pathlib.Path(logdir, time.strftime("%Y%m%d%H%M"))
+        self.logdir = pathlib.Path(
+            self.config.logdir, time.strftime("%Y%m%d%H%M"))
         self.logdir.mkdir(parents=True, exist_ok=True)
 
     def init_logger(self, save_file: bool = True) -> None:
@@ -112,29 +123,24 @@ class Trainer:
 
         self.writer = tb.SummaryWriter(str(self.logdir))
 
-    def load_dataloader(self, train_dir: str, test_dir: str, batch_size: int
-                        ) -> None:
-        """Loads data loader for training and test.
-
-        Args:
-            train_dir (str): Path to train directory.
-            test_dir (str): Path to test directory.
-            batch_size (int): Batch size.
-        """
+    def load_dataloader(self) -> None:
+        """Loads data loader for training and test."""
 
         self.logger.info("Load dataset")
 
         # Dataset specification
-        if self.model_name == "sgqn":
+        if self.config.model == "sgqn":
             dataset = gqnlib.SlimDataset
         else:
             dataset = gqnlib.SceneDataset
 
         # Kwargs for dataset
-        train_kwrags = {"root_dir": train_dir, "batch_size": batch_size}
-        test_kwargs = {"root_dir": test_dir, "batch_size": batch_size}
+        train_kwrags = {"root_dir": self.config.train_dir,
+                        "batch_size": self.config.batch_size}
+        test_kwargs = {"root_dir": self.config.test_dir,
+                       "batch_size": self.config.batch_size}
 
-        if self.model_name == "sgqn":
+        if self.config.model == "sgqn":
             vectorizer = gqnlib.WordVectorizer()
             train_kwrags.update({"vectorizer": vectorizer, "train": True})
             test_kwargs.update({"vectorizer": vectorizer, "train": False})
@@ -158,7 +164,7 @@ class Trainer:
         """Trains model."""
 
         # Partition method
-        if self.model_name == "sgqn":
+        if self.config.model == "sgqn":
             partition = gqnlib.partition_slim
         else:
             partition = gqnlib.partition_scene
@@ -200,11 +206,11 @@ class Trainer:
                         f"train/{key}", value.mean(), self.global_steps)
 
                 # Test
-                if self.global_steps % self.test_interval == 0:
+                if self.global_steps % self.config.test_interval == 0:
                     self.test()
 
                 # Save checkpoint
-                if self.global_steps % self.save_interval == 0:
+                if self.global_steps % self.config.save_interval == 0:
                     self.save_checkpoint()
 
                     loss_logger = {k: v.mean() for k, v in loss_dict.items()}
@@ -213,14 +219,14 @@ class Trainer:
                         f"{loss_logger}")
 
                 # Check step limit
-                if self.global_steps >= self.max_steps:
+                if self.global_steps >= self.config.max_steps:
                     break
 
     def test(self) -> None:
         """Tests model."""
 
         # Partition method
-        if self.model_name == "sgqn":
+        if self.config.model == "sgqn":
             partition = gqnlib.partition_slim
         else:
             partition = gqnlib.partition_scene
@@ -292,7 +298,7 @@ class Trainer:
 
         self.logger.debug("Save configs")
 
-        config = copy.deepcopy(self.hparams)
+        config = dataclasses.asdict(self.config)
         config["logdir"] = str(self.logdir)
 
         with (self.logdir / "config.json").open("w") as f:
@@ -309,38 +315,16 @@ class Trainer:
 
         self.logger.info("Start experiment")
 
-        # Get hyper parameters
-        model_name = self.hparams.get("model", "gqn")
-        train_dir = self.hparams.get("train_dir", "./data/tmp/train")
-        test_dir = self.hparams.get("test_dir", "./data/tmp/test")
-        batch_size = self.hparams.get("batch_size", 1)
-        max_steps = self.hparams.get("steps", 10)
-        test_interval = self.hparams.get("test_interval", 5)
-        save_interval = self.hparams.get("save_interval", 5)
-        gpus = self.hparams.get("gpus", None)
-
-        optimizer_params = self.hparams.get("optimizer_params", {})
-        lr_scheduler_params = self.hparams.get("lr_scheduler_params", {})
-        sigma_scheduler_params = self.hparams.get(
-            "sigma_scheduler_params",
-            {"init": 2.0, "final": 0.7, "constant": 1.0, "steps": 250000,
-             "pretrain": 50000})
-        beta_scheduler_params = self.hparams.get(
-            "beta_scheduler_params",
-            {"init": 1.0, "final": 1.0, "constant": 0.0, "steps": 250000,
-             "pretrain": 50000})
-
         # Device
-        if gpus:
-            device_ids = list(map(int, gpus.split(",")))
+        if self.config.gpus:
+            device_ids = list(map(int, self.config.gpus.split(",")))
             self.device = torch.device(f"cuda:{device_ids[0]}")
         else:
             device_ids = []
             self.device = torch.device("cpu")
 
         # Data
-        self.model_name = model_name
-        self.load_dataloader(train_dir, test_dir, batch_size)
+        self.load_dataloader()
 
         # Model
         self.model = self.model.to(self.device)
@@ -351,26 +335,23 @@ class Trainer:
 
         # Optimizer
         self.optimizer = optim.Adam(
-            self.model.parameters(), **optimizer_params)
+            self.model.parameters(), **self.config.optimizer_params)
 
         # Annealing scheduler
         self.lr_scheduler = gqnlib.AnnealingStepLR(
-            self.optimizer, **lr_scheduler_params)
-        self.sigma_scheduler = gqnlib.SigmaAnnealer(**sigma_scheduler_params)
-        self.beta_scheduler = gqnlib.SigmaAnnealer(**beta_scheduler_params)
+            self.optimizer, **self.config.lr_scheduler_params)
+        self.sigma_scheduler = gqnlib.SigmaAnnealer(
+            **self.config.sigma_scheduler_params)
+        self.beta_scheduler = gqnlib.SigmaAnnealer(
+            **self.config.beta_scheduler_params)
 
         # Progress bar
-        self.pbar = tqdm.tqdm(total=max_steps)
+        self.pbar = tqdm.tqdm(total=self.config.max_steps)
         self.global_steps = 0
-        self.max_steps = max_steps
         self.postfix = {"train/loss": 0.0, "test/loss": 0.0}
 
-        # Intervals
-        self.test_interval = test_interval
-        self.save_interval = save_interval
-
         # Run training
-        while self.global_steps < self.max_steps:
+        while self.global_steps < self.config.max_steps:
             self.train()
 
         self.pbar.close()
@@ -391,7 +372,7 @@ class Trainer:
 
         self.logger.info("Start run")
         self.logger.info(f"Logdir: {self.logdir}")
-        self.logger.info(f"Params: {self.hparams}")
+        self.logger.info(f"Params: {self.config}")
 
         # Run
         try:
