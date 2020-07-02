@@ -134,7 +134,8 @@ def transform_viewpoint(viewpoints: Tensor) -> Tensor:
     return converted
 
 
-def partition_scene(images: Tensor, viewpoints: Tensor, num_query: int = 1
+def partition_scene(images: Tensor, viewpoints: Tensor, num_query: int = 1,
+                    num_context: int = -1
                     ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
     """Partitions given data into context and query sets.
 
@@ -146,6 +147,8 @@ def partition_scene(images: Tensor, viewpoints: Tensor, num_query: int = 1
         viewpoints (torch.Tensor): Viewpoints tensor, size
             `(n, b, num_points, target)`.
         num_query (int, optional): Number of queries.
+        num_context (int, optional): Number of contexts. If the value is less
+            than 1, random number is sampled.
 
     Returns:
         x_c (torch.Tensor): Context images, size `(n*b, num_context, c, h, w)`.
@@ -178,8 +181,13 @@ def partition_scene(images: Tensor, viewpoints: Tensor, num_query: int = 1
     images = images.view(n * b, num_points, *x_dims)
     viewpoints = viewpoints.view(n * b, num_points, *v_dims)
 
-    # Sample randum number of data
-    n_data = random.randint(num_query + 1, num_points)
+    # Sample random number of data
+    if num_context > 0:
+        n_data = min(num_context + num_query, num_points)
+    else:
+        n_data = random.randint(num_query + 1, num_points)
+
+    # Sample indices in randomized order
     indices = random.sample(range(num_points), n_data)
 
     # Partition into context and query

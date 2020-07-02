@@ -145,6 +145,37 @@ class TestSceneDataset(unittest.TestCase):
         self.assertTupleEqual(x_q.size(), (5, 1, 3, 64, 64))
         self.assertTupleEqual(v_q.size(), (5, 1, 7))
 
+    def test_partition_scene_fixed(self):
+        # Data
+        images = torch.empty(5, 15, 3, 64, 64)
+        viewpoints = torch.empty(5, 15, 7)
+
+        # Query single data
+        x_c, v_c, x_q, v_q = gqnlib.partition_scene(
+            images, viewpoints, num_query=2, num_context=4)
+
+        # Context
+        self.assertTupleEqual(x_c.size(), (5, 4, 3, 64, 64))
+        self.assertTupleEqual(v_c.size(), (5, 4, 7))
+
+        # Query
+        self.assertTupleEqual(x_q.size(), (5, 2, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (5, 2, 7))
+
+        # Oversized number
+
+        # Query single data
+        x_c, v_c, x_q, v_q = gqnlib.partition_scene(
+            images, viewpoints, num_query=2, num_context=200)
+
+        # Context
+        self.assertTupleEqual(x_c.size(), (5, 13, 3, 64, 64))
+        self.assertTupleEqual(v_c.size(), (5, 13, 7))
+
+        # Query
+        self.assertTupleEqual(x_q.size(), (5, 2, 3, 64, 64))
+        self.assertTupleEqual(v_q.size(), (5, 2, 7))
+
 
 if __name__ == "__main__":
     unittest.main()
