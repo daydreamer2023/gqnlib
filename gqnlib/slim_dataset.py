@@ -257,7 +257,7 @@ class SlimDataset(torch.utils.data.Dataset):
 
 
 def partition_slim(images: Tensor, viewpoints: Tensor, captions: Tensor,
-                   num_query: int = 1, randomized: bool = False
+                   num_query: int = 1, num_context: int = -1
                    ) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
     """Partitions given SLIM data in context and query sets.
 
@@ -272,8 +272,8 @@ def partition_slim(images: Tensor, viewpoints: Tensor, captions: Tensor,
         captions (torch.Tensor): Captions tensor, size
             `(n, b, num_points, length)`.
         num_query (int, optional): Number of queries.
-        randomized (bool, optional): If `True`, the number of context data is
-            randomly selected.
+        num_context (int, optional): Number of contexts. If the value is less
+            than 1, random number is sampled.
 
     Returns:
         d_c (torch.Tensor): Context captions, size `(n*b, num_context, l)`.
@@ -310,10 +310,10 @@ def partition_slim(images: Tensor, viewpoints: Tensor, captions: Tensor,
     captions = captions.view(n*b, num_points, *d_dims)
 
     # Sample randum number for total data size
-    if randomized:
-        n_data = random.randint(num_query + 1, num_points)
+    if num_context > 0:
+        n_data = min(num_context + num_query, num_points)
     else:
-        n_data = num_points
+        n_data = random.randint(num_query + 1, num_points)
 
     # Shuffle indices
     indices = random.sample(range(num_points), n_data)

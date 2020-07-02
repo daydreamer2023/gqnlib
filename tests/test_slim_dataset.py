@@ -207,7 +207,7 @@ class TestSlimDataset(unittest.TestCase):
 
         # Single query
         d_c, v_c, x_q, v_q = gqnlib.partition_slim(
-            images, viewpoints, captions)
+            images, viewpoints, captions, num_context=100)
 
         # Context
         self.assertTupleEqual(d_c.size(), (5, 14, 20))
@@ -219,7 +219,7 @@ class TestSlimDataset(unittest.TestCase):
 
         # Randomized
         d_c, v_c, x_q, v_q = gqnlib.partition_slim(
-            images, viewpoints, captions, randomized=True)
+            images, viewpoints, captions)
 
         # d_c
         self.assertEqual(d_c.size(0), 5)
@@ -266,7 +266,7 @@ class TestSlimDataset(unittest.TestCase):
 
         # Single query
         d_c, v_c, x_q, v_q = gqnlib.partition_slim(
-            images, viewpoints, captions)
+            images, viewpoints, captions, num_context=14)
 
         # Size check
         self.assertTupleEqual(d_c.size(), (10, 14, 20))
@@ -281,7 +281,7 @@ class TestSlimDataset(unittest.TestCase):
 
         # Single query
         d_c, v_c, x_q, v_q = gqnlib.partition_slim(
-            images, viewpoints, captions)
+            images, viewpoints, captions, num_context=1000)
 
         # Size check
         self.assertTupleEqual(d_c.size(), (5, 14, 20))
