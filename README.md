@@ -33,6 +33,9 @@ Install the package in virtual env.
 python3 -m venv .venv
 source .venv/bin/activate
 pip3 install .
+
+# Install other requirements for sample code.
+pip3 install tqdm==4.46.0 tensorflow==2.2.0 tensorboardX==2.0 matplotlib==3.2.1 torchvision==0.6.0
 ```
 
 Or use [Docker](https://docs.docker.com/get-docker/) and [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker).
