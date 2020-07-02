@@ -358,9 +358,6 @@ class Trainer:
         self.pbar.close()
         self.logger.info("Finish training")
 
-        # Post process
-        self.quit()
-
     def run(self) -> None:
         """Main run method."""
 
@@ -378,5 +375,7 @@ class Trainer:
             self._base_run()
         except Exception as e:
             self.logger.exception(f"Run function error: {e}")
+        finally:
+            self.quit()
 
         self.logger.info("Finish run")
