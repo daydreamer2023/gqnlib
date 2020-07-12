@@ -1,14 +1,4 @@
-FROM nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04
-
-# Set up cudnn
-ENV CUDNN_VERSION 7.6.5.32
-LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        libcudnn7=$CUDNN_VERSION-1+cuda10.2 \
-    && apt-mark hold libcudnn7 \
-    && rm -rf /var/lib/apt/lists/*
+FROM nvidia/cuda:11.0-runtime-ubuntu18.04-rc
 
 # Install Python and utilities
 RUN apt-get update \
