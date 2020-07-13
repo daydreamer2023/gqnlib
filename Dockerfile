@@ -22,7 +22,3 @@ COPY setup.py setup.py
 # Install package
 RUN pip install --upgrade pip
 RUN pip install -e .
-
-# Install other requirements for examples
-RUN pip install --no-cache-dir tqdm==4.46.0 tensorflow==2.2.0 \
-        tensorboardX==2.0 matplotlib==3.2.1 torchvision==0.6.0
