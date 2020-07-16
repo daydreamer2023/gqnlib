@@ -26,7 +26,7 @@ class LatentDistribution(nn.Module):
     """
 
     def __init__(self, r_channel: int, e_channel: int, h_channel: int,
-                 z_channel: int, stride: int):
+                 z_channel: int, stride: int) -> None:
         super().__init__()
 
         self.conv1 = nn.Conv2d(r_channel, e_channel, kernel_size=stride,
@@ -77,7 +77,7 @@ class Renderer(nn.Module):
     """
 
     def __init__(self, h_channel: int, d_channel: int, z_channel: int,
-                 u_channel: int, v_dim: int, stride: int):
+                 u_channel: int, v_dim: int, stride: int) -> None:
         super().__init__()
 
         self.conv = nn.Conv2d(u_channel, d_channel, kernel_size=stride,
@@ -94,20 +94,26 @@ class Renderer(nn.Module):
 
         Args:
             z (torch.Tensor): Latent states, size `(b, z, 8, 8)`.
-            v (torch.Tensor): Query viewpoints, size `(b, v)`.
-            u (torch.Tensor): Canvas for images, size `(b, u, h*st, w*st)`.
-            h (torch.Tensor): Previous hidden states, size `(b, h, 8, 8)`.
-            c (torch.Tensor): Previous cell states, size `(b, h, 8, 8)`.
+            v (torch.Tensor): Query viewpoints, size `(b, n, v)`.
+            u (torch.Tensor): Canvas for images, size `(b*n, u, h*st, w*st)`.
+            h (torch.Tensor): Previous hidden states, size `(b*n, h, 8, 8)`.
+            c (torch.Tensor): Previous cell states, size `(b*n, h, 8, 8)`.
 
         Returns:
-            u (torch.Tensor): Aggregated canvas, size `(b, u, h*st, w*st)`.
-            h (torch.Tensor): Current hidden states, size `(b, h, 8, 8)`.
-            c (torch.Tensor): Current cell states, size `(b, h, 8, 8)`.
+            u (torch.Tensor): Aggregated canvas, size `(b*n, u, h*st, w*st)`.
+            h (torch.Tensor): Current hidden states, size `(b*n, h, 8, 8)`.
+            c (torch.Tensor): Current cell states, size `(b*n, h, 8, 8)`.
         """
 
-        # Resize viewpoints
-        batch, _, height, width = z.size()
-        v = v.contiguous().view(batch, -1, 1, 1).repeat(1, 1, height, width)
+        # Resize latents and viewpoints
+        _, z_dim, h_dim, w_dim = z.size()
+        b, n, v_dim = v.size()
+
+        # z: (b, z, h, w) -> (b * n, z, h, w)
+        z = z.repeat_interleave(n, dim=0)
+
+        # v: (b, n, v) -> (b * n, v, h, w)
+        v = v.contiguous().view(b * n, v_dim, 1, 1).repeat(1, 1, h_dim, w_dim)
 
         lstm_input = self.conv(u)
         h, c = self.lstm_cell(torch.cat([z, v, lstm_input], dim=1), (h, c))
@@ -120,27 +126,30 @@ class DRAWRenderer(nn.Module):
     """DRAW Renderer class for generation and inference.
 
     Args:
-        x_channel (int): Number of channels in the observations.
-        u_channel (int): Number of channels in the hidden layer between
-            LSTM states and the canvas (nf_to_obs).
-        r_channel (int): Number of channels in representation.
-        e_channel (int): Number of channels in the conv. layer mapping input
-            images to LSTM input (nf_enc).
-        d_channel (int): Number of channels in the conv. layer mapping the
-            canvas state to the LSTM input (nf_dec).
-        h_channel (int): Number of channels in LSTM layer (nf_to_hidden).
-        z_channel (int): Number of channels in the stochastic latent in each
-            DRAW step (nf_z).
-        stride (int): Kernel size of transposed conv. layer (stride_to_obs).
-        v_dim (int): Dimension size of viewpoints.
+        x_channel (int, optional): Number of channels in the observations.
+        u_channel (int, optional): Number of channels in the hidden layer
+            between LSTM states and the canvas (nf_to_obs).
+        r_channel (int, optional): Number of channels in representation.
+        e_channel (int, optional): Number of channels in the conv. layer
+            mapping input images to LSTM input (nf_enc).
+        d_channel (int, optional): Number of channels in the conv. layer
+            mapping the canvas state to the LSTM input (nf_dec).
+        h_channel (int, optional): Number of channels in LSTM layer
+            (nf_to_hidden).
+        z_channel (int, optional): Number of channels in the stochastic latent
+            in each DRAW step (nf_z).
+        stride (int, optional): Kernel size of transposed conv. layer
+            (stride_to_obs).
+        v_dim (int, optional): Dimension size of viewpoints.
         n_layer (int, optional): Number of recurrent layers.
         scale (int, optional): Scale of image generation process.
     """
 
-    def __init__(self, x_channel: int, u_channel: int, r_channel: int,
-                 e_channel: int, d_channel: int, h_channel: int,
-                 z_channel: int, stride: int, v_dim: int, n_layer: int = 8,
-                 scale: int = 4):
+    def __init__(self, x_channel: int = 3, u_channel: int = 128,
+                 r_channel: int = 32, e_channel: int = 128,
+                 d_channel: int = 128, h_channel: int = 64, z_channel: int = 3,
+                 stride: int = 2, v_dim: int = 7, n_layer: int = 8,
+                 scale: int = 4) -> None:
         super().__init__()
 
         self.u_channel = u_channel
@@ -165,18 +174,19 @@ class DRAWRenderer(nn.Module):
         """Inferences given query pair (x, v) and representation r.
 
         Args:
-            x (torch.Tensor): True queried iamges `x_q`, size `(b, c, h, w)`.
-            v (torch.Tensor): Query of viewpoints `v_q`, size `(b, v)`.
+            x (torch.Tensor): Query iamges `x_q`, size `(b, n, c, h, w)`.
+            v (torch.Tensor): Query viewpoints `v_q`, size `(b, n, v)`.
             r_c (torch.Tensor): Representation of context, size `(b, c, h, w)`.
             r_q (torch.Tensor): Representation of query, size `(b, c, h, w)`.
 
         Returns:
-            canvas (torch.Tensor): Reconstructed images, size `(b, c, h, w)`.
-            kl_loss (torch.Tensor): Calculated KL loss, size `(1)`.
+            canvas (torch.Tensor): Reconstructed images, size
+                `(b, n, c, h, w)`.
+            kl_loss (torch.Tensor): Calculated KL loss, size `(b,)`.
         """
 
         # Data size
-        batch_size, _, h, w = x.size()
+        batch_size, n, _, h, w = x.size()
         h_scale = h // (self.scale * self.stride)
         w_scale = w // (self.scale * self.stride)
 
@@ -189,18 +199,18 @@ class DRAWRenderer(nn.Module):
         c_psi = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
 
         # Renderer initial state
-        h_rnd = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
-        c_rnd = x.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        h_rnd = x.new_zeros((batch_size * n, self.h_channel, h_scale, w_scale))
+        c_rnd = x.new_zeros((batch_size * n, self.h_channel, h_scale, w_scale))
 
         # Canvas that data is drawn on
-        u = x.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
+        u = x.new_zeros((batch_size * n, self.u_channel, h_scale * self.stride,
                          w_scale * self.stride))
 
         # Latent state
         z = x.new_zeros((batch_size, self.z_channel, h_scale, w_scale))
 
         # KL loss value
-        kl_loss = 0
+        kl_loss = x.new_zeros((batch_size,))
 
         for _ in range(self.n_layer):
             # Prior
@@ -219,9 +229,13 @@ class DRAWRenderer(nn.Module):
             # Calculate loss
             _kl_tmp = kl_divergence_normal(q_mu, q_logvar.exp(), p_mu,
                                            p_logvar.exp(), reduce=False)
-            kl_loss += _kl_tmp.sum([1, 2, 3]).mean()
+            kl_loss += _kl_tmp.sum([1, 2, 3])
 
-        canvas = torch.sigmoid(self.translation(u))
+        canvas = self.translation(u)
+
+        # Reshape
+        _, *canvas_dim = canvas.size()
+        canvas = canvas.view(batch_size, n, *canvas_dim)
 
         return canvas, kl_loss
 
@@ -230,15 +244,15 @@ class DRAWRenderer(nn.Module):
         """Samples images from the prior given viewpoint and representation.
 
         Args:
-            v (torch.Tensor): Query of viewpoints `v_q`, size `(b, v)`.
+            v (torch.Tensor): Query viewpoints `v_q`, size `(b, n, v)`.
             r (torch.Tensor): Representation of context, size `(b, c, h, w)`.
             x_shape (tuple of int, optional): Sampled x shape.
 
         Returns:
-            canvas (torch.Tensor): Sampled data, size `(b, c, h, w)`.
+            canvas (torch.Tensor): Sampled data, size `(b, n, c, h, w)`.
         """
 
-        batch_size = v.size(0)
+        batch_size, n, _ = v.size()
         h, w = x_shape
         h_scale = h // (self.scale * self.stride)
         w_scale = w // (self.scale * self.stride)
@@ -248,14 +262,14 @@ class DRAWRenderer(nn.Module):
         c_phi = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
 
         # Renderer initial state
-        h_rnd = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
-        c_rnd = v.new_zeros((batch_size, self.h_channel, h_scale, w_scale))
+        h_rnd = v.new_zeros((batch_size * n, self.h_channel, h_scale, w_scale))
+        c_rnd = v.new_zeros((batch_size * n, self.h_channel, h_scale, w_scale))
 
         # Latent state
         z = v.new_zeros((batch_size, self.z_channel, h_scale, w_scale))
 
         # Canvas that data is drawn on
-        u = v.new_zeros((batch_size, self.u_channel, h_scale * self.stride,
+        u = v.new_zeros((batch_size * n, self.u_channel, h_scale * self.stride,
                          w_scale * self.stride))
 
         for _ in range(self.n_layer):
@@ -266,6 +280,10 @@ class DRAWRenderer(nn.Module):
             # Generator state update
             u, h_rnd, c_rnd = self.renderer(z, v, u, h_rnd, c_rnd)
 
-        canvas = torch.sigmoid(self.translation(u))
+        canvas = self.translation(u)
+
+        # Reshape
+        _, *canvas_dim = canvas.size()
+        canvas = canvas.view(batch_size, n, *canvas_dim)
 
         return canvas

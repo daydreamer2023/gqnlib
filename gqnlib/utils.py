@@ -11,6 +11,7 @@ def nll_normal(x: Tensor, mu: Tensor, var: Tensor, reduce: bool = True
     """Negative log likelihood for 1-D Normal distribution.
 
     Args:
+        x (torch.Tensor): Inputs vector.
         mu (torch.Tensor): Mean vector.
         var (torch.Tensor): Variance vector.
         reduce (bool, optional): If `True`, sum calculated loss for each

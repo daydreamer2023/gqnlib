@@ -1,21 +1,21 @@
 
-"""Generative Query Network."""
+"""Attention GQN.
+
+D. Rosenbaum et al., "Learning models for visual 3D localization with implicit
+mapping", http://arxiv.org/abs/1807.03149
+"""
 
 from typing import Dict, Tuple, Optional
 
-import math
-
-import torch
 from torch import Tensor
 
+from .attention_layer import DictionaryEncoder, AttentionGenerator
 from .base import BaseGQN
-from .generation import ConvolutionalDRAW
-from .representation import Tower
 from .utils import nll_normal
 
 
-class GenerativeQueryNetwork(BaseGQN):
-    """Generative Query Network class.
+class AttentionGQN(BaseGQN):
+    """Attention Generative Query Network.
 
     Args:
         representation_params (dict, optional): Parameters of representation
@@ -30,8 +30,8 @@ class GenerativeQueryNetwork(BaseGQN):
         rep_kwargs = representation_params if representation_params else {}
         gen_kwargs = generator_params if generator_params else {}
 
-        self.representation = Tower(**rep_kwargs)
-        self.generator = ConvolutionalDRAW(**gen_kwargs)
+        self.representation = DictionaryEncoder(**rep_kwargs)
+        self.generator = AttentionGenerator(**gen_kwargs)
 
     def inference(self, x_c: Tensor, v_c: Tensor, x_q: Tensor, v_q: Tensor,
                   var: float = 1.0, beta: float = 1.0
@@ -51,7 +51,11 @@ class GenerativeQueryNetwork(BaseGQN):
         Returns:
             canvas (torch.Tensor): Reconstructed images, size
                 `(b, n, c, h, w)`.
-            r (torch.Tensor): Representations, size `(b, n, r, x, y)`.
+            key (torch.Tensor): Attention key, size `(b, d*l, 64, 8, 8)`.
+            value (torch.Tensor): Attention value, size
+                `(b, d*l, c+v+2+64, 8, 8)`.
+            r_stack (torch.Tensor): Stacked representations, size
+                `(b, n, c+v+2+64, 8, 8)`.
             loss_dict (dict of [str, torch.Tensor]): Dict of calculated losses
                 with size `(b, n)`.
         """
@@ -67,17 +71,11 @@ class GenerativeQueryNetwork(BaseGQN):
         x_q = x_q.view(-1, *x_dims)
         v_q = v_q.view(-1, *v_dims)
 
-        # Representation generated from context.
-        r = self.representation(x_c, v_c)
-        _, *r_dims = r.size()
-        r = r.view(b, m, *r_dims)
+        # Attention (key, value) pairs from context
+        key, value = self.representation(x_c, v_c)
 
-        # Sum over representations, and repeat n times: (b*n, c, x, y)
-        r = r.sum(1)
-        r = r.repeat_interleave(n, dim=0)
-
-        # Query images by v_q, i.e. reconstruct
-        canvas, kl_loss = self.generator(x_q, v_q, r)
+        # Inference
+        canvas, r_stack, kl_loss = self.generator(x_q, v_q, key, value)
         kl_loss = kl_loss * beta
 
         # Reconstruction loss
@@ -85,22 +83,28 @@ class GenerativeQueryNetwork(BaseGQN):
                               reduce=False)
         nll_loss = nll_loss.sum([1, 2, 3])
 
-        # Reshape loss
+        # Returned loss
         nll_loss = nll_loss.view(b, n)
         kl_loss = kl_loss.view(b, n)
-
-        # Returned loss
         loss_dict = {"loss": nll_loss + kl_loss, "nll_loss": nll_loss,
                      "kl_loss": kl_loss}
 
-        # Restore origina shape
+        # Restore original shape
         canvas = canvas.view(b, n, *x_dims)
-        r = r.view(b, n, *r_dims)
+
+        _, *k_dims = key.size()
+        key = key.view(b, -1, *k_dims)
+
+        _, *v_dims = value.size()
+        value = value.view(b, -1, *v_dims)
+
+        _, *r_dims = r_stack.size()
+        r_stack = r_stack.view(b, -1, *r_dims)
 
         # Squash images to [0, 1]
         canvas = canvas.clamp(0.0, 1.0)
 
-        return (canvas, r), loss_dict
+        return (canvas, key, value, r_stack), loss_dict
 
     def sample(self, x_c: Tensor, v_c: Tensor, v_q: Tensor) -> Tensor:
         """Samples images `x_q` by context pair `(x, v)` and query viewpoint
@@ -126,19 +130,13 @@ class GenerativeQueryNetwork(BaseGQN):
         n = v_q.size(1)
         v_q = v_q.view(-1, *v_dims)
 
-        # Representation generated from context.
-        r = self.representation(x_c, v_c)
-        _, *r_dims = r.size()
-        r = r.view(b, m, *r_dims)
+        # Attention (key, value) pairs from context
+        key, value = self.representation(x_c, v_c)
 
-        # Sum over representations: (b, c, x, y)
-        r = r.sum(1)
-        r = r.repeat_interleave(n, dim=0)
+        # Sample
+        canvas, _ = self.generator.sample(v_q, key, value)
 
-        # Sample query images
-        canvas = self.generator.sample(v_q, r)
-
-        # Restore original shape
+        # Restore origina shape
         canvas = canvas.view(b, n, *x_dims)
 
         # Squash images to [0, 1]

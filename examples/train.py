@@ -53,6 +53,8 @@ def main():
     model_dict = {
         "gqn": gqnlib.GenerativeQueryNetwork,
         "cgqn": gqnlib.ConsistentGQN,
+        "sgqn": gqnlib.SlimGQN,
+        "agqn": gqnlib.AttentionGQN,
     }
     model = model_dict[args.model](**config[f"{args.model}_params"])
 
@@ -79,12 +81,14 @@ def init_args():
                         help="Model name.")
     parser.add_argument("--seed", type=int, default=0,
                         help="Random seed.")
-    parser.add_argument("--batch-size", type=int, default=32,
+    parser.add_argument("--batch-size", type=int, default=36,
                         help="Batch size.")
-    parser.add_argument("--steps", type=int, default=100,
+    parser.add_argument("--max-steps", type=int, default=2,
                         help="Number of gradient steps.")
-    parser.add_argument("--log-save-interval", type=int, default=5,
-                        help="Interval epochs for saving logs.")
+    parser.add_argument("--test-interval", type=int, default=2,
+                        help="Interval steps for testing.")
+    parser.add_argument("--save-interval", type=int, default=2,
+                        help="Interval steps for saving checkpoints.")
 
     return parser.parse_args()
 

@@ -1,23 +1,20 @@
 {
     "gqn_params": {
-        "x_channel": 3,
-        "v_dim": 7,
-        "r_dim": 256,
-        "z_channel": 64,
-        "h_channel": 128,
-        "n_layer": 8
+        "representation_params": {},
+        "generator_params": {}
     },
     "cgqn_params": {
-        "x_channel": 3,
-        "u_channel": 128,
-        "r_channel": 32,
-        "e_channel": 128,
-        "d_channel": 128,
-        "h_channel": 64,
-        "stride": 2,
-        "v_dim": 7,
-        "n_layer": 8,
-        "scale": 4
+        "representation_params": {},
+        "generator_params": {}
+    },
+    "sgqn_params": {
+        "vocab_dim": 5000,
+        "representation_params": {},
+        "generator_params": {}
+    },
+    "agqn_params": {
+        "representation_params": {},
+        "generator_params": {}
     },
     "optimizer_params": {
         "lr": 5e-4
@@ -30,6 +27,15 @@
     "sigma_scheduler_params": {
         "init": 2.0,
         "final": 0.7,
-        "steps": 80000
+        "constant": 1.0,
+        "steps": 250000,
+        "pretrain": 50000
+    },
+    "beta_scheduler_params": {
+        "init": 1.0,
+        "final": 1.0,
+        "constant": 0.0,
+        "steps": 250000,
+        "pretrain": 50000
     }
 }

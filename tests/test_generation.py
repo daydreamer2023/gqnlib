@@ -18,7 +18,8 @@ class TestConvolutionalDRAW(unittest.TestCase):
         canvas, kl_loss = self.model(x, v, r)
 
         self.assertTupleEqual(canvas.size(), (10, 3, 64, 64))
-        self.assertGreater(kl_loss, 0)
+        self.assertTupleEqual(kl_loss.size(), (10,))
+        self.assertGreater(kl_loss.mean(), 0)
 
     def test_sample(self):
         v = torch.randn(10, 7)
@@ -34,7 +35,8 @@ class TestConvolutionalDRAW(unittest.TestCase):
         canvas, kl_loss = self.model(x, v, r)
 
         self.assertTupleEqual(canvas.size(), (10, 3, 64, 64))
-        self.assertGreater(kl_loss, 0)
+        self.assertTupleEqual(kl_loss.size(), (10,))
+        self.assertGreater(kl_loss.mean(), 0)
 
 
 if __name__ == "__main__":
