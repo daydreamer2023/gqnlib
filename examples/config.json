@@ -28,14 +28,14 @@
         "init": 2.0,
         "final": 0.7,
         "constant": 1.0,
-        "steps": 250000,
-        "pretrain": 50000
+        "steps": 200000,
+        "pretrain": 0
     },
     "beta_scheduler_params": {
         "init": 1.0,
         "final": 1.0,
         "constant": 0.0,
-        "steps": 250000,
-        "pretrain": 50000
+        "steps": 200000,
+        "pretrain": 0
     }
 }
